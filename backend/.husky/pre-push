@@ -1,0 +1,14 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run linting and tests before pushing
+npm run lint
+npm test
+
+# Check if the previous commands were successful
+if [ $? -ne 0 ]; then
+  echo "Linting or tests failed. Please fix the issues before pushing."
+  exit 1
+fi
+
+echo "Pre-push checks passed. Proceeding with push."
