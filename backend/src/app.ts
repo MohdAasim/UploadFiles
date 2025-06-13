@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { createServer } from 'http';
 import * as dotenv from 'dotenv';
+import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import fileRoutes from './routes/fileRoutes';
 import folderRoutes from './routes/folderRoutes';
@@ -33,6 +34,14 @@ app.set('socketServer', socketServer);
 
 // Middleware
 app.use(express.json());
+
+// Enable CORS with origin from environment variable
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+  }),
+);
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
