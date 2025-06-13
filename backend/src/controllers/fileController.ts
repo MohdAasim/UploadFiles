@@ -41,6 +41,21 @@ export const uploadFile = asyncHandler(
       parentFolder: parentFolder || null,
     });
 
+    // Emit real-time event
+    const socketServer = req.app.get('socketServer');
+    if (socketServer) {
+      // Emit to all connected users (or specific room)
+      socketServer.io.emit('new-file-uploaded', {
+        file: fileMeta,
+        uploadedBy: {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+        },
+        parentFolder: parentFolder,
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'File uploaded successfully',
