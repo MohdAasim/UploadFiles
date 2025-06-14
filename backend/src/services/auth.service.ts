@@ -1,5 +1,5 @@
 import { createError } from '../middlewares/errorHandler';
-import { createUser, getUserByEmail } from '../repository/auth-repo';
+import { createUser, getUserByEmail } from '../repository/auth.repo';
 import { generateToken } from './jwt-service';
 
 export async function registerUser({

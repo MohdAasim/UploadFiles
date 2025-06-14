@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../middlewares/errorHandler';
-import { loginUser, registerUser } from '../services/auth-service';
+import { loginUser, registerUser } from '../services/auth.service';
 
 export const register = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
