@@ -30,7 +30,10 @@ export const shareResource = asyncHandler(
     } else if (resourceType === 'folder') {
       resource = await Folder.findById(resourceId);
     } else {
-      throw createError('Invalid resource type. Must be "file" or "folder"', 400);
+      throw createError(
+        'Invalid resource type. Must be "file" or "folder"',
+        400,
+      );
     }
 
     if (!resource) {
@@ -46,7 +49,8 @@ export const shareResource = asyncHandler(
     if (!isOwner) {
       // Check if user has admin permission for this resource
       const hasAdminAccess = resource.sharedWith.some(
-        (entry: any) => entry.user.toString() === ownerId && entry.permission === 'admin',
+        (entry: any) =>
+          entry.user.toString() === ownerId && entry.permission === 'admin',
       );
 
       if (!hasAdminAccess) {
@@ -57,7 +61,10 @@ export const shareResource = asyncHandler(
     // Validate permission
     const validPermissions = ['view', 'edit', 'admin'];
     if (!validPermissions.includes(permission)) {
-      throw createError('Invalid permission. Must be view, edit, or admin', 400);
+      throw createError(
+        'Invalid permission. Must be view, edit, or admin',
+        400,
+      );
     }
 
     // Convert targetUser._id to string for comparison
@@ -71,9 +78,9 @@ export const shareResource = asyncHandler(
     if (alreadyShared) {
       alreadyShared.permission = permission; // Update permission
     } else {
-      resource.sharedWith.push({ 
-        user: targetUser._id as mongoose.Types.ObjectId, 
-        permission 
+      resource.sharedWith.push({
+        user: targetUser._id as mongoose.Types.ObjectId,
+        permission,
       });
     }
 
@@ -81,7 +88,7 @@ export const shareResource = asyncHandler(
 
     // Get socket server instance
     const socketServer = req.app.get('socketServer');
-    
+
     // Notify target user in real-time
     socketServer.notifyFileShared(
       resourceId,
@@ -90,9 +97,9 @@ export const shareResource = asyncHandler(
       {
         id: req.user.id,
         name: req.user.name,
-        email: req.user.email
+        email: req.user.email,
       },
-      permission
+      permission,
     );
 
     res.json({
@@ -117,8 +124,11 @@ export const getFilePermissions = asyncHandler(
     const { fileId } = req.params;
     const userId = req.user.id;
 
-    const file = await FileMeta.findById(fileId).populate('sharedWith.user', 'name email');
-    
+    const file = await FileMeta.findById(fileId).populate(
+      'sharedWith.user',
+      'name email',
+    );
+
     if (!file) {
       throw createError('File not found', 404);
     }
@@ -126,7 +136,8 @@ export const getFilePermissions = asyncHandler(
     // Check if user is owner or has admin permission
     const isOwner = file.uploadedBy.toString() === userId;
     const hasAdminAccess = file.sharedWith.some(
-      (entry: any) => entry.user._id.toString() === userId && entry.permission === 'admin'
+      (entry: any) =>
+        entry.user._id.toString() === userId && entry.permission === 'admin',
     );
 
     if (!isOwner && !hasAdminAccess) {
@@ -138,18 +149,18 @@ export const getFilePermissions = asyncHandler(
       file: {
         id: file._id,
         name: file.originalName,
-        owner: isOwner ? 'You' : 'Someone else'
+        owner: isOwner ? 'You' : 'Someone else',
       },
       permissions: file.sharedWith.map((entry: any) => ({
         user: {
           id: entry.user._id,
           name: entry.user.name,
-          email: entry.user.email
+          email: entry.user.email,
         },
-        permission: entry.permission
-      }))
+        permission: entry.permission,
+      })),
     });
-  }
+  },
 );
 
 // Get who has access to a specific folder
@@ -158,8 +169,11 @@ export const getFolderPermissions = asyncHandler(
     const { folderId } = req.params;
     const userId = req.user.id;
 
-    const folder = await Folder.findById(folderId).populate('sharedWith.user', 'name email');
-    
+    const folder = await Folder.findById(folderId).populate(
+      'sharedWith.user',
+      'name email',
+    );
+
     if (!folder) {
       throw createError('Folder not found', 404);
     }
@@ -167,7 +181,8 @@ export const getFolderPermissions = asyncHandler(
     // Check if user is owner or has admin permission
     const isOwner = folder.owner.toString() === userId;
     const hasAdminAccess = folder.sharedWith.some(
-      (entry: any) => entry.user._id.toString() === userId && entry.permission === 'admin'
+      (entry: any) =>
+        entry.user._id.toString() === userId && entry.permission === 'admin',
     );
 
     if (!isOwner && !hasAdminAccess) {
@@ -179,18 +194,18 @@ export const getFolderPermissions = asyncHandler(
       folder: {
         id: folder._id,
         name: folder.name,
-        owner: isOwner ? 'You' : 'Someone else'
+        owner: isOwner ? 'You' : 'Someone else',
       },
       permissions: folder.sharedWith.map((entry: any) => ({
         user: {
           id: entry.user._id,
           name: entry.user.name,
-          email: entry.user.email
+          email: entry.user.email,
         },
-        permission: entry.permission
-      }))
+        permission: entry.permission,
+      })),
     });
-  }
+  },
 );
 
 // Get all files shared with current user
@@ -200,12 +215,12 @@ export const getSharedWithMe = asyncHandler(
 
     // Find files shared with this user
     const sharedFiles = await FileMeta.find({
-      'sharedWith.user': userId
+      'sharedWith.user': userId,
     }).populate('uploadedBy', 'name email');
 
     // Find folders shared with this user
     const sharedFolders = await Folder.find({
-      'sharedWith.user': userId
+      'sharedWith.user': userId,
     }).populate('owner', 'name email');
 
     res.json({
@@ -213,7 +228,7 @@ export const getSharedWithMe = asyncHandler(
       sharedWithMe: {
         files: sharedFiles.map((file: any) => {
           const userPermission = file.sharedWith.find(
-            (entry: any) => entry.user.toString() === userId
+            (entry: any) => entry.user.toString() === userId,
           );
           return {
             id: file._id,
@@ -222,15 +237,15 @@ export const getSharedWithMe = asyncHandler(
             mimetype: file.mimetype,
             owner: {
               name: file.uploadedBy.name,
-              email: file.uploadedBy.email
+              email: file.uploadedBy.email,
             },
             permission: userPermission?.permission,
-            sharedAt: file.createdAt
+            sharedAt: file.createdAt,
           };
         }),
         folders: sharedFolders.map((folder: any) => {
           const userPermission = folder.sharedWith.find(
-            (entry: any) => entry.user.toString() === userId
+            (entry: any) => entry.user.toString() === userId,
           );
           return {
             id: folder._id,
@@ -238,15 +253,15 @@ export const getSharedWithMe = asyncHandler(
             path: folder.path,
             owner: {
               name: folder.owner.name,
-              email: folder.owner.email
+              email: folder.owner.email,
             },
             permission: userPermission?.permission,
-            sharedAt: folder.createdAt
+            sharedAt: folder.createdAt,
           };
-        })
-      }
+        }),
+      },
     });
-  }
+  },
 );
 
 // Get all resources current user has shared with others
@@ -257,13 +272,13 @@ export const getMySharedResources = asyncHandler(
     // Find files owned by user that are shared
     const mySharedFiles = await FileMeta.find({
       uploadedBy: userId,
-      'sharedWith.0': { $exists: true } // Has at least one shared entry
+      'sharedWith.0': { $exists: true }, // Has at least one shared entry
     }).populate('sharedWith.user', 'name email');
 
     // Find folders owned by user that are shared
     const mySharedFolders = await Folder.find({
       owner: userId,
-      'sharedWith.0': { $exists: true } // Has at least one shared entry
+      'sharedWith.0': { $exists: true }, // Has at least one shared entry
     }).populate('sharedWith.user', 'name email');
 
     res.json({
@@ -278,10 +293,10 @@ export const getMySharedResources = asyncHandler(
             user: {
               id: entry.user._id,
               name: entry.user.name,
-              email: entry.user.email
+              email: entry.user.email,
             },
-            permission: entry.permission
-          }))
+            permission: entry.permission,
+          })),
         })),
         folders: mySharedFolders.map((folder: any) => ({
           id: folder._id,
@@ -291,14 +306,14 @@ export const getMySharedResources = asyncHandler(
             user: {
               id: entry.user._id,
               name: entry.user.name,
-              email: entry.user.email
+              email: entry.user.email,
             },
-            permission: entry.permission
-          }))
-        }))
-      }
+            permission: entry.permission,
+          })),
+        })),
+      },
     });
-  }
+  },
 );
 
 // Remove permission for a user
@@ -327,13 +342,15 @@ export const removePermission = asyncHandler(
     }
 
     // Check if user is owner or has admin permission
-    const isOwner = resourceType === 'file' 
-      ? resource.uploadedBy.toString() === userId 
-      : resource.owner.toString() === userId;
+    const isOwner =
+      resourceType === 'file'
+        ? resource.uploadedBy.toString() === userId
+        : resource.owner.toString() === userId;
 
     if (!isOwner) {
       const hasAdminAccess = resource.sharedWith.some(
-        (entry: any) => entry.user.toString() === userId && entry.permission === 'admin'
+        (entry: any) =>
+          entry.user.toString() === userId && entry.permission === 'admin',
       );
       if (!hasAdminAccess) {
         throw createError('Only owner or admin can remove permissions', 403);
@@ -343,6 +360,7 @@ export const removePermission = asyncHandler(
     // Remove the user from sharedWith array
     const targetUserId = (targetUser._id as mongoose.Types.ObjectId).toString();
     resource.sharedWith = resource.sharedWith.filter(
-      (entry: any) => entry.user.toString() !== targetUserId
+      (entry: any) => entry.user.toString() !== targetUserId,
     );
-});
+  },
+);

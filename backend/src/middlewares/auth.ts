@@ -11,11 +11,11 @@ export const authenticate = (
   next: NextFunction,
 ): void => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
-  
+
   if (!token) {
-    res.status(401).json({ 
+    res.status(401).json({
       success: false,
-      message: 'No token, authorization denied' 
+      message: 'No token, authorization denied',
     });
     return;
   }
@@ -25,9 +25,9 @@ export const authenticate = (
     req.user = decoded;
     next();
   } catch (err) {
-    res.status(401).json({ 
+    res.status(401).json({
       success: false,
-      message: 'Token is not valid' 
+      message: 'Token is not valid',
     });
     return;
   }

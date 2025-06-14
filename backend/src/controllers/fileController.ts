@@ -61,7 +61,7 @@ export const uploadFile = asyncHandler(
       message: 'File uploaded successfully',
       file: fileMeta,
     });
-  }
+  },
 );
 
 // GET /api/files/ (list user's files)
@@ -84,7 +84,7 @@ export const listFiles = asyncHandler(
       success: true,
       files,
     });
-  }
+  },
 );
 
 // GET /api/files/preview/:id (preview file)
@@ -117,7 +117,10 @@ export const previewFile = asyncHandler(
 
     // Set correct headers for preview
     res.setHeader('Content-Type', file.mimetype);
-    res.setHeader('Content-Disposition', `inline; filename="${file.originalName}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${file.originalName}"`,
+    );
     res.setHeader('Content-Length', file.size.toString());
 
     // Stream the file
@@ -129,5 +132,5 @@ export const previewFile = asyncHandler(
     });
 
     readStream.pipe(res);
-  }
+  },
 );
