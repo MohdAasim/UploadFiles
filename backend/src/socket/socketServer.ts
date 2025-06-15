@@ -10,7 +10,7 @@ interface AuthenticatedSocket extends Socket {
 }
 
 export class SocketServer {
-  private io: SocketIOServer;
+  io: SocketIOServer;
   private connectedUsers: Map<string, { socketId: string; userData: any }> =
     new Map();
   public fileEditingSessions: Map<

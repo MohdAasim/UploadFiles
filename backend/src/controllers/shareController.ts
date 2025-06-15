@@ -10,7 +10,6 @@ import {
   removePermissionService,
   shareResourceService,
 } from '../services/share.service';
-import { getFileMetaByFileId } from '../repository/filemeta.repo';
 
 interface AuthRequest extends Request {
   user: JwtPayload;

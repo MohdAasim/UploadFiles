@@ -1,9 +1,14 @@
 import { Request, Response } from 'express';
 import FileMeta from '../models/FileMeta';
-import Folder from '../models/Folder';
 import path from 'path';
 import fs from 'fs';
 import { asyncHandler, createError } from '../middlewares/errorHandler';
+
+import { uploadFileService } from '../services/file.service';
+import {
+  getFileMetaById,
+  getFileMetaByownerAndFolder,
+} from '../repository/filemeta.repo';
 
 interface AuthRequest extends Request {
   user?: any;
@@ -22,45 +27,15 @@ export const uploadFile = asyncHandler(
     }
 
     const { parentFolder } = req.body; // Get parent folder from request body
-
-    // Validate parent folder if provided
-    if (parentFolder) {
-      const folder = await Folder.findById(parentFolder);
-      if (!folder || folder.owner.toString() !== req.user.id) {
-        throw createError('Parent folder not found or not yours', 404);
-      }
-    }
-
-    const fileMeta = await FileMeta.create({
-      originalName: req.file.originalname,
-      filename: req.file.filename,
-      path: req.file.path,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-      uploadedBy: req.user.id,
-      parentFolder: parentFolder || null,
-    });
-
-    // Emit real-time event
     const socketServer = req.app.get('socketServer');
-    if (socketServer) {
-      // Emit to all connected users (or specific room)
-      socketServer.io.emit('new-file-uploaded', {
-        file: fileMeta,
-        uploadedBy: {
-          id: req.user.id,
-          name: req.user.name,
-          email: req.user.email,
-        },
-        parentFolder: parentFolder,
-      });
-    }
 
-    res.status(201).json({
-      success: true,
-      message: 'File uploaded successfully',
-      file: fileMeta,
+    const response = await uploadFileService({
+      file: req.file,
+      socketServer,
+      user: req.user,
+      parentFolder,
     });
+    res.status(201).json(response);
   },
 );
 
@@ -71,14 +46,9 @@ export const listFiles = asyncHandler(
       throw createError('User not found', 401);
     }
 
-    const { parentFolder } = req.query; // Get parent folder from query params
+    const parentFolder = (req.query.parentFolder as string) || null; // Get parent folder from query params
 
-    const files = await FileMeta.find({
-      uploadedBy: req.user.id,
-      parentFolder: parentFolder || null,
-    }).sort({
-      createdAt: -1,
-    });
+    const files = await getFileMetaByownerAndFolder(req.user.id, parentFolder);
 
     res.json({
       success: true,
@@ -93,11 +63,7 @@ export const previewFile = asyncHandler(
     const fileId = req.params.id;
     const userId = req.user.id;
 
-    if (!userId) {
-      throw createError('User not found', 401);
-    }
-
-    const file = await FileMeta.findById(fileId);
+    const file = await getFileMetaById(fileId);
 
     if (!file) {
       throw createError('File not found', 404);
