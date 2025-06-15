@@ -20,3 +20,16 @@ export async function createFolder(
 export async function findFolderByOwner(owner: string, parent: string | null) {
   return await Folder.find({ owner, parent: parent || null });
 }
+
+export async function getFoldersByUserId(id: string) {
+  return await Folder.find({
+    'sharedWith.user': id,
+  }).populate('owner', 'name email');
+}
+
+export async function getSharedFoldersByUserId(id: string) {
+  return await Folder.find({
+    owner: id,
+    'sharedWith.0': { $exists: true }, // Has at least one shared entry
+  }).populate('sharedWith.user', 'name email');
+}

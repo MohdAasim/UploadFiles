@@ -6,3 +6,24 @@ export async function getFileMetaByownerAndFolder(
 ) {
   return await FileMeta.find({ uploadedBy, parentFolder });
 }
+
+export async function getFileMetaById(id: string) {
+  return await FileMeta.findById(id);
+}
+
+export async function getFilesByUserID(id: string) {
+  return await FileMeta.find({
+    'sharedWith.user': id,
+  }).populate('uploadedBy', 'name email');
+}
+
+export async function getSharedFilesByUserID(id: string) {
+  return await FileMeta.find({
+    uploadedBy: id,
+    'sharedWith.0': { $exists: true }, // Has at least one shared entry
+  }).populate('sharedWith.user', 'name email');
+}
+
+export async function getFileMetaByFileId(id: string) {
+  return await FileMeta.findById(id).populate('sharedWith.user', 'name email');
+}
