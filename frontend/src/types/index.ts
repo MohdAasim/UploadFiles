@@ -23,6 +23,7 @@ export interface FileType {
   sharedWith: SharedEntry[];
   versions: FileVersion[];
   createdAt: string;
+  updatedAt: string; // Add this if missing
 }
 
 export interface FileVersion {
@@ -42,6 +43,7 @@ export interface FolderType {
   path: string;
   sharedWith: SharedEntry[];
   createdAt: string;
+  updatedAt: string; // Add this if missing
 }
 
 export interface SharedEntry {

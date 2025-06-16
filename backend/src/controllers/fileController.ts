@@ -46,13 +46,17 @@ export const listFiles = asyncHandler(
       throw createError('User not found', 401);
     }
 
-    const parentFolder = (req.query.parentFolder as string) || null; // Get parent folder from query params
+    const parentFolder = (req.query.parentFolder as string) || null;
 
     const files = await getFileMetaByownerAndFolder(req.user.id, parentFolder);
 
+    // Fix: Return the expected structure that frontend can parse
     res.json({
       success: true,
-      files,
+      data: {
+        files: files, // Wrap files in data object
+        count: files.length,
+      },
     });
   },
 );
@@ -98,5 +102,55 @@ export const previewFile = asyncHandler(
     });
 
     readStream.pipe(res);
+  },
+);
+
+// DELETE /api/files/:id (delete file)
+export const deleteFile = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const fileId = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      throw createError('User not authenticated', 401);
+    }
+
+    const file = await getFileMetaById(fileId);
+
+    if (!file) {
+      throw createError('File not found', 404);
+    }
+
+    // Check if user owns the file
+    if (file.uploadedBy.toString() !== userId) {
+      throw createError('Not authorized to delete this file', 403);
+    }
+
+    try {
+      // Delete physical file from filesystem
+      if (fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+
+      // Delete all versions if they exist
+      if (file.versions && file.versions.length > 0) {
+        file.versions.forEach(version => {
+          if (fs.existsSync(version.path)) {
+            fs.unlinkSync(version.path);
+          }
+        });
+      }
+
+      // Delete from database
+      await FileMeta.findByIdAndDelete(fileId);
+
+      res.json({
+        success: true,
+        message: 'File deleted successfully',
+      });
+    } catch (error) {
+      console.error('Delete file error:', error);
+      throw createError('Failed to delete file', 500);
+    }
   },
 );

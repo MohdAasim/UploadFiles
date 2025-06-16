@@ -1,13 +1,12 @@
 import axios from 'axios';
-import type { 
-  AuthResponse, 
-  ApiResponse, 
-  FileType, 
-  FolderType, 
-  SearchFilters,
+import type {
+  AuthResponse,
+  ApiResponse,
+  FileType,
+  FolderType,
   User,
-  OnlineUser
-} from '../types';
+  OnlineUser,
+} from "../types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -20,7 +19,7 @@ export const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,9 +33,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -45,42 +44,39 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (email: string, password: string) =>
-    api.post<AuthResponse>('/auth/login', { email, password }),
-  
+    api.post<AuthResponse>("/auth/login", { email, password }),
+
   register: (name: string, email: string, password: string) =>
-    api.post<AuthResponse>('/auth/register', { name, email, password }),
-  
-  getCurrentUser: () =>
-    api.get<ApiResponse<User>>('/auth/me'),
+    api.post<AuthResponse>("/auth/register", { name, email, password }),
+
+  getCurrentUser: () => api.get<ApiResponse<User>>("/auth/me"),
 };
 
 // Files API
 export const filesAPI = {
   uploadFile: (formData: FormData) =>
-    api.post<ApiResponse<FileType>>('/files/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    api.post<ApiResponse<FileType>>("/files/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     }),
-  
+
   getFiles: (parentFolder?: string) =>
-    api.get<ApiResponse<FileType[]>>('/files', {
+    api.get<ApiResponse<FileType[]>>("/files", {
       params: { parentFolder },
     }),
-  
+
   previewFile: (fileId: string) =>
     api.get(`/files/preview/${fileId}`, {
-      responseType: 'blob',
+      responseType: "blob",
     }),
-  
-  deleteFile: (fileId: string) =>
-    api.delete<ApiResponse>(`/files/${fileId}`),
-  
+
+  deleteFile: (fileId: string) => api.delete<ApiResponse>(`/files/${fileId}`),
+
   updateFile: (fileId: string, data: { originalName: string }) =>
     api.put<ApiResponse<FileType>>(`/files/${fileId}`, data),
 };
 
 // Folders API
 export const foldersAPI = {
-  // Updated createFolder method to support additional options
   createFolder: (
     name: string,
     parent?: string,
@@ -93,24 +89,64 @@ export const foldersAPI = {
     const data = {
       name,
       parent,
-      ...options, // Spread the additional options
+      ...options,
     };
     return api.post<ApiResponse<FolderType>>("/folders/create", data);
   },
 
-  getFolderTree: () => api.get<ApiResponse<FolderType[]>>("/folders/tree"),
+  // Get folder tree (files + folders in current directory)
+  getFolderTree: (parentFolder?: string) =>
+    api.get<
+      ApiResponse<{
+        folders: FolderType[];
+        files: FileType[];
+        folderCount: number;
+        fileCount: number;
+        currentFolder: string | null;
+      }>
+    >("/folders/tree", {
+      params: { parent: parentFolder },
+    }),
 
+  // Get all folders (for navigation/stats)
+  getAllFolders: () =>
+    api.get<ApiResponse<{ folders: FolderType[]; count: number }>>(
+      "/folders/all"
+    ),
+
+  // Delete folder
   deleteFolder: (folderId: string) =>
     api.delete<ApiResponse>(`/folders/${folderId}`),
 
+  // Update folder (rename)
   updateFolder: (folderId: string, data: { name: string }) =>
     api.put<ApiResponse<FolderType>>(`/folders/${folderId}`, data),
 };
 
-// Search API
+// Search API - simplified version
 export const searchAPI = {
-  search: (filters: SearchFilters) =>
-    api.get<ApiResponse>('/search', { params: filters }),
+  // Basic search using existing backend route
+  search: (params: {
+    q?: string;
+    type?: string;
+    inFolder?: string;
+    kind?: "file" | "folder" | "all";
+  }) => {
+    console.log('API: Making search request with params:', params);
+    return api.get<
+      ApiResponse<{
+        files: FileType[];
+        folders: FolderType[];
+        summary: {
+          totalFiles: number;
+          totalFolders: number;
+          searchQuery: string;
+          searchType: string;
+          searchKind: string;
+        };
+      }>
+    >("/search", { params });
+  },
 };
 
 // Share API

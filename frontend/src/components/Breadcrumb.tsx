@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-  Breadcrumbs,
-  Typography,
-  Link,
-  Box,
-} from '@mui/material';
-import { Home, NavigateNext } from '@mui/icons-material';
-import { useFolders } from '../hooks/useFiles';
+import { Breadcrumbs, Typography, Link, Box, IconButton } from "@mui/material";
+import { Home, NavigateNext, ArrowBack } from "@mui/icons-material";
+import { useFolders } from "../hooks/useFiles";
 
 interface BreadcrumbProps {
   currentFolder?: string;
@@ -54,7 +49,29 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   const breadcrumbPath = buildBreadcrumbPath(currentFolder);
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        mb: 2,
+        p: 1,
+        bgcolor: "grey.50",
+        borderRadius: 1,
+      }}
+    >
+      {/* Back Button */}
+      {currentFolder && (
+        <IconButton
+          onClick={() => onFolderClick(undefined)}
+          size="small"
+          sx={{ mr: 1 }}
+          title="Back to root"
+        >
+          <ArrowBack />
+        </IconButton>
+      )}
+
+      {/* Breadcrumbs */}
       <Breadcrumbs separator={<NavigateNext fontSize="small" />}>
         {breadcrumbPath.map((item, index) => {
           const isLast = index === breadcrumbPath.length - 1;
@@ -76,21 +93,13 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
             <Link
               key={item.id || "home"}
               component="button"
-              variant="body1"
+              variant="body2"
               onClick={() => onFolderClick(item.id)}
               sx={{
                 display: "flex",
                 alignItems: "center",
-                cursor: "pointer",
                 textDecoration: "none",
-                border: "none",
-                background: "none",
-                padding: 0,
-                font: "inherit",
-                color: "primary.main",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
+                "&:hover": { textDecoration: "underline" },
               }}
             >
               {index === 0 && <Home sx={{ mr: 0.5, fontSize: "1rem" }} />}

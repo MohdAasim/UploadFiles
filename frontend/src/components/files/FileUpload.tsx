@@ -36,6 +36,7 @@ import {
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import { useUploadFile, useBatchUpload } from "../../hooks/useFiles";
+import { useUploadContext } from "../../contexts/UploadContext";
 
 interface FileUploadProps {
   parentFolder?: string;
@@ -82,7 +83,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
   allowedTypes = [], // Empty means all types allowed
   maxFiles = 10,
 }) => {
+  // Create local state for this component's uploads instead of using global context
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+
   const [tabValue, setTabValue] = useState(0);
   const [batchMode, setBatchMode] = useState(false);
   const [autoUpload, setAutoUpload] = useState(true);
@@ -115,15 +118,10 @@ const FileUpload: React.FC<FileUploadProps> = ({
     error?: string
   ) => {
     setUploadingFiles((prev) =>
-      prev.map((f) =>
-        f.id === fileId
-          ? {
-              ...f,
-              progress,
-              ...(status && { status }),
-              ...(error && { error }),
-            }
-          : f
+      prev.map((file) =>
+        file.id === fileId
+          ? { ...file, progress, status: status || file.status, error }
+          : file
       )
     );
   };
@@ -134,7 +132,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       clearInterval(interval);
       intervalRefs.current.delete(fileId);
     }
-    setUploadingFiles((prev) => prev.filter((f) => f.id !== fileId));
+    setUploadingFiles((prev) => prev.filter((file) => file.id !== fileId));
   };
 
   const pauseUpload = (fileId: string) => {
@@ -202,7 +200,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return;
     }
 
-    // Fix: Create uploading file objects with proper typing
+    // Create uploading file objects with proper typing
     const newUploadingFiles: UploadingFile[] = validFiles.map((file) => ({
       file,
       progress: 0,
@@ -210,6 +208,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       status: autoUpload ? ("uploading" as const) : ("waiting" as const),
     }));
 
+    // Add to local state
     setUploadingFiles((prev) => [...prev, ...newUploadingFiles]);
 
     if (autoUpload) {
@@ -543,20 +542,41 @@ const FileUpload: React.FC<FileUploadProps> = ({
         </Box>
       )}
 
-      {/* Upload Progress List */}
+      {/* Upload Progress List - FIXED */}
       {uploadingFiles.length > 0 && (
         <Paper sx={{ mt: 2, p: 2 }}>
           <Typography variant="h6" gutterBottom>
             Upload Progress ({uploadingFiles.length} files)
           </Typography>
           <List>
-            {uploadingFiles.map((uploadingFile) => (
-              <ListItem key={uploadingFile.id} sx={{ px: 0 }}>
-                <Box sx={{ mr: 2 }}>{getStatusIcon(uploadingFile.status)}</Box>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="subtitle2" noWrap>
+            {uploadingFiles
+              .filter((uploadingFile) => uploadingFile && uploadingFile.file)
+              .map((uploadingFile, index) => (
+                <ListItem
+                  key={uploadingFile.id || index}
+                  sx={{ px: 0, flexDirection: "column", alignItems: "stretch" }}
+                >
+                  {/* Primary content */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      mb: 1,
+                    }}
+                  >
+                    <Box sx={{ mr: 2 }}>
+                      {getStatusIcon(uploadingFile.status)}
+                    </Box>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography variant="subtitle2" noWrap sx={{ flex: 1 }}>
                         {uploadingFile.file.name}
                       </Typography>
                       <Chip
@@ -566,62 +586,60 @@ const FileUpload: React.FC<FileUploadProps> = ({
                         variant="outlined"
                       />
                     </Box>
-                  }
-                  secondary={
-                    <Box sx={{ mt: 1 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={uploadingFile.progress}
-                        color={getProgressColor(uploadingFile.status)}
-                        sx={{ mb: 0.5 }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        {uploadingFile.status === "error" ? (
-                          <span style={{ color: "red" }}>
-                            Error: {uploadingFile.error}
-                          </span>
-                        ) : uploadingFile.status === "completed" ? (
-                          "Upload completed"
-                        ) : (
-                          `${uploadingFile.progress}% of ${formatFileSize(
-                            uploadingFile.file.size
-                          )}`
-                        )}
-                      </Typography>
+                    {/* Action buttons */}
+                    <Box sx={{ display: "flex", gap: 1, ml: 2 }}>
+                      {uploadingFile.status === "uploading" && (
+                        <IconButton
+                          size="small"
+                          onClick={() => pauseUpload(uploadingFile.id)}
+                          title="Pause"
+                        >
+                          <Pause />
+                        </IconButton>
+                      )}
+                      {uploadingFile.status === "paused" && (
+                        <IconButton
+                          size="small"
+                          onClick={() => resumeUpload(uploadingFile.id)}
+                          title="Resume"
+                        >
+                          <PlayArrow />
+                        </IconButton>
+                      )}
+                      <IconButton
+                        size="small"
+                        onClick={() => removeFile(uploadingFile.id)}
+                        title="Remove"
+                      >
+                        <Close />
+                      </IconButton>
                     </Box>
-                  }
-                />
-                <ListItemSecondaryAction>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    {uploadingFile.status === "uploading" && (
-                      <IconButton
-                        size="small"
-                        onClick={() => pauseUpload(uploadingFile.id)}
-                        title="Pause"
-                      >
-                        <Pause />
-                      </IconButton>
-                    )}
-                    {uploadingFile.status === "paused" && (
-                      <IconButton
-                        size="small"
-                        onClick={() => resumeUpload(uploadingFile.id)}
-                        title="Resume"
-                      >
-                        <PlayArrow />
-                      </IconButton>
-                    )}
-                    <IconButton
-                      size="small"
-                      onClick={() => removeFile(uploadingFile.id)}
-                      title="Remove"
-                    >
-                      <Close />
-                    </IconButton>
                   </Box>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
+
+                  {/* Progress bar and status */}
+                  <Box sx={{ width: "100%", pl: 6 }}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={uploadingFile.progress}
+                      color={getProgressColor(uploadingFile.status)}
+                      sx={{ mb: 0.5 }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      {uploadingFile.status === "error" ? (
+                        <span style={{ color: "red" }}>
+                          Error: {uploadingFile.error}
+                        </span>
+                      ) : uploadingFile.status === "completed" ? (
+                        "Upload completed"
+                      ) : (
+                        `${uploadingFile.progress}% of ${formatFileSize(
+                          uploadingFile.file.size
+                        )}`
+                      )}
+                    </Typography>
+                  </Box>
+                </ListItem>
+              ))}
           </List>
         </Paper>
       )}
