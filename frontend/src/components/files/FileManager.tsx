@@ -1,3 +1,4 @@
+/*eslint-disable */
 import React, { useState } from "react";
 import {
   Box,
@@ -14,25 +15,16 @@ import {
   MenuItem,
   Avatar,
   Chip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  CircularProgress,
 } from "@mui/material";
 import {
   MoreVert,
   CloudUpload,
   Folder,
-  InsertDriveFile,
   Delete,
-  Edit,
   Share,
   Download,
   Visibility,
-  Close,
-  OpenInNew,
+  History,
 } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -47,14 +39,20 @@ import {
 } from "../../utils/sweetAlert";
 import type { FileType, FolderType } from "../../types";
 import { api } from "../../services/api";
+import FileViewersIndicator from "./FileViewersIndicator";
+import { useViewing } from "../../contexts/ViewingContext";
+import ShareDialog from "../dialogs/ShareDialog";
+import PreviewDialog from "../dialogs/PreviewDialog";
+import VersionHistoryDialog from '../dialogs/VersionHistoryDialog';
+
 
 interface FileManagerProps {
   currentFolder?: string;
   onFolderClick: (folderId?: string) => void;
-  searchResults?: {
-    files: any[];
-    folders: any[];
-  } | null;
+  searchResults?: {data:{
+    files: FileType[];
+    folders: FolderType[];
+  } }| null;
 }
 
 // Create extended types with the type property
@@ -76,12 +74,30 @@ const FileManager: React.FC<FileManagerProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<ItemWithType | null>(null);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [previewContent, setPreviewContent] = useState<{
-    url: string;
+  const [selectedFileForPreview, setSelectedFileForPreview] = useState<{
+    id: string;
+    name: string;
     type: string;
+  } | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareResource, setShareResource] = useState<{
+    id: string;
+    type: 'file' | 'folder';
     name: string;
   } | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
+  const [versionDialogOpen, setVersionDialogOpen] = useState(false);
+  const [selectedFileForVersion, setSelectedFileForVersion] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const { startViewing } = useViewing();
+
+  // Add viewing handlers
+  const handleFileClick = (file: FileWithType) => {
+    startViewing(file._id);
+    // You can also open file preview here if needed
+  };
 
   // Use the new hook that gets both files and folders for current folder
   const {
@@ -94,20 +110,9 @@ const FileManager: React.FC<FileManagerProps> = ({
   const deleteFolder = useDeleteFolder();
 
   // Decide which data to use - search results or regular folder tree
-  const displayData = searchResults || folderTree;
-  const isLoading = searchResults ? false : treeLoading;
+  const displayData = searchResults?.data || folderTree;
+  const isLoading = searchResults?.data ? false : treeLoading;
   const error = searchResults ? null : treeError;
-
-  // Debug log for search results
-  React.useEffect(() => {
-    if (searchResults) {
-      console.log("FileManager: Using search results:", {
-        files: searchResults.files?.length || 0,
-        folders: searchResults.folders?.length || 0,
-        searchResults
-      });
-    }
-  }, [searchResults]);
 
   // Show loading state
   if (isLoading) {
@@ -135,14 +140,18 @@ const FileManager: React.FC<FileManagerProps> = ({
   const files = displayData?.files || [];
   const folders = displayData?.folders || [];
 
-  console.log("FileManager: Display data:", { files: files.length, folders: folders.length, isSearchResults: !!searchResults });
+  console.log("FileManager: Display data:", {
+    files: files.length,
+    folders: folders.length,
+    isSearchResults: !!searchResults,
+  });
 
   // Create combined items array
   const allItems: ItemWithType[] = [
     ...folders.map(
-      (folder): FolderWithType => ({ ...folder, type: "folder" as const })
+      (folder: FolderWithType )=> ({ ...folder, type: "folder" as const })
     ),
-    ...files.map((file): FileWithType => ({ ...file, type: "file" as const })),
+    ...files.map((file: FileWithType) => ({ ...file, type: "file" as const })),
   ];
 
   const handleMenuOpen = (
@@ -205,41 +214,16 @@ const FileManager: React.FC<FileManagerProps> = ({
   };
 
   const handlePreview = async (file: FileWithType) => {
-    setPreviewLoading(true);
+    setSelectedFileForPreview({
+      id: file._id,
+      name: file.originalName,
+      type: file.mimetype,
+    });
     setPreviewDialogOpen(true);
-
-    try {
-      // Use the configured API instance which includes auth headers
-      const response = await api.get(`/files/preview/${file._id}`, {
-        responseType: "blob",
-      });
-
-      // Create object URL for the blob
-      const blob = response.data;
-      const url = URL.createObjectURL(blob);
-
-      setPreviewContent({
-        url,
-        type: file.mimetype,
-        name: file.originalName,
-      });
-    } catch (error: any) {
-      console.error("Preview error:", error);
-      await showErrorAlert(
-        "Preview Failed",
-        "Unable to load file preview. The file might be corrupted or too large."
-      );
-      setPreviewDialogOpen(false);
-    } finally {
-      setPreviewLoading(false);
-    }
   };
 
   const handleClosePreview = () => {
-    if (previewContent?.url) {
-      URL.revokeObjectURL(previewContent.url);
-    }
-    setPreviewContent(null);
+    setSelectedFileForPreview(null);
     setPreviewDialogOpen(false);
   };
 
@@ -252,7 +236,6 @@ const FileManager: React.FC<FileManagerProps> = ({
       const blob = response.data;
       const url = URL.createObjectURL(blob);
 
-      // Create temporary download link
       const link = document.createElement("a");
       link.href = url;
       link.download = file.originalName;
@@ -260,7 +243,6 @@ const FileManager: React.FC<FileManagerProps> = ({
       link.click();
       document.body.removeChild(link);
 
-      // Clean up
       URL.revokeObjectURL(url);
     } catch (error: any) {
       await showErrorAlert(
@@ -301,97 +283,31 @@ const FileManager: React.FC<FileManagerProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const renderPreviewContent = () => {
-    if (!previewContent) return null;
+  const handleShare = (item: ItemWithType) => {
+    setShareResource({
+      id: item._id,
+      type: item.type,
+      name:
+        item.type === "file"
+          ? (item as FileWithType).originalName
+          : (item as FolderWithType).name,
+    });
+    setShareDialogOpen(true);
+    handleMenuClose();
+  };
 
-    const { url, type, name } = previewContent;
+  const handleVersionHistory = (file: FileWithType) => {
+    setSelectedFileForVersion({
+      id: file._id,
+      name: file.originalName,
+    });
+    setVersionDialogOpen(true);
+    handleMenuClose();
+  };
 
-    if (type.startsWith("image/")) {
-      return (
-        <img
-          src={url}
-          alt={name}
-          style={{
-            maxWidth: "100%",
-            maxHeight: "70vh",
-            objectFit: "contain",
-          }}
-        />
-      );
-    }
-
-    if (type.startsWith("video/")) {
-      return (
-        <video
-          src={url}
-          controls
-          style={{
-            maxWidth: "100%",
-            maxHeight: "70vh",
-          }}
-        >
-          Your browser does not support the video tag.
-        </video>
-      );
-    }
-
-    if (type.startsWith("audio/")) {
-      return (
-        <audio src={url} controls style={{ width: "100%" }}>
-          Your browser does not support the audio tag.
-        </audio>
-      );
-    }
-
-    if (type === "application/pdf") {
-      return (
-        <iframe
-          src={url}
-          style={{
-            width: "100%",
-            height: "70vh",
-            border: "none",
-          }}
-          title={name}
-        />
-      );
-    }
-
-    if (type.startsWith("text/") || type === "application/json") {
-      return (
-        <iframe
-          src={url}
-          style={{
-            width: "100%",
-            height: "70vh",
-            border: "1px solid #ccc",
-          }}
-          title={name}
-        />
-      );
-    }
-
-    // For other file types, show download option
-    return (
-      <Box sx={{ textAlign: "center", py: 4 }}>
-        <InsertDriveFile sx={{ fontSize: 64, color: "grey.400", mb: 2 }} />
-        <Typography variant="h6" gutterBottom>
-          Preview not available
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          This file type cannot be previewed in the browser.
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Download />}
-          onClick={() =>
-            selectedItem && handleDownload(selectedItem as FileWithType)
-          }
-        >
-          Download File
-        </Button>
-      </Box>
-    );
+  const handleCloseVersionDialog = () => {
+    setSelectedFileForVersion(null);
+    setVersionDialogOpen(false);
   };
 
   if (allItems.length === 0) {
@@ -402,7 +318,9 @@ const FileManager: React.FC<FileManagerProps> = ({
           {searchResults ? "No search results found" : "This folder is empty"}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {searchResults ? "Try different search terms" : "Upload files or create folders to get started"}
+          {searchResults
+            ? "Try different search terms"
+            : "Upload files or create folders to get started"}
         </Typography>
       </Box>
     );
@@ -437,6 +355,11 @@ const FileManager: React.FC<FileManagerProps> = ({
                     handleFolderDoubleClick(item as FolderWithType);
                   }
                 }}
+                onClick={() => {
+                  if (item.type === "file") {
+                    handleFileClick(item as FileWithType);
+                  }
+                }}
               >
                 <TableCell>
                   <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -444,9 +367,7 @@ const FileManager: React.FC<FileManagerProps> = ({
                       sx={{
                         mr: 2,
                         bgcolor:
-                          item.type === "folder"
-                            ? "primary.main"
-                            : "grey.100",
+                          item.type === "folder" ? "primary.main" : "grey.100",
                         width: 40,
                         height: 40,
                       }}
@@ -465,9 +386,26 @@ const FileManager: React.FC<FileManagerProps> = ({
                           ? (item as FileWithType).originalName
                           : (item as FolderWithType).name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.type === "file" ? "File" : "Folder"}
-                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          {item.type === "file" ? "File" : "Folder"}
+                        </Typography>
+                        {/* Add viewing indicator for files */}
+                        {item.type === "file" && (
+                          <FileViewersIndicator
+                            fileId={item._id}
+                            variant="compact"
+                            maxVisible={2}
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 </TableCell>
@@ -508,6 +446,10 @@ const FileManager: React.FC<FileManagerProps> = ({
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
       >
         {selectedItem?.type === "file" && (
           <MenuItem
@@ -518,6 +460,12 @@ const FileManager: React.FC<FileManagerProps> = ({
           >
             <Visibility sx={{ mr: 2 }} />
             Preview
+          </MenuItem>
+        )}
+        {selectedItem?.type === "file" && (
+          <MenuItem onClick={() => handleVersionHistory(selectedItem as FileWithType)}>
+            <History sx={{ mr: 2 }} />
+            Version History
           </MenuItem>
         )}
         {selectedItem?.type === "folder" && (
@@ -531,11 +479,7 @@ const FileManager: React.FC<FileManagerProps> = ({
             Open Folder
           </MenuItem>
         )}
-        <MenuItem onClick={handleMenuClose}>
-          <Edit sx={{ mr: 2 }} />
-          Rename
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={() => handleShare(selectedItem!)}>
           <Share sx={{ mr: 2 }} />
           Share
         </MenuItem>
@@ -556,82 +500,38 @@ const FileManager: React.FC<FileManagerProps> = ({
         </MenuItem>
       </Menu>
 
-      {/* Preview Dialog */}
-      <Dialog
+      {/* Preview Dialog - Now using the simplified component */}
+      <PreviewDialog
         open={previewDialogOpen}
         onClose={handleClosePreview}
-        maxWidth="lg"
-        fullWidth
-        sx={{
-          "& .MuiDialog-paper": {
-            maxHeight: "90vh",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+        fileId={selectedFileForPreview?.id}
+        fileName={selectedFileForPreview?.name}
+        fileType={selectedFileForPreview?.type}
+      />
+
+      {/* Share Dialog */}
+      {shareResource && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onClose={() => {
+            setShareDialogOpen(false);
+            setShareResource(null);
           }}
-        >
-          <Typography variant="h6" component="div" noWrap>
-            {previewContent?.name || "File Preview"}
-          </Typography>
-          <Box>
-            {previewContent && (
-              <IconButton
-                onClick={() => {
-                  const link = document.createElement("a");
-                  link.href = previewContent.url;
-                  link.target = "_blank";
-                  link.click();
-                }}
-                title="Open in new tab"
-              >
-                <OpenInNew />
-              </IconButton>
-            )}
-            <IconButton onClick={handleClosePreview}>
-              <Close />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {previewLoading ? (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                py: 4,
-              }}
-            >
-              <CircularProgress sx={{ mb: 2 }} />
-              <Typography>Loading preview...</Typography>
-            </Box>
-          ) : (
-            renderPreviewContent()
-          )}
-        </DialogContent>
-        <DialogActions>
-          {previewContent && selectedItem?.type === "file" && (
-            <Button
-              startIcon={<Download />}
-              onClick={() => handleDownload(selectedItem as FileWithType)}
-            >
-              Download
-            </Button>
-          )}
-          <Button onClick={handleClosePreview}>Close</Button>
-        </DialogActions>
-      </Dialog>
+          resourceId={shareResource.id}
+          resourceType={shareResource.type}
+          resourceName={shareResource.name}
+        />
+      )}
+
+      {/* Version History Dialog */}
+      {selectedFileForVersion && (
+        <VersionHistoryDialog
+          open={versionDialogOpen}
+          onClose={handleCloseVersionDialog}
+          fileId={selectedFileForVersion.id}
+          fileName={selectedFileForVersion.name}
+        />
+      )}
     </Box>
   );
 };

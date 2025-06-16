@@ -54,45 +54,97 @@ class SocketService {
   private socket: Socket | null = null;
   private isConnected = false;
   private listeners: Map<string, EventCallback[]> = new Map();
+  private connectionAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000;
+  private isConnecting = false;
 
   connect(token: string): void {
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
-    
-    this.socket = io(SOCKET_URL, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-    });
+    // Prevent multiple connection attempts
+    if (this.isConnecting || (this.socket && this.socket.connected)) {
+      console.log('Socket already connecting or connected');
+      return;
+    }
 
-    this.socket.on('connect', () => {
-      console.log('Connected to real-time server');
-      this.isConnected = true;
-      toast.success('Connected to real-time server');
-    });
+    this.isConnecting = true;
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from real-time server');
-      this.isConnected = false;
-      toast.error('Disconnected from real-time server');
-    });
+    console.log('Attempting to connect to socket server:', SOCKET_URL);
 
-    this.setupEventListeners();
+    try {
+      this.socket = io(SOCKET_URL, {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        timeout: 20000,
+        reconnection: true,
+        reconnectionDelay: this.reconnectDelay,
+        reconnectionAttempts: this.maxReconnectAttempts,
+        autoConnect: true,
+      });
+
+      this.socket.on("connect", () => {
+        console.log("Connected to real-time server");
+        this.isConnected = true;
+        this.isConnecting = false;
+        this.connectionAttempts = 0;
+        toast.success("Connected to real-time server");
+      });
+
+      this.socket.on("disconnect", (reason) => {
+        console.log("Disconnected from real-time server:", reason);
+        this.isConnected = false;
+        this.isConnecting = false;
+        
+        // Only show error toast for unexpected disconnections
+        if (reason !== 'io client disconnect') {
+          toast.error("Disconnected from real-time server");
+        }
+      });
+
+      this.socket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        this.isConnecting = false;
+        this.connectionAttempts++;
+        
+        if (this.connectionAttempts >= this.maxReconnectAttempts) {
+          toast.error("Failed to connect to real-time server");
+        }
+      });
+
+      this.socket.on("reconnect", (attemptNumber) => {
+        console.log(`Reconnected after ${attemptNumber} attempts`);
+        toast.success("Reconnected to real-time server");
+      });
+
+      this.socket.on("reconnect_failed", () => {
+        console.error("Failed to reconnect to socket server");
+        toast.error("Failed to reconnect to real-time server");
+        this.isConnecting = false;
+      });
+
+      this.setupEventListeners();
+    } catch (error) {
+      console.error('Error creating socket connection:', error);
+      this.isConnecting = false;
+      toast.error("Failed to initialize real-time connection");
+    }
   }
 
   private setupEventListeners(): void {
     if (!this.socket) return;
 
     // File events
-    this.socket.on('new-file-uploaded', (data: FileUploadedData) => {
+    this.socket.on("new-file-uploaded", (data: FileUploadedData) => {
       toast.success(`New file uploaded: ${data.file.originalName}`);
-      this.triggerEvent('fileListUpdated');
+      this.triggerEvent("fileListUpdated");
     });
 
-    this.socket.on('user-started-editing', (data: UserEditingData) => {
+    this.socket.on("user-started-editing", (data: UserEditingData) => {
       toast(`${data.userName} started editing a file`, {
-        icon: 'ℹ️',
+        icon: "ℹ️",
         duration: 3000,
       });
-      this.triggerEvent('userStartedEditing', data);
+      this.triggerEvent("userStartedEditing", data);
     });
 
     this.socket.on("user-stopped-editing", (data: UserEditingData) => {
@@ -145,9 +197,28 @@ class SocketService {
     });
 
     // Online users
-    this.socket.on('online-users', (users: OnlineUser[]) => {
+    this.socket.on("online-users", (users: OnlineUser[]) => {
       this.triggerEvent("onlineUsersUpdated", users);
     });
+  }
+
+  // File viewing events
+  startViewingFile(fileId: string) {
+    if (this.socket?.connected) {
+      console.log("Starting to view file:", fileId);
+      this.socket.emit("start-viewing-file", { fileId });
+    } else {
+      console.warn("Cannot start viewing file - socket not connected");
+    }
+  }
+
+  stopViewingFile(fileId: string) {
+    if (this.socket?.connected) {
+      console.log("Stopping viewing file:", fileId);
+      this.socket.emit("stop-viewing-file", { fileId });
+    } else {
+      console.warn("Cannot stop viewing file - socket not connected");
+    }
   }
 
   // Event emitter pattern for components to listen to socket events
@@ -172,7 +243,7 @@ class SocketService {
   private triggerEvent<T = unknown>(event: string, data?: T): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
-      callbacks.forEach(callback => callback(data));
+      callbacks.forEach((callback) => callback(data));
     }
   }
 
@@ -183,14 +254,14 @@ class SocketService {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
     } else {
-      console.warn('Socket not connected, cannot emit event:', event);
+      console.warn("Socket not connected, cannot emit event:", event);
     }
   }
 
   /*eslint-disable @typescript-eslint/no-explicit-any */
   // Specific method for file upload events
   public notifyFileUploaded(fileData: any, parentFolder?: string): void {
-    this.emit('file-uploaded', { fileData, parentFolder });
+    this.emit("file-uploaded", { fileData, parentFolder });
   }
 
   // File editing methods
@@ -213,9 +284,9 @@ class SocketService {
 
   // Notification methods
   sendNotification(
-    targetUserId: string, 
-    type: string, 
-    message: string, 
+    targetUserId: string,
+    type: string,
+    message: string,
     resourceId?: string
   ): void {
     this.emit("send-notification", {
@@ -237,15 +308,43 @@ class SocketService {
 
   disconnect(): void {
     if (this.socket) {
+      console.log('Disconnecting socket...');
+      this.isConnected = false;
+      this.isConnecting = false;
+      
+      // Remove all listeners before disconnecting
+      this.socket.removeAllListeners();
+      
+      // Gracefully disconnect
       this.socket.disconnect();
       this.socket = null;
-      this.isConnected = false;
+      
+      // Clear local listeners
       this.listeners.clear();
+      
+      console.log('Socket disconnected successfully');
     }
   }
 
+  // Method to check if socket should reconnect
+  public shouldReconnect(): boolean {
+    return !this.isConnected && !this.isConnecting && this.connectionAttempts < this.maxReconnectAttempts;
+  }
+
+  // Method to force reconnect
+  public forceReconnect(token: string): void {
+    this.disconnect();
+    setTimeout(() => {
+      this.connect(token);
+    }, 1000);
+  }
+
   get connected(): boolean {
-    return this.isConnected;
+    return this.isConnected && this.socket?.connected === true;
+  }
+
+  get connecting(): boolean {
+    return this.isConnecting;
   }
 }
 

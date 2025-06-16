@@ -6,7 +6,11 @@ import type {
   FolderType,
   User,
   OnlineUser,
+  BulkActionData,
+  BulkDeleteResponse,
+  BulkDeleteData,
 } from "../types";
+import type { MySharedResource, SharedResource, SharePermission } from '../types/sharing';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -154,19 +158,51 @@ export const shareAPI = {
   shareResource: (data: {
     resourceId: string;
     resourceType: 'file' | 'folder';
-    targetEmail: string;
+    targetUserEmail: string;
     permission: 'view' | 'edit' | 'admin';
   }) =>
-    api.post<ApiResponse>('/share', data),
+    api.post<ApiResponse<{
+      sharedWith: {
+        user: { id: string; name: string; email: string };
+        permission: string;
+        resourceType: string;
+      };
+    }>>('/share', data),
   
   getSharedWithMe: () =>
-    api.get<ApiResponse>('/share/shared-with-me'),
+    api.get<{
+      sharedWithMe: {
+        files: SharedResource[];
+        folders: SharedResource[];
+      };
+    }>('/share/shared-with-me'),
+  
+  getMySharedResources: () =>
+    api.get<{
+      mySharedResources: {
+        files: MySharedResource[];
+        folders: MySharedResource[];
+      };
+    }>('/share/my-shared'),
   
   getFilePermissions: (fileId: string) =>
-    api.get<ApiResponse>(`/share/file/${fileId}/permissions`),
+    api.get<ApiResponse<{
+      file: { id: string; name: string; owner: string };
+      permissions: SharePermission[];
+    }>>(`/share/file/${fileId}/permissions`),
   
   getFolderPermissions: (folderId: string) =>
-    api.get<ApiResponse>(`/share/folder/${folderId}/permissions`),
+    api.get<ApiResponse<{
+      folder: { id: string; name: string; owner: string };
+      permissions: SharePermission[];
+    }>>(`/share/folder/${folderId}/permissions`),
+  
+  removePermission: (data: {
+    resourceId: string;
+    resourceType: 'file' | 'folder';
+    targetUserEmail: string;
+  }) =>
+    api.delete<ApiResponse>('/share/permission', { data }),
 };
 
 // Versions API
@@ -185,13 +221,26 @@ export const versionsAPI = {
 
 // Bulk API
 export const bulkAPI = {
-  bulkAction: (data: {
-    action: 'delete' | 'move' | 'download';
-    files?: string[];
-    folders?: string[];
-    targetFolder?: string;
-  }) =>
-    api.post<ApiResponse>('/bulk', data),
+  bulkAction: (data: BulkActionData) =>
+    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', data),
+  
+  bulkDelete: (data: BulkDeleteData) =>
+    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', {
+      action: 'delete',
+      ...data,
+    }),
+  
+  bulkMove: (data: { files: string[]; folders: string[]; targetFolder: string }) =>
+    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', {
+      action: 'move',
+      ...data,
+    }),
+  
+  bulkDownload: (data: { files: string[]; folders: string[] }) =>
+    api.post<ApiResponse<{ files: Array<{ id: string; name: string; downloadUrl: string; size: number; mimetype: string }>; folders: string[] }>>('/api/v1/bulk', {
+      action: 'download',
+      ...data,
+    }),
 };
 
 // Real-time API

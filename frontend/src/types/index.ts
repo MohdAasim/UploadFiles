@@ -31,8 +31,21 @@ export interface FileVersion {
   filename: string;
   path: string;
   uploadedAt: string;
-  uploadedBy: string;
+  uploadedBy: {
+    id: string;
+    name: string;
+    email: string;
+  };
   remark?: string;
+}
+
+export interface VersionHistoryData {
+  file: {
+    id: string;
+    originalName: string;
+    currentVersion: number;
+  };
+  versions: FileVersion[];
 }
 
 export interface FolderType {
@@ -120,6 +133,18 @@ export interface BulkActionData {
   files?: string[];
   folders?: string[];
   targetFolder?: string;
+}
+
+export interface BulkDeleteData {
+  files: string[];
+  folders: string[];
+}
+
+export interface BulkDeleteResponse {
+  success: boolean;
+  message: string;
+  deletedFiles: number;
+  deletedFolders: number;
 }
 
 export interface ShareResourceData {
@@ -241,4 +266,12 @@ export interface ToastNotification {
   message: string;
   duration?: number;
   persistent?: boolean;
+}
+
+export interface SelectableItem {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  size?: number;
+  parentFolder?: string;
 }

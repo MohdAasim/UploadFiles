@@ -3,8 +3,10 @@ import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User';
+import { handleViewingEvents } from './viewingEvents';
 
-interface AuthenticatedSocket extends Socket {
+
+export interface AuthenticatedSocket extends Socket {
   userId?: string;
   userData?: any;
 }
@@ -66,6 +68,8 @@ export class SocketServer {
   private setupEventHandlers() {
     this.io.on('connection', (socket: AuthenticatedSocket) => {
       console.log(`User ${socket.userData.name} connected: ${socket.id}`);
+      //handle viewing events
+      handleViewingEvents(this.io, socket);
 
       // Add user to connected users
       this.connectedUsers.set(socket.userId!, {

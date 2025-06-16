@@ -4,9 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Toaster } from 'react-hot-toast';
-
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UploadProvider } from "./contexts/UploadContext";
+import { ViewingProvider } from './contexts/ViewingContext';
 import Layout from "./components/layout/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -15,6 +15,8 @@ import FilesPage from "./pages/FilesPage";
 import FoldersPage from "./pages/FoldersPage";
 import UploadQueue from "./components/files/UploadQueue";
 import { useUploadContext } from "./contexts/UploadContext";
+import SharedPage from './pages/SharedPage';
+import LoadingSpinner from './components/common/LoadingSpinner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,7 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><LoadingSpinner /></div>;
   }
 
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -58,7 +60,7 @@ const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><LoadingSpinner /></div>;
   }
 
   return user ? <Navigate to="/dashboard" /> : <>{children}</>;
@@ -98,76 +100,80 @@ function App() {
         <CssBaseline />
         <AuthProvider>
           <UploadProvider>
-            <Router>
-              <Routes>
-                <Route
-                  path="/login"
-                  element={
-                    <PublicRoute>
-                      <LoginPage />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/register"
-                  element={
-                    <PublicRoute>
-                      <RegisterPage />
-                    </PublicRoute>
-                  }
-                />
-                <Route
-                  path="/*"
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Routes>
-                          <Route
-                            path="/dashboard"
-                            element={<DashboardPage />}
-                          />
-                          <Route path="/files" element={<FilesPage />} />
-                          <Route path="/folders" element={<FoldersPage />} />
-                          <Route
-                            path="/"
-                            element={<Navigate to="/dashboard" />}
-                          />
-                          <Route
-                            path="*"
-                            element={<Navigate to="/dashboard" />}
-                          />
-                        </Routes>
-                      </Layout>
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-              <UploadQueueContainer />
-            </Router>
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: "#363636",
-                  color: "#fff",
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: "#4aed88",
-                    secondary: "#fff",
+            {/* Wrap the app in ViewingProvider to manage file viewing state */}
+            <ViewingProvider>
+              <Router>
+                <Routes>
+                  <Route
+                    path="/login"
+                    element={
+                      <PublicRoute>
+                        <LoginPage />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/register"
+                    element={
+                      <PublicRoute>
+                        <RegisterPage />
+                      </PublicRoute>
+                    }
+                  />
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Routes>
+                            <Route
+                              path="/dashboard"
+                              element={<DashboardPage />}
+                            />
+                            <Route path="/files" element={<FilesPage />} />
+                            <Route path="/folders" element={<FoldersPage />} />
+                            <Route path="/shared" element={<SharedPage />} />
+                            <Route
+                              path="/"
+                              element={<Navigate to="/dashboard" />}
+                            />
+                            <Route
+                              path="*"
+                              element={<Navigate to="/dashboard" />}
+                            />
+                          </Routes>
+                        </Layout>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+                <UploadQueueContainer />
+              </Router>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: "#363636",
+                    color: "#fff",
                   },
-                },
-                error: {
-                  duration: 5000,
-                  iconTheme: {
-                    primary: "#ff6b6b",
-                    secondary: "#fff",
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: "#4aed88",
+                      secondary: "#fff",
+                    },
                   },
-                },
-              }}
-            />
+                  error: {
+                    duration: 5000,
+                    iconTheme: {
+                      primary: "#ff6b6b",
+                      secondary: "#fff",
+                    },
+                  },
+                }}
+              />
+            </ViewingProvider>
           </UploadProvider>
         </AuthProvider>
       </ThemeProvider>

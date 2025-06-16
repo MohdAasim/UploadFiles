@@ -73,8 +73,11 @@ export const previewFile = asyncHandler(
       throw createError('File not found', 404);
     }
 
+   
+    const sharedId = file.sharedWith.find((sharedUser: any) => sharedUser.user.toString() === userId);
+
     // Check permissions: Only owner can preview
-    if (file.uploadedBy.toString() !== userId) {
+    if (file.uploadedBy.toString() !== userId && !sharedId) {
       throw createError('Not authorized to preview this file', 403);
     }
 

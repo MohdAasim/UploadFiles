@@ -17,10 +17,7 @@ import {
   InputAdornment,
   IconButton,
   Chip,
-  Alert,
-  Grid,
-  Avatar,
-} from "@mui/material";
+  Alert,} from "@mui/material";
 import {
   CloudUpload,
   Folder,
@@ -32,7 +29,7 @@ import {
   Clear,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
-import { useFiles, useFolders, useFolderTree } from "../hooks/useFiles";
+import { useFolders, useFolderTree } from "../hooks/useFiles";
 import { useSearch } from "../hooks/useSearch";
 import { useDebounce } from "../hooks/useDebounce";
 import FileManager from "../components/files/FileManager";
@@ -40,11 +37,15 @@ import FileUpload from "../components/files/FileUpload";
 import BulkUpload from "../components/files/BulkUpload";
 import CreateFolderDialog from "../components/dialogs/CreateFolderDialog";
 import Breadcrumb from "../components/Breadcrumb";
+import type { FileType, FolderType } from "../types";
 
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+}
+interface searchResultsType {
+  data: { files: FileType[]; folders: FolderType[] };
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -75,7 +76,7 @@ const DashboardPage: React.FC = () => {
 
   // Search state with longer debounce (3 seconds)
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedQuery = useDebounce(searchQuery, 3000); // 3 second delay
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
   // Use the new hook that gets both files and folders for current directory
   const {
@@ -108,7 +109,7 @@ const DashboardPage: React.FC = () => {
 
   const showSearchResults = debouncedQuery.length >= 2;
 
-  // Memoize stats calculation
+  // Memoize stats calculation with proper TypeScript typing
   const stats = useMemo(() => {
     const currentFiles = folderTree?.files || [];
     const currentFolders = folderTree?.folders || [];
@@ -117,7 +118,10 @@ const DashboardPage: React.FC = () => {
     const fileCount = currentFiles.length;
     const folderCount = currentFolders.length;
     const totalFolderCount = totalFolders.length;
-    const totalSize = currentFiles.reduce((acc, f) => acc + (f.size || 0), 0);
+    const totalSize = currentFiles.reduce(
+      (acc: number, f: FileType) => acc + (f.size || 0),
+      0
+    );
     const sizeInMB = totalSize / 1024 / 1024;
 
     return [
@@ -149,54 +153,66 @@ const DashboardPage: React.FC = () => {
   }, [folderTree, allFolders]);
 
   // Memoize event handlers
-  const handleTabChange = React.useCallback((_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  }, []);
+  const handleTabChange = React.useCallback(
+    (_event: React.SyntheticEvent, newValue: number) => {
+      setTabValue(newValue);
+    },
+    []
+  );
 
-  const handleSearchChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    console.log("Dashboard: Search input changed:", value);
-    setSearchQuery(value);
-  }, []);
+  const handleSearchChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      console.log("Dashboard: Search input changed:", value);
+      setSearchQuery(value);
+    },
+    []
+  );
 
   const handleClearSearch = React.useCallback(() => {
     setSearchQuery("");
   }, []);
 
-  const handleFolderClick = React.useCallback((folderId?: string) => {
-    setCurrentFolder(folderId);
-    // Clear search when navigating to a folder
-    if (searchQuery) {
-      setSearchQuery("");
-    }
-  }, [searchQuery]);
+  const handleFolderClick = React.useCallback(
+    (folderId?: string) => {
+      setCurrentFolder(folderId);
+      // Clear search when navigating to a folder
+      if (searchQuery) {
+        setSearchQuery("");
+      }
+    },
+    [searchQuery]
+  );
 
   // Define Speed Dial Actions
-  const speedDialActions = useMemo(() => [
-    {
-      name: "Upload Files",
-      icon: <CloudUpload />,
-      onClick: () => setUploadDialogOpen(true),
-    },
-    {
-      name: "Bulk Upload",
-      icon: <CloudQueue />,
-      onClick: () => setBulkUploadOpen(true),
-    },
-    {
-      name: "New Folder",
-      icon: <Folder />,
-      onClick: () => setCreateFolderDialogOpen(true),
-    },
-    {
-      name: "Share",
-      icon: <Share />,
-      onClick: () => {
-        // Add share functionality here
-        console.log("Share clicked");
+  const speedDialActions = useMemo(
+    () => [
+      {
+        name: "Upload Files",
+        icon: <CloudUpload />,
+        onClick: () => setUploadDialogOpen(true),
       },
-    },
-  ], []);
+      {
+        name: "Bulk Upload",
+        icon: <CloudQueue />,
+        onClick: () => setBulkUploadOpen(true),
+      },
+      {
+        name: "New Folder",
+        icon: <Folder />,
+        onClick: () => setCreateFolderDialogOpen(true),
+      },
+      {
+        name: "Share",
+        icon: <Share />,
+        onClick: () => {
+          // Add share functionality here
+          console.log("Share clicked");
+        },
+      },
+    ],
+    []
+  );
 
   // Debug log with less frequency
   React.useEffect(() => {
@@ -208,7 +224,14 @@ const DashboardPage: React.FC = () => {
       searchLoading,
       searchError: !!searchError,
     });
-  }, [searchQuery, debouncedQuery, showSearchResults, searchResults, searchLoading, searchError]);
+  }, [
+    searchQuery,
+    debouncedQuery,
+    showSearchResults,
+    searchResults,
+    searchLoading,
+    searchError,
+  ]);
 
   return (
     <Box>
@@ -232,10 +255,24 @@ const DashboardPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* Stats Cards - Using Box instead of Grid */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          mb: 4,
+        }}
+      >
         {stats.map((stat, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
+          <Box
+            key={index}
+            sx={{
+              flex: "1 1 300px",
+              minWidth: "250px",
+              maxWidth: "300px",
+            }}
+          >
             <Card sx={{ height: "100%" }}>
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -265,9 +302,9 @@ const DashboardPage: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
 
       {/* File Management Section */}
       <Paper sx={{ mt: 4 }}>
@@ -285,7 +322,7 @@ const DashboardPage: React.FC = () => {
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
-                placeholder="Search files and folders by name... (search starts after 3 seconds pause)"
+                placeholder="Search files and folders by name..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 variant="outlined"
@@ -371,8 +408,8 @@ const DashboardPage: React.FC = () => {
                       </Typography>
                       <Chip
                         label={`${
-                          (searchResults.files?.length || 0) +
-                          (searchResults.folders?.length || 0)
+                          ((searchResults as any).files?.length || 0) +
+                          ((searchResults as any).folders?.length || 0)
                         } items found`}
                         size="small"
                         color="primary"
@@ -429,7 +466,9 @@ const DashboardPage: React.FC = () => {
             <FileManager
               currentFolder={currentFolder}
               onFolderClick={handleFolderClick}
-              searchResults={showSearchResults ? searchResults : null}
+              searchResults={
+                showSearchResults ? (searchResults as searchResultsType) : null
+              }
             />
           </Box>
         </TabPanel>
