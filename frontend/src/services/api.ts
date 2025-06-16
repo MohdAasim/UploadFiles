@@ -80,15 +80,29 @@ export const filesAPI = {
 
 // Folders API
 export const foldersAPI = {
-  createFolder: (name: string, parent?: string) =>
-    api.post<ApiResponse<FolderType>>('/folders/create', { name, parent }),
-  
-  getFolderTree: () =>
-    api.get<ApiResponse<FolderType[]>>('/folders/tree'),
-  
+  // Updated createFolder method to support additional options
+  createFolder: (
+    name: string,
+    parent?: string,
+    options?: {
+      description?: string;
+      tags?: string[];
+      isTemplate?: boolean;
+    }
+  ) => {
+    const data = {
+      name,
+      parent,
+      ...options, // Spread the additional options
+    };
+    return api.post<ApiResponse<FolderType>>("/folders/create", data);
+  },
+
+  getFolderTree: () => api.get<ApiResponse<FolderType[]>>("/folders/tree"),
+
   deleteFolder: (folderId: string) =>
     api.delete<ApiResponse>(`/folders/${folderId}`),
-  
+
   updateFolder: (folderId: string, data: { name: string }) =>
     api.put<ApiResponse<FolderType>>(`/folders/${folderId}`, data),
 };

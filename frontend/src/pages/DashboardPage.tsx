@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/*eslint-disable*/
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -10,14 +11,26 @@ import {
   Tab,
   Dialog,
   Fab,
-} from '@mui/material';
-import { CloudUpload, Folder, Share, Storage, Add } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useFiles, useFolders } from '../hooks/useFiles';
-import FileManager from '../components/files/FileManager';
-import FileUpload from '../components/files/FileUpload';
-import CreateFolderDialog from '../components/folders/CreateFolderDialog';
-import Breadcrumb from '../components/Breadcrumb';
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+} from "@mui/material";
+import {
+  CloudUpload,
+  Folder,
+  Share,
+  Storage,
+  Add,
+  FolderOpen,
+  CloudQueue,
+} from "@mui/icons-material";
+import { useAuth } from "../contexts/AuthContext";
+import { useFiles, useFolders } from "../hooks/useFiles";
+import FileManager from "../components/files/FileManager";
+import FileUpload from "../components/files/FileUpload";
+import BulkUpload from "../components/files/BulkUpload";
+import CreateFolderDialog from "../components/dialogs/CreateFolderDialog";
+import Breadcrumb from "../components/Breadcrumb";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,39 +57,52 @@ function TabPanel(props: TabPanelProps) {
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [tabValue, setTabValue] = useState(0);
-  const [currentFolder, setCurrentFolder] = useState<string | undefined>(undefined);
+  const [currentFolder, setCurrentFolder] = useState<string | undefined>(
+    undefined
+  );
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
 
   const { data: files } = useFiles(currentFolder);
   const { data: folders } = useFolders();
 
-  const stats = [
-    { 
-      label: 'Total Files', 
-      value: files?.length.toString() || '0', 
-      icon: <CloudUpload />, 
-      color: '#1976d2' 
-    },
-    { 
-      label: 'Folders', 
-      value: folders?.length.toString() || '0', 
-      icon: <Folder />, 
-      color: '#2e7d32' 
-    },
-    { 
-      label: 'Shared Files', 
-      value: files?.filter(f => f.sharedWith.length > 0).length.toString() || '0', 
-      icon: <Share />, 
-      color: '#ed6c02' 
-    },
-    { 
-      label: 'Storage Used', 
-      value: files ? `${(files.reduce((acc, f) => acc + f.size, 0) / 1024 / 1024).toFixed(1)} MB` : '0 MB', 
-      icon: <Storage />, 
-      color: '#9c27b0' 
-    },
-  ];
+  const stats = useMemo(() => {
+    const fileCount = files?.length ?? 0;
+    const folderCount = folders?.length ?? 0;
+    const sharedFileCount =
+      files?.filter((f) => f.sharedWith && f.sharedWith.length > 0)?.length ??
+      0;
+    const totalSize = files?.reduce((acc, f) => acc + (f.size || 0), 0) ?? 0;
+    const sizeInMB = totalSize / 1024 / 1024;
+
+    return [
+      {
+        label: "Total Files",
+        value: fileCount.toString(),
+        icon: <CloudUpload />,
+        color: "#1976d2",
+      },
+      {
+        label: "Folders",
+        value: folderCount.toString(),
+        icon: <Folder />,
+        color: "#2e7d32",
+      },
+      {
+        label: "Shared Files",
+        value: sharedFileCount.toString(),
+        icon: <Share />,
+        color: "#ed6c02",
+      },
+      {
+        label: "Storage Used",
+        value: sizeInMB > 0 ? `${sizeInMB.toFixed(1)} MB` : "0 MB",
+        icon: <Storage />,
+        color: "#9c27b0",
+      },
+    ];
+  }, [files, folders]);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -85,6 +111,24 @@ const DashboardPage: React.FC = () => {
   const handleFolderClick = (folderId?: string) => {
     setCurrentFolder(folderId);
   };
+
+  const speedDialActions = [
+    {
+      icon: <CloudUpload />,
+      name: "Upload Files",
+      onClick: () => setUploadDialogOpen(true),
+    },
+    {
+      icon: <CloudQueue />,
+      name: "Bulk Upload",
+      onClick: () => setBulkUploadOpen(true),
+    },
+    {
+      icon: <FolderOpen />,
+      name: "New Folder",
+      onClick: () => setCreateFolderDialogOpen(true),
+    },
+  ];
 
   return (
     <Box>
@@ -99,22 +143,22 @@ const DashboardPage: React.FC = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Box 
-        sx={{ 
-          display: 'grid',
+      <Box
+        sx={{
+          display: "grid",
           gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(4, 1fr)'
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(4, 1fr)",
           },
           gap: 3,
-          mb: 4
+          mb: 4,
         }}
       >
         {stats.map((stat, index) => (
-          <Card key={index} sx={{ height: '100%' }}>
+          <Card key={index} sx={{ height: "100%" }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Box
                   sx={{
                     p: 1,
@@ -127,7 +171,11 @@ const DashboardPage: React.FC = () => {
                   {stat.icon}
                 </Box>
                 <Box>
-                  <Typography variant="h4" component="div" sx={{ fontWeight: 600 }}>
+                  <Typography
+                    variant="h4"
+                    component="div"
+                    sx={{ fontWeight: 600 }}
+                  >
                     {stat.value}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -142,22 +190,30 @@ const DashboardPage: React.FC = () => {
 
       {/* File Management Section */}
       <Paper sx={{ mt: 4 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabValue} onChange={handleTabChange}>
             <Tab label="Files & Folders" />
             <Tab label="Upload Files" />
+            <Tab label="Bulk Upload" />
           </Tabs>
         </Box>
 
         <TabPanel value={tabValue} index={0}>
           {/* Action Buttons */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
             <Button
               variant="contained"
               startIcon={<CloudUpload />}
               onClick={() => setUploadDialogOpen(true)}
             >
               Upload Files
+            </Button>
+            <Button
+              variant="outlined"
+              startIcon={<CloudQueue />}
+              onClick={() => setBulkUploadOpen(true)}
+            >
+              Bulk Upload
             </Button>
             <Button
               variant="outlined"
@@ -169,38 +225,63 @@ const DashboardPage: React.FC = () => {
           </Box>
 
           {/* Breadcrumb Navigation */}
-          <Breadcrumb 
-            currentFolder={currentFolder} 
+          <Breadcrumb
+            currentFolder={currentFolder}
             onFolderClick={handleFolderClick}
           />
 
           {/* File Manager */}
-          <FileManager 
+          <FileManager
             currentFolder={currentFolder}
             onFolderClick={handleFolderClick}
           />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
-          <FileUpload 
+          <FileUpload
             parentFolder={currentFolder}
             onUploadComplete={() => setTabValue(0)}
+            maxFileSize={100}
+            maxFiles={20}
           />
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={2}>
+          <Box sx={{ p: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<CloudQueue />}
+              onClick={() => setBulkUploadOpen(true)}
+            >
+              Open Bulk Upload
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Upload entire folders with their structure preserved.
+            </Typography>
+          </Box>
         </TabPanel>
       </Paper>
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => setCreateFolderDialogOpen(true)}
+      {/* Speed Dial */}
+      <SpeedDial
+        ariaLabel="Upload actions"
+        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon />}
       >
-        <Add />
-      </Fab>
+        {speedDialActions.map((action) => (
+          <SpeedDialAction
+            key={action.name}
+            icon={action.icon}
+            tooltipTitle={action.name}
+            onClick={action.onClick}
+          />
+        ))}
+      </SpeedDial>
 
       {/* Upload Dialog */}
-      <Dialog 
-        open={uploadDialogOpen} 
+      <Dialog
+        open={uploadDialogOpen}
         onClose={() => setUploadDialogOpen(false)}
         maxWidth="md"
         fullWidth
@@ -209,15 +290,28 @@ const DashboardPage: React.FC = () => {
           <Typography variant="h6" gutterBottom>
             Upload Files
           </Typography>
-          <FileUpload 
+          <FileUpload
             parentFolder={currentFolder}
             onUploadComplete={() => {
               setUploadDialogOpen(false);
               setTabValue(0);
             }}
+            maxFileSize={100}
+            maxFiles={20}
           />
         </Box>
       </Dialog>
+
+      {/* Bulk Upload Dialog */}
+      <BulkUpload
+        open={bulkUploadOpen}
+        onClose={() => setBulkUploadOpen(false)}
+        parentFolder={currentFolder}
+        onUploadComplete={() => {
+          setBulkUploadOpen(false);
+          setTabValue(0);
+        }}
+      />
 
       {/* Create Folder Dialog */}
       <CreateFolderDialog

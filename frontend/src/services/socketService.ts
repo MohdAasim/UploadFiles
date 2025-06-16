@@ -84,7 +84,7 @@ class SocketService {
     // File events
     this.socket.on('new-file-uploaded', (data: FileUploadedData) => {
       toast.success(`New file uploaded: ${data.file.originalName}`);
-      this.emit('fileListUpdated');
+      this.triggerEvent('fileListUpdated');
     });
 
     this.socket.on('user-started-editing', (data: UserEditingData) => {
@@ -92,59 +92,61 @@ class SocketService {
         icon: 'ℹ️',
         duration: 3000,
       });
-      this.emit('userStartedEditing', data);
+      this.triggerEvent('userStartedEditing', data);
     });
 
-    this.socket.on('user-stopped-editing', (data: UserEditingData) => {
-      this.emit('userStoppedEditing', data);
+    this.socket.on("user-stopped-editing", (data: UserEditingData) => {
+      this.triggerEvent("userStoppedEditing", data);
     });
 
-    this.socket.on('file-being-edited', (data: FileBeingEditedData) => {
+    this.socket.on("file-being-edited", (data: FileBeingEditedData) => {
       toast(`File is being edited by ${data.editor.userName}`, {
-        icon: '⚠️',
+        icon: "⚠️",
         duration: 4000,
       });
     });
 
     // Sharing events
-    this.socket.on('resource-shared-with-you', (data: ResourceSharedData) => {
-      toast.success(`${data.sharedBy.name} shared a ${data.resourceType} with you`);
-      this.emit('resourceShared', data);
+    this.socket.on("resource-shared-with-you", (data: ResourceSharedData) => {
+      toast.success(
+        `${data.sharedBy.name} shared a ${data.resourceType} with you`
+      );
+      this.triggerEvent("resourceShared", data);
     });
 
-    this.socket.on('permission-updated', (data: PermissionUpdatedData) => {
+    this.socket.on("permission-updated", (data: PermissionUpdatedData) => {
       toast(`Your permission was updated by ${data.updatedBy.name}`, {
-        icon: 'ℹ️',
+        icon: "ℹ️",
         duration: 4000,
       });
-      this.emit('permissionUpdated', data);
+      this.triggerEvent("permissionUpdated", data);
     });
 
     // Notifications
-    this.socket.on('notification', (data: NotificationData) => {
+    this.socket.on("notification", (data: NotificationData) => {
       const getIcon = (type: string): string => {
         switch (type) {
-          case 'error':
-            return '❌';
-          case 'warning':
-            return '⚠️';
-          case 'success':
-            return '✅';
+          case "error":
+            return "❌";
+          case "warning":
+            return "⚠️";
+          case "success":
+            return "✅";
           default:
-            return 'ℹ️';
+            return "ℹ️";
         }
       };
 
-      toast(data.message, { 
+      toast(data.message, {
         icon: getIcon(data.type),
         duration: 4000,
       });
-      this.emit('notification', data);
+      this.triggerEvent("notification", data);
     });
 
     // Online users
     this.socket.on('online-users', (users: OnlineUser[]) => {
-      this.emit('onlineUsersUpdated', users);
+      this.triggerEvent("onlineUsersUpdated", users);
     });
   }
 
@@ -166,29 +168,47 @@ class SocketService {
     }
   }
 
-  private emit<T = unknown>(event: string, data?: T): void {
+  // Make this method private since it's for internal event triggering
+  private triggerEvent<T = unknown>(event: string, data?: T): void {
     const callbacks = this.listeners.get(event);
     if (callbacks) {
       callbacks.forEach(callback => callback(data));
     }
   }
 
+  // PUBLIC METHODS - Add these public methods for emitting socket events
+
+  // Public method to emit socket events to the server
+  public emit<T = unknown>(event: string, data?: T): void {
+    if (this.socket?.connected) {
+      this.socket.emit(event, data);
+    } else {
+      console.warn('Socket not connected, cannot emit event:', event);
+    }
+  }
+
+  /*eslint-disable @typescript-eslint/no-explicit-any */
+  // Specific method for file upload events
+  public notifyFileUploaded(fileData: any, parentFolder?: string): void {
+    this.emit('file-uploaded', { fileData, parentFolder });
+  }
+
   // File editing methods
   startEditingFile(fileId: string): void {
-    this.socket?.emit('start-editing-file', { fileId });
+    this.emit("start-editing-file", { fileId });
   }
 
   stopEditingFile(fileId: string): void {
-    this.socket?.emit('stop-editing-file', { fileId });
+    this.emit("stop-editing-file", { fileId });
   }
 
   // Collaboration methods
   joinCollaboration(resourceId: string): void {
-    this.socket?.emit('join-collaboration', { resourceId });
+    this.emit("join-collaboration", { resourceId });
   }
 
   leaveCollaboration(resourceId: string): void {
-    this.socket?.emit('leave-collaboration', { resourceId });
+    this.emit("leave-collaboration", { resourceId });
   }
 
   // Notification methods
@@ -198,21 +218,21 @@ class SocketService {
     message: string, 
     resourceId?: string
   ): void {
-    this.socket?.emit('send-notification', {
+    this.emit("send-notification", {
       targetUserId,
       type,
       message,
-      resourceId
+      resourceId,
     });
   }
 
   // Utility methods
   getOnlineUsers(): void {
-    this.socket?.emit('get-online-users');
+    this.emit("get-online-users");
   }
 
   checkUserOnline(userId: string): void {
-    this.socket?.emit('check-user-online', { userId });
+    this.emit("check-user-online", { userId });
   }
 
   disconnect(): void {
