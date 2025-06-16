@@ -6,6 +6,6 @@ import validateRequest from '../middlewares/validateRequest';
 const router = Router();
 
 router.post('/register', validateRequest(signupSchema), register);
-router.post('/login', validateRequest(loginSchema),login);
+router.post('/login', validateRequest(loginSchema), login);
 
 export default router;

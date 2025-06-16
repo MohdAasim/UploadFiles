@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { 
-  getOnlineUsers, 
+import {
+  getOnlineUsers,
   getFileEditingStatus,
-  notifyUser
+  notifyUser,
 } from '../controllers/realtimeController';
 
 const router = Router();

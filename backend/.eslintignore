@@ -1,0 +1,4 @@
+/Desktop/UploadFiles/backend/.eslintignore
+node_modules
+dist
+coverage

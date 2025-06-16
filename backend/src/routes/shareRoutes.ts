@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/auth';
-import { 
-  shareResource, 
-  getFilePermissions, 
-  getFolderPermissions, 
-  getSharedWithMe, 
+import {
+  shareResource,
+  getFilePermissions,
+  getFolderPermissions,
+  getSharedWithMe,
   getMySharedResources,
-  removePermission 
+  removePermission,
 } from '../controllers/shareController';
 
 const router = Router();

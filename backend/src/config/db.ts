@@ -16,7 +16,7 @@ mongoose.connection.on('connected', () => {
   console.log('Mongoose connected to MongoDB Atlas');
 });
 
-mongoose.connection.on('error', (err) => {
+mongoose.connection.on('error', err => {
   console.error('Mongoose connection error:', err);
 });
 
