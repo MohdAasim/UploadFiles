@@ -23,6 +23,7 @@ export interface FileType {
   sharedWith: SharedEntry[];
   versions: FileVersion[];
   createdAt: string;
+  updatedAt: string; // Add this if missing
 }
 
 export interface FileVersion {
@@ -30,8 +31,21 @@ export interface FileVersion {
   filename: string;
   path: string;
   uploadedAt: string;
-  uploadedBy: string;
+  uploadedBy: {
+    id: string;
+    name: string;
+    email: string;
+  };
   remark?: string;
+}
+
+export interface VersionHistoryData {
+  file: {
+    id: string;
+    originalName: string;
+    currentVersion: number;
+  };
+  versions: FileVersion[];
 }
 
 export interface FolderType {
@@ -42,6 +56,7 @@ export interface FolderType {
   path: string;
   sharedWith: SharedEntry[];
   createdAt: string;
+  updatedAt: string; // Add this if missing
 }
 
 export interface SharedEntry {
@@ -118,6 +133,39 @@ export interface BulkActionData {
   files?: string[];
   folders?: string[];
   targetFolder?: string;
+}
+
+export interface BulkDeleteData {
+  files: string[];
+  folders: string[];
+}
+
+export interface BulkDeleteResponse {
+  success: boolean;
+  message: string;
+  deletedFiles: number;
+  deletedFolders: number;
+}
+
+export interface BulkDownloadData {
+  files: string[];
+  folders: string[];
+}
+
+export interface FileDownloadInfo {
+  id: string;
+  name: string;
+  downloadUrl: string;
+  size: number;
+  mimetype: string;
+}
+
+export interface BulkDownloadResponse {
+  success: boolean;
+  data: {
+    files: FileDownloadInfo[];
+    folders: string[];
+  };
 }
 
 export interface ShareResourceData {
@@ -239,4 +287,12 @@ export interface ToastNotification {
   message: string;
   duration?: number;
   persistent?: boolean;
+}
+
+export interface SelectableItem {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  size?: number;
+  parentFolder?: string;
 }

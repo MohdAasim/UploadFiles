@@ -13,6 +13,8 @@ import {
   Button,
   Collapse,
   Badge,
+  CircularProgress,
+  Avatar,
 } from "@mui/material";
 import {
   ExpandLess,
@@ -22,6 +24,9 @@ import {
   Stop,
   Clear,
   CloudUpload,
+  CheckCircle,
+  Error,
+  Close,
 } from "@mui/icons-material";
 
 interface QueueItem {
@@ -31,6 +36,8 @@ interface QueueItem {
   progress: number;
   status: "waiting" | "uploading" | "paused" | "completed" | "error";
   error?: string;
+  uploadSpeed?: string;
+  timeRemaining?: string;
 }
 
 interface UploadQueueProps {
@@ -38,8 +45,10 @@ interface UploadQueueProps {
   onPause: (id: string) => void;
   onResume: (id: string) => void;
   onCancel: (id: string) => void;
+  onRetry: (id: string) => void;
   onClearCompleted: () => void;
   onClearAll: () => void;
+  totalProgress?: number;
 }
 
 const UploadQueue: React.FC<UploadQueueProps> = ({
@@ -47,8 +56,10 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
   onPause,
   onResume,
   onCancel,
+  onRetry,
   onClearCompleted,
   onClearAll,
+  totalProgress = 0,
 }) => {
   const [expanded, setExpanded] = useState(true);
 
@@ -59,6 +70,10 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
     (item) => item.status === "completed"
   ).length;
   const errorUploads = items.filter((item) => item.status === "error").length;
+  const pausedUploads = items.filter((item) => item.status === "paused").length;
+  const waitingUploads = items.filter(
+    (item) => item.status === "waiting"
+  ).length;
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -68,7 +83,23 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  // Fix: Separate functions for Chip and LinearProgress colors
+  const getStatusIcon = (status: QueueItem["status"]) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle color="success" sx={{ fontSize: 20 }} />;
+      case "error":
+        return <Error color="error" sx={{ fontSize: 20 }} />;
+      case "uploading":
+        return <CircularProgress size={20} />;
+      case "paused":
+        return <Pause color="warning" sx={{ fontSize: 20 }} />;
+      case "waiting":
+        return <CloudUpload color="info" sx={{ fontSize: 20 }} />;
+      default:
+        return <CloudUpload sx={{ fontSize: 20 }} />;
+    }
+  };
+
   const getChipColor = (
     status: QueueItem["status"]
   ): "default" | "primary" | "success" | "error" | "warning" => {
@@ -88,18 +119,23 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
 
   const getProgressColor = (
     status: QueueItem["status"]
-  ): "primary" | "secondary" | "error" | "info" | "success" | "warning" | "inherit" => {
+  ):
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning"
+    | "inherit" => {
     switch (status) {
       case "completed":
         return "success";
       case "error":
         return "error";
-      case "uploading":
-        return "primary";
       case "paused":
         return "warning";
       default:
-        return "primary"; // Use "primary" instead of "default"
+        return "primary";
     }
   };
 
@@ -111,9 +147,13 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
         position: "fixed",
         bottom: 16,
         right: 16,
-        width: 400,
-        maxHeight: 500,
-        zIndex: 1000,
+        width: { xs: "calc(100vw - 32px)", sm: 450 },
+        maxWidth: 450,
+        maxHeight: "60vh",
+        zIndex: 1300,
+        border: 1,
+        borderColor: "divider",
+        boxShadow: 3,
       }}
     >
       {/* Header */}
@@ -125,16 +165,17 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          bgcolor: "background.paper",
           cursor: "pointer",
         }}
         onClick={() => setExpanded(!expanded)}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <CloudUpload color="primary" />
-          <Typography variant="h6">Upload Queue</Typography>
           <Badge badgeContent={activeUploads} color="primary">
-            <Chip label={`${items.length} files`} size="small" />
+            <CloudUpload color="primary" />
           </Badge>
+          <Typography variant="h6">Upload Queue</Typography>
+          <Chip label={`${items.length} files`} size="small" />
         </Box>
         <IconButton size="small">
           {expanded ? <ExpandLess /> : <ExpandMore />}
@@ -143,19 +184,52 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
 
       {/* Content */}
       <Collapse in={expanded}>
+        {/* Overall Progress */}
+        {activeUploads > 0 && (
+          <Box sx={{ p: 2, bgcolor: "primary.50" }}>
+            <Typography variant="body2" gutterBottom>
+              Overall Progress: {Math.round(totalProgress)}%
+            </Typography>
+            <LinearProgress
+              variant="determinate"
+              value={totalProgress}
+              sx={{ height: 8, borderRadius: 4 }}
+            />
+          </Box>
+        )}
+
         {/* Statistics */}
         <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <Chip
-              label={`${activeUploads} uploading`}
-              size="small"
-              color="primary"
-            />
-            <Chip
-              label={`${completedUploads} completed`}
-              size="small"
-              color="success"
-            />
+            {activeUploads > 0 && (
+              <Chip
+                label={`${activeUploads} uploading`}
+                size="small"
+                color="primary"
+                icon={<CircularProgress size={12} color="inherit" />}
+              />
+            )}
+            {waitingUploads > 0 && (
+              <Chip
+                label={`${waitingUploads} waiting`}
+                size="small"
+                color="default"
+              />
+            )}
+            {pausedUploads > 0 && (
+              <Chip
+                label={`${pausedUploads} paused`}
+                size="small"
+                color="warning"
+              />
+            )}
+            {completedUploads > 0 && (
+              <Chip
+                label={`${completedUploads} completed`}
+                size="small"
+                color="success"
+              />
+            )}
             {errorUploads > 0 && (
               <Chip
                 label={`${errorUploads} errors`}
@@ -167,8 +241,8 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
         </Box>
 
         {/* Action Buttons */}
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-          <Box sx={{ display: "flex", gap: 1 }}>
+        <Box sx={{ p: 1, borderBottom: 1, borderColor: "divider" }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
             <Button
               size="small"
               variant="outlined"
@@ -184,6 +258,7 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
               onClick={onClearAll}
               disabled={activeUploads > 0}
               startIcon={<Stop />}
+              color="error"
             >
               Clear All
             </Button>
@@ -195,6 +270,9 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
           <List dense>
             {items.map((item) => (
               <ListItem key={item.id} divider>
+                <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
+                  {getStatusIcon(item.status)}
+                </Avatar>
                 <ListItemText
                   primary={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -204,31 +282,39 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                       <Chip
                         label={item.status}
                         size="small"
-                        color={getChipColor(item.status)} // Use getChipColor for Chip
+                        color={getChipColor(item.status)}
                         variant="outlined"
                       />
                     </Box>
                   }
                   secondary={
-                    <Box sx={{ mt: 0.5 }}>
+                    <Box component="div" sx={{ mt: 0.5 }}>
                       {(item.status === "uploading" ||
                         item.status === "paused") && (
                         <LinearProgress
                           variant="determinate"
                           value={item.progress}
-                          color={getProgressColor(item.status)} // Use getProgressColor for LinearProgress
-                          sx={{ mb: 0.5 }}
+                          color={getProgressColor(item.status)}
+                          sx={{ mb: 0.5, height: 4, borderRadius: 2 }}
                         />
                       )}
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" component="div">
                         {item.error ? (
-                          <span style={{ color: "red" }}>
+                          <Typography component="span" sx={{ color: "error.main" }}>
                             Error: {item.error}
-                          </span>
+                          </Typography>
+                        ) : item.status === "completed" ? (
+                          `Completed • ${formatFileSize(item.fileSize)}`
+                        ) : item.status === "uploading" ? (
+                          `${item.progress}% • ${formatFileSize(
+                            item.fileSize
+                          )}${
+                            item.uploadSpeed ? ` • ${item.uploadSpeed}` : ""
+                          }${
+                            item.timeRemaining ? ` • ${item.timeRemaining}` : ""
+                          }`
                         ) : (
-                          <>
-                            {item.progress}% • {formatFileSize(item.fileSize)}
-                          </>
+                          `${formatFileSize(item.fileSize)}`
                         )}
                       </Typography>
                     </Box>
@@ -254,13 +340,25 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                         <PlayArrow />
                       </IconButton>
                     )}
-                    {(item.status === "waiting" || item.status === "error") && (
+                    {item.status === "error" && (
+                      <IconButton
+                        size="small"
+                        onClick={() => onRetry(item.id)}
+                        title="Retry"
+                        color="primary"
+                      >
+                        <PlayArrow />
+                      </IconButton>
+                    )}
+                    {(item.status === "waiting" ||
+                      item.status === "error" ||
+                      item.status === "completed") && (
                       <IconButton
                         size="small"
                         onClick={() => onCancel(item.id)}
-                        title="Cancel"
+                        title="Remove"
                       >
-                        <Stop />
+                        <Close />
                       </IconButton>
                     )}
                   </Box>

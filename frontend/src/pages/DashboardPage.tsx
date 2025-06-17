@@ -10,32 +10,44 @@ import {
   Tabs,
   Tab,
   Dialog,
-  Fab,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
-} from "@mui/material";
+  TextField,
+  InputAdornment,
+  IconButton,
+  Chip,
+  Alert,} from "@mui/material";
 import {
   CloudUpload,
   Folder,
   Share,
   Storage,
-  Add,
   FolderOpen,
   CloudQueue,
+  Search,
+  Clear,
+  Settings,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
-import { useFiles, useFolders } from "../hooks/useFiles";
+import { useFolders, useFolderTree } from "../hooks/useFiles";
+import { useSearch } from "../hooks/useSearch";
+import { useDebounce } from "../hooks/useDebounce";
 import FileManager from "../components/files/FileManager";
 import FileUpload from "../components/files/FileUpload";
 import BulkUpload from "../components/files/BulkUpload";
 import CreateFolderDialog from "../components/dialogs/CreateFolderDialog";
 import Breadcrumb from "../components/Breadcrumb";
+import type { FileType, FolderType } from "../types";
+import toast from "react-hot-toast";
 
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
   value: number;
+}
+interface searchResultsType {
+  data: { files: FileType[]; folders: FolderType[] };
 }
 
 function TabPanel(props: TabPanelProps) {
@@ -64,35 +76,72 @@ const DashboardPage: React.FC = () => {
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
 
-  const { data: files } = useFiles(currentFolder);
-  const { data: folders } = useFolders();
+  // Search state with longer debounce (3 seconds)
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
+  // Use the new hook that gets both files and folders for current directory
+  const {
+    data: folderTree,
+    isLoading: treeLoading,
+    error: treeError,
+  } = useFolderTree(currentFolder);
+  const { data: allFolders } = useFolders(); // All folders for stats
+
+  // Search hook
+  const {
+    updateQuery,
+    searchResults,
+    isLoading: searchLoading,
+    error: searchError,
+    updateCurrentFolder,
+  } = useSearch();
+
+  // Update search when debounced query changes - with better dependency management
+  React.useEffect(() => {
+    if (debouncedQuery !== searchQuery) return; 
+    updateQuery(debouncedQuery);
+  }, [debouncedQuery]); // Remove updateQuery from dependencies to prevent loops
+
+  // Update current folder in search hook - with better dependency management
+  React.useEffect(() => {
+    updateCurrentFolder(currentFolder);
+  }, [currentFolder]); // Remove updateCurrentFolder from dependencies
+
+  const showSearchResults = debouncedQuery.length >= 2;
+
+  // Memoize stats calculation with proper TypeScript typing
   const stats = useMemo(() => {
-    const fileCount = files?.length ?? 0;
-    const folderCount = folders?.length ?? 0;
-    const sharedFileCount =
-      files?.filter((f) => f.sharedWith && f.sharedWith.length > 0)?.length ??
-      0;
-    const totalSize = files?.reduce((acc, f) => acc + (f.size || 0), 0) ?? 0;
+    const currentFiles = folderTree?.files || [];
+    const currentFolders = folderTree?.folders || [];
+    const totalFolders = allFolders || [];
+
+    const fileCount = currentFiles.length;
+    const folderCount = currentFolders.length;
+    const totalFolderCount = totalFolders.length;
+    const totalSize = currentFiles.reduce(
+      (acc: number, f: FileType) => acc + (f.size || 0),
+      0
+    );
     const sizeInMB = totalSize / 1024 / 1024;
 
     return [
       {
-        label: "Total Files",
+        label: "Files (Current)",
         value: fileCount.toString(),
         icon: <CloudUpload />,
         color: "#1976d2",
       },
       {
-        label: "Folders",
+        label: "Folders (Current)",
         value: folderCount.toString(),
         icon: <Folder />,
         color: "#2e7d32",
       },
       {
-        label: "Shared Files",
-        value: sharedFileCount.toString(),
-        icon: <Share />,
+        label: "Total Folders",
+        value: totalFolderCount.toString(),
+        icon: <FolderOpen />,
         color: "#ed6c02",
       },
       {
@@ -102,89 +151,165 @@ const DashboardPage: React.FC = () => {
         color: "#9c27b0",
       },
     ];
-  }, [files, folders]);
+  }, [folderTree, allFolders]);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  // Memoize event handlers
+  const handleTabChange = React.useCallback(
+    (_event: React.SyntheticEvent, newValue: number) => {
+      setTabValue(newValue);
+    },
+    []
+  );
 
-  const handleFolderClick = (folderId?: string) => {
-    setCurrentFolder(folderId);
-  };
+  const handleSearchChange = React.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setSearchQuery(value);
+    },
+    []
+  );
 
-  const speedDialActions = [
-    {
-      icon: <CloudUpload />,
-      name: "Upload Files",
-      onClick: () => setUploadDialogOpen(true),
+  const handleClearSearch = React.useCallback(() => {
+    setSearchQuery("");
+  }, []);
+
+  const handleFolderClick = React.useCallback(
+    (folderId?: string) => {
+      setCurrentFolder(folderId);
+      // Clear search when navigating to a folder
+      if (searchQuery) {
+        setSearchQuery("");
+      }
     },
-    {
-      icon: <CloudQueue />,
-      name: "Bulk Upload",
-      onClick: () => setBulkUploadOpen(true),
-    },
-    {
-      icon: <FolderOpen />,
-      name: "New Folder",
-      onClick: () => setCreateFolderDialogOpen(true),
-    },
-  ];
+    [searchQuery]
+  );
+
+  // Define Speed Dial Actions
+  const speedDialActions = useMemo(
+    () => [
+      {
+        name: "Upload Files",
+        icon: <CloudUpload />,
+        onClick: () => setUploadDialogOpen(true),
+      },
+      {
+        name: "Bulk Upload",
+        icon: <CloudQueue />,
+        onClick: () => setBulkUploadOpen(true),
+      },
+      {
+        name: "New Folder",
+        icon: <Folder />,
+        onClick: () => setCreateFolderDialogOpen(true),
+      },
+      {
+        name: "Share",
+        icon: <Share />,
+        onClick: () => {
+          // Add share functionality here
+          toast.custom("Select a file or folder to share")},
+      },
+      {
+        name: "Bulk Actions",
+        icon: <Settings />, // or any appropriate icon
+        onClick: () => {
+          // This could open a bulk actions panel or show a message
+          toast.custom("Select files/folders in the file manager to access bulk actions")
+        },
+      },
+    ],
+    []
+  );
+
+  // Debug log with less frequency
+  React.useEffect(() => {
+    console.log("Dashboard render state:", {
+      searchQuery,
+      debouncedQuery,
+      showSearchResults,
+      hasSearchResults: !!searchResults,
+      searchLoading,
+      searchError: !!searchError,
+    });
+  }, [
+    searchQuery,
+    debouncedQuery,
+    showSearchResults,
+    searchResults,
+    searchLoading,
+    searchError,
+  ]);
 
   return (
     <Box>
-      {/* Header */}
+      {/* Header with current folder info */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Welcome back, {user?.name}! 👋
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Here's what's happening with your files today.
+          {currentFolder ? (
+            <>
+              Browsing folder • {folderTree?.fileCount || 0} files,{" "}
+              {folderTree?.folderCount || 0} folders
+            </>
+          ) : (
+            <>
+              Root directory • {folderTree?.fileCount || 0} files,{" "}
+              {folderTree?.folderCount || 0} folders
+            </>
+          )}
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Using Box instead of Grid */}
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr",
-            sm: "repeat(2, 1fr)",
-            md: "repeat(4, 1fr)",
-          },
+          display: "flex",
+          flexWrap: "wrap",
           gap: 3,
           mb: 4,
         }}
       >
         {stats.map((stat, index) => (
-          <Card key={index} sx={{ height: "100%" }}>
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Box
-                  sx={{
-                    p: 1,
-                    borderRadius: 2,
-                    backgroundColor: `${stat.color}20`,
-                    color: stat.color,
-                    mr: 2,
-                  }}
-                >
-                  {stat.icon}
-                </Box>
-                <Box>
-                  <Typography
-                    variant="h4"
-                    component="div"
-                    sx={{ fontWeight: 600 }}
+          <Box
+            key={index}
+            sx={{
+              flex: "1 1 300px",
+              minWidth: "250px",
+              maxWidth: "300px",
+            }}
+          >
+            <Card sx={{ height: "100%" }}>
+              <CardContent>
+                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      backgroundColor: `${stat.color}20`,
+                      color: stat.color,
+                      mr: 2,
+                    }}
                   >
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {stat.label}
-                  </Typography>
+                    {stat.icon}
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="h4"
+                      component="div"
+                      sx={{ fontWeight: 600 }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {stat.label}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Box>
         ))}
       </Box>
 
@@ -199,42 +324,160 @@ const DashboardPage: React.FC = () => {
         </Box>
 
         <TabPanel value={tabValue} index={0}>
-          {/* Action Buttons */}
-          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            <Button
-              variant="contained"
-              startIcon={<CloudUpload />}
-              onClick={() => setUploadDialogOpen(true)}
-            >
-              Upload Files
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<CloudQueue />}
-              onClick={() => setBulkUploadOpen(true)}
-            >
-              Bulk Upload
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<Folder />}
-              onClick={() => setCreateFolderDialogOpen(true)}
-            >
-              New Folder
-            </Button>
+          <Box sx={{ p: 3 }}>
+            {/* Single Search Input */}
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                fullWidth
+                placeholder="Search files and folders by name..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                variant="outlined"
+                size="small"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search color="action" />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={handleClearSearch}
+                        title="Clear search"
+                      >
+                        <Clear />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+
+              {/* Search Status Indicators */}
+              {searchQuery.length > 0 && searchQuery.length < 2 && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  Type at least 2 characters to search
+                </Typography>
+              )}
+
+              {searchQuery.length >= 2 && debouncedQuery !== searchQuery && (
+                <Typography
+                  variant="caption"
+                  color="warning.main"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  ⏳ Search will start in a moment...
+                </Typography>
+              )}
+
+              {searchLoading && (
+                <Typography
+                  variant="caption"
+                  color="primary.main"
+                  sx={{ mt: 1, display: "block" }}
+                >
+                  🔍 Searching for "{debouncedQuery}"...
+                </Typography>
+              )}
+            </Box>
+
+            {/* Search Results or Error */}
+            {showSearchResults && (
+              <Box sx={{ mb: 3 }}>
+                {searchError && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    Search failed: {searchError.message}
+                  </Alert>
+                )}
+
+                {searchResults && !searchLoading && (
+                  <Box sx={{ mb: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        mb: 2,
+                      }}
+                    >
+                      <Typography variant="h6">
+                        Search Results for "{debouncedQuery}"
+                      </Typography>
+                      <Chip
+                        label={`${
+                          ((searchResults as any).files?.length || 0) +
+                          ((searchResults as any).folders?.length || 0)
+                        } items found`}
+                        size="small"
+                        color="primary"
+                      />
+                      <Button
+                        size="small"
+                        onClick={handleClearSearch}
+                        variant="outlined"
+                      >
+                        Clear Search
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {/* Action Buttons - Show only when NOT searching */}
+            {!showSearchResults && (
+              <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<CloudUpload />}
+                  onClick={() => setUploadDialogOpen(true)}
+                >
+                  Upload Files
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<CloudQueue />}
+                  onClick={() => setBulkUploadOpen(true)}
+                >
+                  Bulk Upload
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Folder />}
+                  onClick={() => setCreateFolderDialogOpen(true)}
+                >
+                  New Folder
+                </Button>
+              </Box>
+            )}
+
+            {/* Breadcrumb Navigation - Show only when NOT searching */}
+            {!showSearchResults && (
+              <Breadcrumb
+                currentFolder={currentFolder}
+                onFolderClick={handleFolderClick}
+              />
+            )}
+
+            {/* File Manager - Pass search results when searching */}
+            <FileManager
+              currentFolder={currentFolder}
+              onFolderClick={handleFolderClick}
+              searchResults={
+                showSearchResults ? (searchResults as searchResultsType) : null
+              }
+            />
           </Box>
-
-          {/* Breadcrumb Navigation */}
-          <Breadcrumb
-            currentFolder={currentFolder}
-            onFolderClick={handleFolderClick}
-          />
-
-          {/* File Manager */}
-          <FileManager
-            currentFolder={currentFolder}
-            onFolderClick={handleFolderClick}
-          />
         </TabPanel>
 
         <TabPanel value={tabValue} index={1}>
@@ -262,22 +505,6 @@ const DashboardPage: React.FC = () => {
           </Box>
         </TabPanel>
       </Paper>
-
-      {/* Speed Dial */}
-      <SpeedDial
-        ariaLabel="Upload actions"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
-        icon={<SpeedDialIcon />}
-      >
-        {speedDialActions.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={action.onClick}
-          />
-        ))}
-      </SpeedDial>
 
       {/* Upload Dialog */}
       <Dialog
@@ -319,6 +546,22 @@ const DashboardPage: React.FC = () => {
         onClose={() => setCreateFolderDialogOpen(false)}
         parentFolder={currentFolder}
       />
+
+      {/* Speed Dial */}
+      <SpeedDial
+        ariaLabel="Upload actions"
+        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon />}
+      >
+        {speedDialActions.map((action) => (
+          <SpeedDialAction
+            key={action.name}
+            icon={action.icon}
+            tooltipTitle={action.name}
+            onClick={action.onClick}
+          />
+        ))}
+      </SpeedDial>
     </Box>
   );
 };

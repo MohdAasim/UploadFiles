@@ -34,7 +34,7 @@ const FileVersionSchema = new Schema<IFileVersion>(
     uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     remark: { type: String },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const FileMetaSchema = new Schema<IFileMeta>(
@@ -58,7 +58,7 @@ const FileMetaSchema = new Schema<IFileMeta>(
     ],
     versions: [FileVersionSchema],
   },
-  { timestamps: { createdAt: true, updatedAt: false } },
+  { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 export default mongoose.model<IFileMeta>('FileMeta', FileMetaSchema);

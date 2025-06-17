@@ -3,8 +3,9 @@ import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import User from '../models/User';
+import { handleViewingEvents } from './viewingEvents';
 
-interface AuthenticatedSocket extends Socket {
+export interface AuthenticatedSocket extends Socket {
   userId?: string;
   userData?: any;
 }
@@ -66,6 +67,8 @@ export class SocketServer {
   private setupEventHandlers() {
     this.io.on('connection', (socket: AuthenticatedSocket) => {
       console.log(`User ${socket.userData.name} connected: ${socket.id}`);
+      //handle viewing events
+      handleViewingEvents(this.io, socket);
 
       // Add user to connected users
       this.connectedUsers.set(socket.userId!, {
@@ -169,7 +172,7 @@ export class SocketServer {
           uploadedBy: socket.userData,
           parentFolder: data.parentFolder,
         });
-      },
+      }
     );
 
     // File updated/new version
@@ -181,7 +184,7 @@ export class SocketServer {
           version: data.versionData,
           updatedBy: socket.userData,
         });
-      },
+      }
     );
 
     // File deleted
@@ -213,7 +216,7 @@ export class SocketServer {
             sharedBy: socket.userData,
           });
         }
-      },
+      }
     );
 
     // Permission changed
@@ -233,7 +236,7 @@ export class SocketServer {
             updatedBy: socket.userData,
           });
         }
-      },
+      }
     );
   }
 
@@ -268,7 +271,7 @@ export class SocketServer {
           user: socket.userData,
           position: data.position,
         });
-      },
+      }
     );
   }
 
@@ -293,13 +296,13 @@ export class SocketServer {
             timestamp: new Date(),
           });
         }
-      },
+      }
     );
 
     // Get online users
     socket.on('get-online-users', () => {
       const onlineUsers = Array.from(this.connectedUsers.values()).map(
-        user => user.userData,
+        user => user.userData
       );
       socket.emit('online-users', onlineUsers);
     });
@@ -320,7 +323,7 @@ export class SocketServer {
     resourceType: 'file' | 'folder',
     targetUserId: string,
     sharedBy: any,
-    permission: string,
+    permission: string
   ) {
     const targetUser = this.connectedUsers.get(targetUserId);
 
@@ -337,7 +340,7 @@ export class SocketServer {
   public notifyResourceDeleted(
     resourceId: string,
     resourceType: 'file' | 'folder',
-    deletedBy: any,
+    deletedBy: any
   ) {
     this.io.emit('resource-was-deleted', {
       resourceId,

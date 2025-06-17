@@ -1,166 +1,144 @@
+// Update the response format to match frontend expectations
 import { Request, Response } from 'express';
 import FileMeta from '../models/FileMeta';
 import Folder from '../models/Folder';
 import { asyncHandler, createError } from '../middlewares/errorHandler';
+import logger from '../utils/logger';
 
 interface AuthRequest extends Request {
   user?: any;
 }
 
+/**
+ * Search files and folders
+ * @description Performs comprehensive search across user's files and folders with filtering options
+ * @route GET /api/v1/search
+ * @access Private
+ * @param {AuthRequest} req - Express request object with search query parameters
+ * @param {Response} res - Express response object
+ * @returns {Promise<void>} JSON response with search results and summary
+ */
 export const searchFilesAndFolders = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.id;
 
+    logger.info(`Search initiated by user: ${userId}`);
+
     if (!userId) {
+      logger.warn('Search attempted without authentication');
       throw createError('User not authenticated', 401);
     }
 
     const {
       q, // keyword
-      type, // file extension or mimetype, e.g. "pdf" or "image/png"
+      type, // file extension or mimetype
       inFolder, // folder id (optional)
-      uploadedBy, // search by uploader (optional)
-      kind, // "file" | "folder" | "all"
-      dateFrom, // ISO string
-      dateTo, // ISO string
+      kind = 'all', // "file" | "folder" | "all"
     } = req.query;
 
-    let fileQuery: any = { $or: [] };
-    let folderQuery: any = {};
+    logger.info(`Search parameters - Query: "${q}", Type: ${type}, Folder: ${inFolder}, Kind: ${kind}`);
 
-    // Search for files
-    if (kind !== 'folder') {
-      // Include files owned by user OR shared with user
-      fileQuery = {
-        $and: [
-          {
-            $or: [
-              { uploadedBy: userId }, // Files owned by user
-              { 'sharedWith.user': userId }, // Files shared with user
-            ],
+    if (!q || typeof q !== 'string' || q.trim().length === 0) {
+      logger.info('Empty search query, returning empty results');
+      res.json({
+        success: true,
+        data: {
+          files: [],
+          folders: [],
+          summary: {
+            totalFiles: 0,
+            totalFolders: 0,
+            searchQuery: '',
+            searchType: '',
+            searchKind: kind,
           },
-        ],
-      };
-
-      // Add search conditions
-      const searchConditions: any[] = [];
-
-      if (q) {
-        searchConditions.push({
-          originalName: { $regex: q as string, $options: 'i' },
-        });
-      }
-
-      if (type) {
-        // Allow searching by extension or mimetype
-        searchConditions.push(
-          { mimetype: { $regex: type as string, $options: 'i' } },
-          {
-            originalName: {
-              $regex: '\\.' + (type as string) + '$',
-              $options: 'i',
-            },
-          },
-        );
-      }
-
-      if (searchConditions.length > 0) {
-        fileQuery.$and.push({ $or: searchConditions });
-      }
-
-      if (inFolder) {
-        fileQuery.$and.push({ parentFolder: inFolder });
-      }
-
-      if (uploadedBy) {
-        fileQuery.$and.push({ uploadedBy: uploadedBy });
-      }
-
-      if (dateFrom || dateTo) {
-        const dateQuery: any = {};
-        if (dateFrom) dateQuery.$gte = new Date(dateFrom as string);
-        if (dateTo) dateQuery.$lte = new Date(dateTo as string);
-        fileQuery.$and.push({ createdAt: dateQuery });
-      }
+        },
+      });
+      return;
     }
 
-    // Search for folders
-    if (kind !== 'file') {
-      // Include folders owned by user OR shared with user
-      folderQuery = {
-        $or: [
-          { owner: userId }, // Folders owned by user
-          { 'sharedWith.user': userId }, // Folders shared with user
-        ],
-      };
+    const searchQuery = q.trim();
+    let files: any[] = [];
+    let folders: any[] = [];
 
-      const folderConditions: any[] = [];
-
-      if (q) {
-        folderConditions.push({
-          name: { $regex: q as string, $options: 'i' },
-        });
-      }
-
-      if (inFolder) {
-        folderConditions.push({ parent: inFolder });
-      }
-
-      if (dateFrom || dateTo) {
-        const dateQuery: any = {};
-        if (dateFrom) dateQuery.$gte = new Date(dateFrom as string);
-        if (dateTo) dateQuery.$lte = new Date(dateTo as string);
-        folderConditions.push({ createdAt: dateQuery });
-      }
-
-      if (folderConditions.length > 0) {
-        folderQuery = {
-          $and: [folderQuery, ...folderConditions],
+    try {
+      // Search files - simplified query
+      if (kind === 'all' || kind === 'file') {
+        logger.info(`Searching files with query: "${searchQuery}"`);
+        
+        const fileQuery: any = {
+          uploadedBy: userId,
+          originalName: { $regex: searchQuery, $options: 'i' },
         };
-      }
-    }
 
-    const results: { files?: any; folders?: any; summary?: any } = {};
+        // Add type filter if provided
+        if (type) {
+          fileQuery.mimetype = { $regex: type as string, $options: 'i' };
+          logger.debug(`Added type filter: ${type}`);
+        }
 
-    if (kind === 'file') {
-      results.files = await FileMeta.find(fileQuery)
-        .populate('uploadedBy', 'name email')
-        .populate('parentFolder', 'name path')
-        .sort({ createdAt: -1 });
-    } else if (kind === 'folder') {
-      results.folders = await Folder.find(folderQuery)
-        .populate('owner', 'name email')
-        .populate('parent', 'name path')
-        .sort({ createdAt: -1 });
-    } else {
-      // Search both files and folders
-      const [files, folders] = await Promise.all([
-        FileMeta.find(fileQuery)
+        // Add folder filter if provided
+        if (inFolder) {
+          fileQuery.parentFolder = inFolder;
+          logger.debug(`Added folder filter: ${inFolder}`);
+        }
+
+        files = await FileMeta.find(fileQuery)
           .populate('uploadedBy', 'name email')
-          .populate('parentFolder', 'name path')
-          .sort({ createdAt: -1 }),
-        Folder.find(folderQuery)
+          .populate('parentFolder', 'name')
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .lean();
+
+        logger.info(`Found ${files.length} files matching search criteria`);
+      }
+
+      // Search folders - simplified query
+      if (kind === 'all' || kind === 'folder') {
+        logger.info(`Searching folders with query: "${searchQuery}"`);
+        
+        const folderQuery: any = {
+          owner: userId,
+          name: { $regex: searchQuery, $options: 'i' },
+        };
+
+        // Add folder filter if provided
+        if (inFolder) {
+          folderQuery.parent = inFolder;
+          logger.debug(`Added parent folder filter: ${inFolder}`);
+        }
+        
+        folders = await Folder.find(folderQuery)
           .populate('owner', 'name email')
-          .populate('parent', 'name path')
-          .sort({ createdAt: -1 }),
-      ]);
+          .populate('parent', 'name')
+          .sort({ createdAt: -1 })
+          .limit(50)
+          .lean();
 
-      results.files = files;
-      results.folders = folders;
+        logger.info(`Found ${folders.length} folders matching search criteria`);
+      }
+
+      const totalResults = files.length + folders.length;
+      logger.info(`Search completed - Total results: ${totalResults} (Files: ${files.length}, Folders: ${folders.length})`);
+
+      // Return response in expected format
+      res.json({
+        success: true,
+        data: {
+          files,
+          folders,
+          summary: {
+            totalFiles: files.length,
+            totalFolders: folders.length,
+            searchQuery,
+            searchType: type || '',
+            searchKind: kind,
+          },
+        },
+      });
+    } catch (error) {
+      logger.error(`Search error for user ${userId}:`, error);
+      throw createError('Search failed', 500);
     }
-
-    // Add summary
-    results.summary = {
-      totalFiles: results.files?.length || 0,
-      totalFolders: results.folders?.length || 0,
-      searchQuery: q || '',
-      searchType: type || '',
-      searchKind: kind || 'all',
-    };
-
-    res.json({
-      success: true,
-      results,
-    });
-  },
+  }
 );

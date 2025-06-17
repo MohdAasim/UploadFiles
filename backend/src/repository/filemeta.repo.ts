@@ -18,7 +18,7 @@ interface createFileMetaPropsType {
 
 export async function getFileMetaByownerAndFolder(
   uploadedBy: string,
-  parentFolder: string | null,
+  parentFolder: string | null
 ) {
   return await FileMeta.find({ uploadedBy, parentFolder }).sort({
     createdAt: -1,
@@ -49,7 +49,7 @@ export async function getFileMetaByFileId(id: string) {
 export async function getFileVersoinHistoryByFileId(id: string) {
   return await FileMeta.findById(id).populate(
     'versions.uploadedBy',
-    'name email',
+    'name email'
   );
 }
 

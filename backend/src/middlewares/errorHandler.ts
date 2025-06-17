@@ -7,7 +7,7 @@ export interface CustomError extends Error {
 
 export const createError = (
   message: string,
-  statusCode: number = 500,
+  statusCode: number = 500
 ): CustomError => {
   const error: CustomError = new Error(message);
   error.statusCode = statusCode;
@@ -19,7 +19,7 @@ export const globalErrorHandler = (
   err: CustomError,
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ) => {
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal server error';

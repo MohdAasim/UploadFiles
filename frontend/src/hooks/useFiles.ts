@@ -3,36 +3,44 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { filesAPI, foldersAPI } from "../services/api";
 import toast from "react-hot-toast";
 import socketService from "../services/socketService";
-
-export const useFiles = (parentFolder?: string) => {
-  return useQuery({
-    queryKey: ["files", parentFolder],
-    queryFn: () => filesAPI.getFiles(parentFolder),
-    select: (data) => {
-      console.log("Files API response:", data);
-      const files = data?.data?.data || data?.data || data || [];
-      console.log("Processed files:", files);
-      return Array.isArray(files) ? files : [];
-    },
-  });
-};
+import { useUploadContext } from "../contexts/UploadContext";
 
 export const useFolders = () => {
   return useQuery({
     queryKey: ["folders"],
-    queryFn: () => foldersAPI.getFolderTree(),
+    queryFn: () => foldersAPI.getAllFolders(),
     select: (data) => {
-      console.log("Folders API response:", data);
-      const folders = data?.data?.data || data?.data || data || [];
-      console.log("Processed folders:", folders);
+      // Fix: Handle the nested data structure
+      const folders = data?.data?.data?.folders || [];
       return Array.isArray(folders) ? folders : [];
     },
   });
 };
 
-// Enhanced upload hook with better progress tracking
+// Add new hook for folder tree (files + folders in current directory)
+export const useFolderTree = (parentFolder?: string) => {
+  return useQuery({
+    queryKey: ["folderTree", parentFolder],
+    queryFn: () => foldersAPI.getFolderTree(parentFolder),
+    select: (data) => {
+      const result = data?.data?.data;
+      // Ensure we return arrays for folders and file
+      return {
+        folders: Array.isArray(result?.folders) ? result.folders : [],
+        files: Array.isArray(result?.files) ? result?.files : [],
+        folderCount: result?.folderCount || 0,
+        fileCount: result?.fileCount || 0,
+        currentFolder: result?.currentFolder || null,
+      };
+    },
+  });
+};
+
+// Enhanced upload hook with progress tracking
 export const useUploadFile = () => {
   const queryClient = useQueryClient();
+  const { addUpload, updateProgress, setStatus, removeUpload } =
+    useUploadContext();
 
   return useMutation({
     mutationFn: async (data: {
@@ -41,13 +49,48 @@ export const useUploadFile = () => {
     }) => {
       const { formData, onProgress } = data;
 
-      // Create XMLHttpRequest for progress tracking
+      // Get file info for progress tracking
+      const file = formData.get("file") as File;
+      const uploadId = addUpload({
+        fileName: file.name,
+        fileSize: file.size,
+      });
+
+      setStatus(uploadId, "uploading");
+
+      // Calculate upload speed and time remaining
+      let startTime = Date.now();
+      let lastLoaded = 0;
+      let lastTime = startTime;
+
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
         xhr.upload.addEventListener("progress", (event) => {
           if (event.lengthComputable) {
             const progress = Math.round((event.loaded / event.total) * 100);
+
+            // Calculate upload speed and time remaining
+            const currentTime = Date.now();
+            const timeDiff = (currentTime - lastTime) / 1000; // seconds
+            const loadedDiff = event.loaded - lastLoaded;
+
+            if (timeDiff > 1) {
+              // Update every second
+              const uploadSpeed = loadedDiff / timeDiff; // bytes per second
+              const remainingBytes = event.total - event.loaded;
+              const timeRemaining = remainingBytes / uploadSpeed; // seconds
+
+              const speedStr = formatSpeed(uploadSpeed);
+              const timeStr = formatTime(timeRemaining);
+
+              updateProgress(uploadId, progress, speedStr, timeStr);
+              lastLoaded = event.loaded;
+              lastTime = currentTime;
+            } else {
+              updateProgress(uploadId, progress);
+            }
+
             onProgress?.(progress);
           }
         });
@@ -56,25 +99,35 @@ export const useUploadFile = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const response = JSON.parse(xhr.responseText);
+              setStatus(uploadId, "completed");
+              // Remove completed upload after 3 seconds
+              setTimeout(() => removeUpload(uploadId), 3000);
               resolve(response);
             } catch {
+              setStatus(uploadId, "error", "Invalid response format");
               reject(new Error("Invalid response format"));
             }
           } else {
+            setStatus(
+              uploadId,
+              "error",
+              `Upload failed with status ${xhr.status}`
+            );
             reject(new Error(`Upload failed with status ${xhr.status}`));
           }
         });
 
         xhr.addEventListener("error", () => {
+          setStatus(uploadId, "error", "Network error during upload");
           reject(new Error("Network error during upload"));
         });
 
         xhr.addEventListener("abort", () => {
+          setStatus(uploadId, "error", "Upload cancelled");
           reject(new Error("Upload cancelled"));
         });
 
         const token = localStorage.getItem("token");
-        // Fix: Use the correct API URL with base URL and version
         const API_BASE_URL =
           import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
         xhr.open("POST", `${API_BASE_URL}/files/upload`);
@@ -86,9 +139,9 @@ export const useUploadFile = () => {
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["folderTree"] });
       toast.success("File uploaded successfully!");
 
-      // Emit socket event for real-time updates
       socketService.emit("file-uploaded", {
         fileData: response.file,
         parentFolder: response.file.parentFolder,
@@ -100,7 +153,26 @@ export const useUploadFile = () => {
   });
 };
 
-// Batch upload hook
+// Helper functions
+const formatSpeed = (bytesPerSecond: number): string => {
+  const units = ["B/s", "KB/s", "MB/s", "GB/s"];
+  let unitIndex = 0;
+  let speed = bytesPerSecond;
+
+  while (speed >= 1024 && unitIndex < units.length - 1) {
+    speed /= 1024;
+    unitIndex++;
+  }
+
+  return `${speed.toFixed(1)} ${units[unitIndex]}`;
+};
+
+const formatTime = (seconds: number): string => {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+  return `${Math.round(seconds / 3600)}h`;
+};
+
 export const useBatchUpload = () => {
   const queryClient = useQueryClient();
 
@@ -199,6 +271,25 @@ export const useDeleteFile = () => {
   });
 };
 
+// Add the missing delete folder hook if it doesn't exist
+export const useDeleteFolder = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (folderId: string) => foldersAPI.deleteFolder(folderId),
+    onSuccess: () => {
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["folderTree"] });
+      toast.success("Folder deleted successfully!");
+    },
+    onError: (error: any) => {
+      toast.error(`Delete folder failed: ${error?.message || "Unknown error"}`);
+    },
+  });
+};
+
 export const useCreateFolder = () => {
   const queryClient = useQueryClient();
 
@@ -215,31 +306,22 @@ export const useCreateFolder = () => {
       description?: string;
       tags?: string[];
       isTemplate?: boolean;
-    }) =>
-      foldersAPI.createFolder(name, parent, { description, tags, isTemplate }),
+    }) => {
+      return foldersAPI.createFolder(name, parent, {
+        description,
+        tags,
+        isTemplate,
+      });
+    },
     onSuccess: () => {
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ["folders"] });
       queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["folderTree"] });
       toast.success("Folder created successfully!");
     },
     onError: (error: any) => {
       toast.error(`Create folder failed: ${error?.message || "Unknown error"}`);
-    },
-  });
-};
-
-export const useDeleteFolder = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (folderId: string) => foldersAPI.deleteFolder(folderId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["folders"] });
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-      toast.success("Folder deleted successfully!");
-    },
-    onError: (error) => {
-      toast.error(`Delete folder failed: ${error.message}`);
     },
   });
 };

@@ -18,13 +18,10 @@ import {
   CloudUpload,
   Folder,
   Share,
-  Search,
-  History,
-  Delete,
   People,
   Storage,
   Settings,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -42,57 +39,41 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    text: 'Dashboard',
+    text: "Dashboard",
     icon: <Dashboard />,
-    path: '/dashboard',
+    path: "/dashboard",
   },
   {
-    text: 'My Files',
+    text: "My Files",
     icon: <CloudUpload />,
-    path: '/files',
+    path: "/files",
   },
   {
-    text: 'Folders',
+    text: "Folders",
     icon: <Folder />,
-    path: '/folders',
+    path: "/folders",
   },
   {
-    text: 'Shared with Me',
+    text: "Shared with Me",
     icon: <Share />,
-    path: '/shared',
+    path: "/shared",
     badge: 0,
   },
   {
-    text: 'Search',
-    icon: <Search />,
-    path: '/search',
-    divider: true,
-  },
-  {
-    text: 'Recent',
-    icon: <History />,
-    path: '/recent',
-  },
-  {
-    text: 'Trash',
-    icon: <Delete />,
-    path: '/trash',
-    divider: true,
-  },
-  {
-    text: 'Team',
+    text: "Team",
     icon: <People />,
-    path: '/team',
+    path: "/team",
+    divider: true,
   },
   {
-    text: 'Storage',
+    text: "Storage",
     icon: <Storage />,
-    path: '/storage',
+    path: "/storage",
   },
   {
-    text: 'Settings',
+    text: "Settings",
     icon: <Settings />,
-    path: '/settings',
+    path: "/settings",
   },
 ];
 

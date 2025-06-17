@@ -8,7 +8,7 @@ export async function createFolder(
   name: string,
   parent: string,
   owner: string,
-  path: string,
+  path: string
 ) {
   return await Folder.create({
     name,
