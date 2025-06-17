@@ -5,30 +5,13 @@ import toast from "react-hot-toast";
 import socketService from "../services/socketService";
 import { useUploadContext } from "../contexts/UploadContext";
 
-export const useFiles = (parentFolder?: string) => {
-  return useQuery({
-    queryKey: ["files", parentFolder],
-    queryFn: () => filesAPI.getFiles(parentFolder),
-    select: (data) => {
-      console.log("Files API response:", data);
-      // Fix: Handle the nested data structure
-      const files =
-        data?.data?.data?.files || data?.data?.files || data?.data || [];
-      console.log("Processed files:", files);
-      return Array.isArray(files) ? files : [];
-    },
-  });
-};
-
 export const useFolders = () => {
   return useQuery({
     queryKey: ["folders"],
     queryFn: () => foldersAPI.getAllFolders(),
     select: (data) => {
-      console.log("All Folders API response:", data);
       // Fix: Handle the nested data structure
-      const folders = data?.data?.data?.folders || data?.data?.folders || [];
-      console.log("Processed all folders:", folders);
+      const folders = data?.data?.data?.folders || [];
       return Array.isArray(folders) ? folders : [];
     },
   });
@@ -40,14 +23,14 @@ export const useFolderTree = (parentFolder?: string) => {
     queryKey: ["folderTree", parentFolder],
     queryFn: () => foldersAPI.getFolderTree(parentFolder),
     select: (data) => {
-      console.log("Folder tree API response:", data);
-      const result = data?.data?.data || data?.data || {};
+      const result = data?.data?.data;
+      // Ensure we return arrays for folders and file
       return {
-        folders: Array.isArray(result.folders) ? result.folders : [],
-        files: Array.isArray(result.files) ? result.files : [],
-        folderCount: result.folderCount || 0,
-        fileCount: result.fileCount || 0,
-        currentFolder: result.currentFolder || null,
+        folders: Array.isArray(result?.folders) ? result.folders : [],
+        files: Array.isArray(result?.files) ? result?.files : [],
+        folderCount: result?.folderCount || 0,
+        fileCount: result?.fileCount || 0,
+        currentFolder: result?.currentFolder || null,
       };
     },
   });

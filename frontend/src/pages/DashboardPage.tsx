@@ -27,6 +27,7 @@ import {
   CloudQueue,
   Search,
   Clear,
+  Settings,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { useFolders, useFolderTree } from "../hooks/useFiles";
@@ -38,6 +39,7 @@ import BulkUpload from "../components/files/BulkUpload";
 import CreateFolderDialog from "../components/dialogs/CreateFolderDialog";
 import Breadcrumb from "../components/Breadcrumb";
 import type { FileType, FolderType } from "../types";
+import toast from "react-hot-toast";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -97,8 +99,7 @@ const DashboardPage: React.FC = () => {
 
   // Update search when debounced query changes - with better dependency management
   React.useEffect(() => {
-    if (debouncedQuery !== searchQuery) return; // Only update when debounce is complete
-    console.log("Dashboard: Debounced query changed:", debouncedQuery);
+    if (debouncedQuery !== searchQuery) return; 
     updateQuery(debouncedQuery);
   }, [debouncedQuery]); // Remove updateQuery from dependencies to prevent loops
 
@@ -163,7 +164,6 @@ const DashboardPage: React.FC = () => {
   const handleSearchChange = React.useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
-      console.log("Dashboard: Search input changed:", value);
       setSearchQuery(value);
     },
     []
@@ -207,7 +207,14 @@ const DashboardPage: React.FC = () => {
         icon: <Share />,
         onClick: () => {
           // Add share functionality here
-          console.log("Share clicked");
+          toast.custom("Select a file or folder to share")},
+      },
+      {
+        name: "Bulk Actions",
+        icon: <Settings />, // or any appropriate icon
+        onClick: () => {
+          // This could open a bulk actions panel or show a message
+          toast.custom("Select files/folders in the file manager to access bulk actions")
         },
       },
     ],

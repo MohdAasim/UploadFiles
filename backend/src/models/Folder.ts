@@ -29,7 +29,7 @@ const FolderSchema = new Schema<IFolder>(
       },
     ],
   },
-  { timestamps: { createdAt: true, updatedAt: false } },
+  { timestamps: { createdAt: true, updatedAt: false } }
 );
 
 export default mongoose.model<IFolder>('Folder', FolderSchema);

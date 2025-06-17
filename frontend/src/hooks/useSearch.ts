@@ -35,14 +35,13 @@ export const useSearch = () => {
       return response.data;
     },
     enabled: query.length >= 2,
-    staleTime: 10000, // 10 seconds
-    cacheTime: 300000, // 5 minutes
+    staleTime: 10000,
+    gcTime: 300000, 
     retry: 1,
     refetchOnWindowFocus: false,
   });
 
   const updateQuery = useCallback((newQuery: string) => {
-    console.log('Frontend: Updating query to:', newQuery);
     setQuery(newQuery);
   }, []);
 

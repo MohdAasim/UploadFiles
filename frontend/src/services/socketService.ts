@@ -62,7 +62,6 @@ class SocketService {
   connect(token: string): void {
     // Prevent multiple connection attempts
     if (this.isConnecting || (this.socket && this.socket.connected)) {
-      console.log('Socket already connecting or connected');
       return;
     }
 

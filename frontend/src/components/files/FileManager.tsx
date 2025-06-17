@@ -1,5 +1,5 @@
 /*eslint-disable */
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Table,
@@ -15,6 +15,11 @@ import {
   MenuItem,
   Avatar,
   Chip,
+  Checkbox,
+  Toolbar,
+  Button,
+  ListItemIcon,
+  ListItemText,
 } from "@mui/material";
 import {
   MoreVert,
@@ -25,6 +30,8 @@ import {
   Download,
   Visibility,
   History,
+  SelectAll,
+  Clear,
 } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -37,13 +44,15 @@ import {
   showSuccessAlert,
   showErrorAlert,
 } from "../../utils/sweetAlert";
-import type { FileType, FolderType } from "../../types";
+import type { FileType, FolderType, SelectableItem } from "../../types";
 import { api } from "../../services/api";
 import FileViewersIndicator from "./FileViewersIndicator";
 import { useViewing } from "../../contexts/ViewingContext";
 import ShareDialog from "../dialogs/ShareDialog";
 import PreviewDialog from "../dialogs/PreviewDialog";
 import VersionHistoryDialog from '../dialogs/VersionHistoryDialog';
+import BulkDeleteDialog from '../dialogs/BulkDeleteDialog';
+import BulkDownloadDialog from '../dialogs/BulkDownloadDialog';
 
 
 interface FileManagerProps {
@@ -71,8 +80,10 @@ const FileManager: React.FC<FileManagerProps> = ({
   onFolderClick,
   searchResults = null,
 }) => {
+  // ALL HOOKS MUST BE AT THE TOP - MOVE EVERYTHING HERE
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<ItemWithType | null>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<{
     id: string;
@@ -90,14 +101,10 @@ const FileManager: React.FC<FileManagerProps> = ({
     id: string;
     name: string;
   } | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkDownloadDialogOpen, setBulkDownloadDialogOpen] = useState(false);
 
   const { startViewing } = useViewing();
-
-  // Add viewing handlers
-  const handleFileClick = (file: FileWithType) => {
-    startViewing(file._id);
-    // You can also open file preview here if needed
-  };
 
   // Use the new hook that gets both files and folders for current folder
   const {
@@ -114,6 +121,46 @@ const FileManager: React.FC<FileManagerProps> = ({
   const isLoading = searchResults?.data ? false : treeLoading;
   const error = searchResults ? null : treeError;
 
+  // Extract files and folders from display data
+  const files = displayData?.files || [];
+  const folders = displayData?.folders || [];
+
+  // Create combined items array
+  const allItems: ItemWithType[] = useMemo(() => [
+    ...folders.map(
+      (folder: FolderType) => ({ ...folder, type: "folder" as const })
+    ),
+    ...files.map((file: FileType) => ({ ...file, type: "file" as const })),
+  ], [files, folders]);
+
+  // Convert selected items to SelectableItem format for bulk dialogs
+  const selectedSelectableItems: SelectableItem[] = useMemo(() => {
+    return selectedItems.map(itemId => {
+      const item = allItems.find(item => item._id === itemId);
+      if (!item) return null;
+      
+      return {
+        id: item._id,
+        name: item.type === 'file' ? item.originalName : item.name,
+        type: item.type,
+        size: item.type === 'file' ? item.size : undefined,
+        parentFolder: item.type === 'file' ? item.parentFolder : item.parent,
+      };
+    }).filter(Boolean) as SelectableItem[];
+  }, [selectedItems, allItems]);
+
+  // Add viewing handlers
+  const handleFileClick = (file: FileWithType) => {
+    startViewing(file._id);
+  };
+
+  console.log("FileManager: Display data:", {
+    files: files.length,
+    folders: folders.length,
+    isSearchResults: !!searchResults,
+  });
+
+  // CONDITIONAL LOGIC AFTER ALL HOOKS
   // Show loading state
   if (isLoading) {
     return (
@@ -136,23 +183,43 @@ const FileManager: React.FC<FileManagerProps> = ({
     );
   }
 
-  // Extract files and folders from display data
-  const files = displayData?.files || [];
-  const folders = displayData?.folders || [];
+  // Selection handlers
+  const handleItemSelect = (itemId: string) => {
+    setSelectedItems(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
 
-  console.log("FileManager: Display data:", {
-    files: files.length,
-    folders: folders.length,
-    isSearchResults: !!searchResults,
-  });
+  const handleSelectAll = () => {
+    if (selectedItems.length === allItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(allItems.map(item => item._id));
+    }
+  };
 
-  // Create combined items array
-  const allItems: ItemWithType[] = [
-    ...folders.map(
-      (folder: FolderWithType )=> ({ ...folder, type: "folder" as const })
-    ),
-    ...files.map((file: FileWithType) => ({ ...file, type: "file" as const })),
-  ];
+  const handleClearSelection = () => {
+    setSelectedItems([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = () => {
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const handleBulkDownload = () => {
+    setBulkDownloadDialogOpen(true);
+  };
+
+  const handleBulkDeleteComplete = () => {
+    setSelectedItems([]);
+  };
+
+  const handleBulkDownloadComplete = () => {
+    setSelectedItems([]);
+  };
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -253,7 +320,9 @@ const FileManager: React.FC<FileManagerProps> = ({
   };
 
   const handleFolderDoubleClick = (folder: FolderWithType) => {
-    onFolderClick(folder._id);
+    if (selectedItems.length === 0) {
+      onFolderClick(folder._id);
+    }
   };
 
   const getFileIcon = (mimetype: string) => {
@@ -326,12 +395,80 @@ const FileManager: React.FC<FileManagerProps> = ({
     );
   }
 
+  const isAllSelected = selectedItems.length === allItems.length;
+  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < allItems.length;
+
   return (
     <Box>
+      {/* Selection toolbar */}
+      <Toolbar sx={{ minHeight: '48px !important', px: '0 !important', mb: 1 }}>
+        <Checkbox
+          indeterminate={isIndeterminate}
+          checked={isAllSelected}
+          onChange={handleSelectAll}
+          sx={{ mr: 1 }}
+        />
+        <Button
+          size="small"
+          variant="text"
+          startIcon={<SelectAll />}
+          onClick={handleSelectAll}
+          sx={{ mr: 2 }}
+        >
+          {isAllSelected ? 'Deselect All' : 'Select All'}
+        </Button>
+
+        {selectedItems.length > 0 && (
+          <>
+            <Chip 
+              label={`${selectedItems.length} selected`} 
+              size="small" 
+              color="primary"
+              sx={{ mr: 2 }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              color="primary"
+              startIcon={<Download />}
+              onClick={handleBulkDownload}
+              sx={{ mr: 1 }}
+            >
+              Download
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<Delete />}
+              onClick={handleBulkDelete}
+              sx={{ mr: 1 }}
+            >
+              Delete
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Clear />}
+              onClick={handleClearSelection}
+            >
+              Clear
+            </Button>
+          </>
+        )}
+      </Toolbar>
+
       <TableContainer component={Paper} elevation={0} variant="outlined">
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  indeterminate={isIndeterminate}
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                />
+              </TableCell>
               <TableCell>Name</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Size</TableCell>
@@ -340,103 +477,111 @@ const FileManager: React.FC<FileManagerProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {allItems.map((item) => (
-              <TableRow
-                key={`${item.type}-${item._id}`}
-                hover
-                sx={{
-                  cursor: item.type === "folder" ? "pointer" : "default",
-                  "&:hover": {
-                    backgroundColor: "action.hover",
-                  },
-                }}
-                onDoubleClick={() => {
-                  if (item.type === "folder") {
-                    handleFolderDoubleClick(item as FolderWithType);
-                  }
-                }}
-                onClick={() => {
-                  if (item.type === "file") {
-                    handleFileClick(item as FileWithType);
-                  }
-                }}
-              >
-                <TableCell>
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Avatar
-                      sx={{
-                        mr: 2,
-                        bgcolor:
-                          item.type === "folder" ? "primary.main" : "grey.100",
-                        width: 40,
-                        height: 40,
-                      }}
-                    >
-                      {item.type === "folder" ? (
-                        <Folder />
-                      ) : (
-                        <span style={{ fontSize: "1.2rem" }}>
-                          {getFileIcon((item as FileWithType).mimetype)}
-                        </span>
-                      )}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="subtitle2">
-                        {item.type === "file"
-                          ? (item as FileWithType).originalName
-                          : (item as FolderWithType).name}
-                      </Typography>
-                      <Box
+            {allItems.map((item) => {
+              const isSelected = selectedItems.includes(item._id);
+              
+              return (
+                <TableRow
+                  key={`${item.type}-${item._id}`}
+                  hover
+                  selected={isSelected}
+                  sx={{
+                    cursor: item.type === "folder" ? "pointer" : "default",
+                    "&:hover": {
+                      backgroundColor: "action.hover",
+                    },
+                  }}
+                  onClick={() => handleItemSelect(item._id)}
+                  onDoubleClick={() => {
+                    if (item.type === "folder") {
+                      handleFolderDoubleClick(item as FolderWithType);
+                    }
+                  }}
+                >
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={isSelected}
+                      onChange={() => handleItemSelect(item._id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Avatar
                         sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          flexWrap: "wrap",
+                          mr: 2,
+                          bgcolor:
+                            item.type === "folder" ? "primary.main" : "grey.100",
+                          width: 40,
+                          height: 40,
                         }}
                       >
-                        <Typography variant="caption" color="text.secondary">
-                          {item.type === "file" ? "File" : "Folder"}
-                        </Typography>
-                        {/* Add viewing indicator for files */}
-                        {item.type === "file" && (
-                          <FileViewersIndicator
-                            fileId={item._id}
-                            variant="compact"
-                            maxVisible={2}
-                          />
+                        {item.type === "folder" ? (
+                          <Folder />
+                        ) : (
+                          <span style={{ fontSize: "1.2rem" }}>
+                            {getFileIcon((item as FileWithType).mimetype)}
+                          </span>
                         )}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle2">
+                          {item.type === "file"
+                            ? (item as FileWithType).originalName
+                            : (item as FolderWithType).name}
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary">
+                            {item.type === "file" ? "File" : "Folder"}
+                          </Typography>
+                          {/* Add viewing indicator for files */}
+                          {item.type === "file" && (
+                            <FileViewersIndicator
+                              fileId={item._id}
+                              variant="compact"
+                              maxVisible={2}
+                            />
+                          )}
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={item.type === "file" ? "File" : "Folder"}
-                    size="small"
-                    color={item.type === "file" ? "primary" : "secondary"}
-                    variant="outlined"
-                  />
-                </TableCell>
-                <TableCell>
-                  {item.type === "file"
-                    ? formatFileSize((item as FileWithType).size)
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  {formatDistanceToNow(new Date(item.createdAt), {
-                    addSuffix: true,
-                  })}
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleMenuOpen(e, item)}
-                  >
-                    <MoreVert />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.type === "file" ? "File" : "Folder"}
+                      size="small"
+                      color={item.type === "file" ? "primary" : "secondary"}
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {item.type === "file"
+                      ? formatFileSize((item as FileWithType).size)
+                      : "-"}
+                  </TableCell>
+                  <TableCell>
+                    {formatDistanceToNow(new Date(item.createdAt), {
+                      addSuffix: true,
+                    })}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleMenuOpen(e, item)}
+                    >
+                      <MoreVert />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -458,14 +603,18 @@ const FileManager: React.FC<FileManagerProps> = ({
               handleMenuClose();
             }}
           >
-            <Visibility sx={{ mr: 2 }} />
-            Preview
+            <ListItemIcon>
+              <Visibility fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Preview</ListItemText>
           </MenuItem>
         )}
         {selectedItem?.type === "file" && (
           <MenuItem onClick={() => handleVersionHistory(selectedItem as FileWithType)}>
-            <History sx={{ mr: 2 }} />
-            Version History
+            <ListItemIcon>
+              <History fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Version History</ListItemText>
           </MenuItem>
         )}
         {selectedItem?.type === "folder" && (
@@ -475,13 +624,17 @@ const FileManager: React.FC<FileManagerProps> = ({
               handleMenuClose();
             }}
           >
-            <Folder sx={{ mr: 2 }} />
-            Open Folder
+            <ListItemIcon>
+              <Folder fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Open Folder</ListItemText>
           </MenuItem>
         )}
         <MenuItem onClick={() => handleShare(selectedItem!)}>
-          <Share sx={{ mr: 2 }} />
-          Share
+          <ListItemIcon>
+            <Share fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Share</ListItemText>
         </MenuItem>
         {selectedItem?.type === "file" && (
           <MenuItem
@@ -490,17 +643,21 @@ const FileManager: React.FC<FileManagerProps> = ({
               handleMenuClose();
             }}
           >
-            <Download sx={{ mr: 2 }} />
-            Download
+            <ListItemIcon>
+              <Download fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>Download</ListItemText>
           </MenuItem>
         )}
         <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
-          <Delete sx={{ mr: 2 }} />
-          Delete
+          <ListItemIcon>
+            <Delete fontSize="small" color="error" />
+          </ListItemIcon>
+          <ListItemText>Delete</ListItemText>
         </MenuItem>
       </Menu>
 
-      {/* Preview Dialog - Now using the simplified component */}
+      {/* Preview Dialog */}
       <PreviewDialog
         open={previewDialogOpen}
         onClose={handleClosePreview}
@@ -532,6 +689,22 @@ const FileManager: React.FC<FileManagerProps> = ({
           fileName={selectedFileForVersion.name}
         />
       )}
+
+      {/* Bulk Delete Dialog */}
+      <BulkDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onClose={() => setBulkDeleteDialogOpen(false)}
+        selectedItems={selectedSelectableItems}
+        onDeleteComplete={handleBulkDeleteComplete}
+      />
+
+      {/* Bulk Download Dialog */}
+      <BulkDownloadDialog
+        open={bulkDownloadDialogOpen}
+        onClose={() => setBulkDownloadDialogOpen(false)}
+        selectedItems={selectedSelectableItems}
+        onDownloadComplete={handleBulkDownloadComplete}
+      />
     </Box>
   );
 };

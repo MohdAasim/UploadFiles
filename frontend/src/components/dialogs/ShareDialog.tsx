@@ -32,6 +32,7 @@ import {
   Close,
 } from '@mui/icons-material';
 import { useShareResource, useFilePermissions, useFolderPermissions, useRemovePermission } from '../../hooks/useSharing';
+import toast from 'react-hot-toast';
 
 interface ShareDialogProps {
   open: boolean;
@@ -102,7 +103,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
       
       setEmail('');
       setPermission('view');
-    } catch (error) {
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -114,7 +115,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
         resourceType,
         targetUserEmail: userEmail,
       });
-    } catch (error) {
+    } catch{
       // Error is handled by the hook
     }
   };
@@ -267,7 +268,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
                       icon={getPermissionIcon(perm.permission)}
                       label={perm.permission.charAt(0).toUpperCase() + perm.permission.slice(1)}
                       size="small"
-                      color={getPermissionColor(perm.permission) as any}
+                      color={getPermissionColor(perm.permission)}
                       variant="outlined"
                     />
                     <IconButton

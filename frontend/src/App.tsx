@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { UploadProvider } from "./contexts/UploadContext";
 import { ViewingProvider } from './contexts/ViewingContext';
@@ -16,16 +16,47 @@ import FoldersPage from "./pages/FoldersPage";
 import UploadQueue from "./components/files/UploadQueue";
 import { useUploadContext } from "./contexts/UploadContext";
 import SharedPage from './pages/SharedPage';
+import NotFoundPage from './pages/NotFoundPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
+
+// Set up global error handler for queries
+queryClient.setMutationDefaults(['upload'], {
+  onError: (error) => {
+    console.error('Upload mutation error:', error);
+  },
+});
+
+// Global query error handler using query cache
+queryClient.getQueryCache().config = {
+  onError: (error, query) => {
+    console.error('Query error:', error, 'Query key:', query.queryKey);
+    // You can add toast notifications here for specific errors
+    // toast.error(`Error: ${error.message}`);
+  },
+};
+
+// Global mutation error handler using mutation cache
+queryClient.getMutationCache().config = {
+  onError: (error) => {
+    console.error('Mutation error:', error);
+    toast.error(`Operation failed: ${error.message}`);
+  },
+};
 
 const theme = createTheme({
   palette: {
@@ -95,89 +126,143 @@ const UploadQueueContainer = () => {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <UploadProvider>
-            {/* Wrap the app in ViewingProvider to manage file viewing state */}
-            <ViewingProvider>
-              <Router>
-                <Routes>
-                  <Route
-                    path="/login"
-                    element={
-                      <PublicRoute>
-                        <LoginPage />
-                      </PublicRoute>
-                    }
-                  />
-                  <Route
-                    path="/register"
-                    element={
-                      <PublicRoute>
-                        <RegisterPage />
-                      </PublicRoute>
-                    }
-                  />
-                  <Route
-                    path="/*"
-                    element={
-                      <ProtectedRoute>
-                        <Layout>
-                          <Routes>
-                            <Route
-                              path="/dashboard"
-                              element={<DashboardPage />}
-                            />
-                            <Route path="/files" element={<FilesPage />} />
-                            <Route path="/folders" element={<FoldersPage />} />
-                            <Route path="/shared" element={<SharedPage />} />
-                            <Route
-                              path="/"
-                              element={<Navigate to="/dashboard" />}
-                            />
-                            <Route
-                              path="*"
-                              element={<Navigate to="/dashboard" />}
-                            />
-                          </Routes>
-                        </Layout>
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-                <UploadQueueContainer />
-              </Router>
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: "#363636",
-                    color: "#fff",
-                  },
-                  success: {
-                    duration: 3000,
-                    iconTheme: {
-                      primary: "#4aed88",
-                      secondary: "#fff",
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AuthProvider>
+            <UploadProvider>
+              <ViewingProvider>
+                <Router>
+                  <ErrorBoundary>
+                    <Routes>
+                      {/* Public Routes - No Layout */}
+                      <Route
+                        path="/login"
+                        element={
+                          <ErrorBoundary>
+                            <PublicRoute>
+                              <LoginPage />
+                            </PublicRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/register"
+                        element={
+                          <ErrorBoundary>
+                            <PublicRoute>
+                              <RegisterPage />
+                            </PublicRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      
+                      {/* Root redirect */}
+                      <Route
+                        path="/"
+                        element={<Navigate to="/dashboard" replace />}
+                      />
+                      
+                      {/* Protected Routes with Layout */}
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <ErrorBoundary>
+                            <ProtectedRoute>
+                              <Layout>
+                                <DashboardPage />
+                              </Layout>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/files"
+                        element={
+                          <ErrorBoundary>
+                            <ProtectedRoute>
+                              <Layout>
+                                <FilesPage />
+                              </Layout>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/folders"
+                        element={
+                          <ErrorBoundary>
+                            <ProtectedRoute>
+                              <Layout>
+                                <FoldersPage />
+                              </Layout>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      <Route
+                        path="/shared"
+                        element={
+                          <ErrorBoundary>
+                            <ProtectedRoute>
+                              <Layout>
+                                <SharedPage />
+                              </Layout>
+                            </ProtectedRoute>
+                          </ErrorBoundary>
+                        }
+                      />
+                      
+                      {/* 404 Not Found - Standalone page without Layout */}
+                      <Route
+                        path="*"
+                        element={
+                          <ErrorBoundary>
+                            <NotFoundPage />
+                          </ErrorBoundary>
+                        }
+                      />
+                    </Routes>
+                  </ErrorBoundary>
+                  
+                  {/* Upload Queue - Only show for authenticated users */}
+                  <ProtectedRoute>
+                    <UploadQueueContainer />
+                  </ProtectedRoute>
+                </Router>
+                
+                {/* Toast Notifications */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: "#363636",
+                      color: "#fff",
                     },
-                  },
-                  error: {
-                    duration: 5000,
-                    iconTheme: {
-                      primary: "#ff6b6b",
-                      secondary: "#fff",
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: "#4aed88",
+                        secondary: "#fff",
+                      },
                     },
-                  },
-                }}
-              />
-            </ViewingProvider>
-          </UploadProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                    error: {
+                      duration: 5000,
+                      iconTheme: {
+                        primary: "#ff6b6b",
+                        secondary: "#fff",
+                      },
+                    },
+                  }}
+                />
+              </ViewingProvider>
+            </UploadProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

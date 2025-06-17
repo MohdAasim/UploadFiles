@@ -9,10 +9,7 @@ export const useVersionHistory = (fileId: string) => {
     queryFn: () => versionsAPI.getVersionHistory(fileId),
     enabled: !!fileId,
     select: (data) => {
-      console.log('Version history response:', data);
-      const responseData = data?.data?.data || data?.data || data;
-      console.log('Parsed response data:', responseData);
-      
+      const responseData = data?.data?.data || data?.data || data;      
       return responseData || {
         file: { id: fileId, originalName: 'Unknown', currentVersion: 1 },
         versions: []

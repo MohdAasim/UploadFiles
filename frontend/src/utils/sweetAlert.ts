@@ -32,6 +32,21 @@ export const showConfirmation = async (
     cancelButtonColor: "#3085d6",
     confirmButtonText,
     cancelButtonText: "Cancel",
+    backdrop: true,
+    allowOutsideClick: false,
+    allowEscapeKey: true,
+    customClass: {
+      container: "sweet-alert-high-z",
+    },
+    didOpen: () => {
+      // Set z-index after the popup opens
+      const container = document.querySelector(
+        ".swal2-container"
+      ) as HTMLElement;
+      if (container) {
+        container.style.zIndex = "10000";
+      }
+    },
   });
 
   return result.isConfirmed;

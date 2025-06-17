@@ -31,9 +31,7 @@ export const useSharedWithMe = () => {
     queryKey: ['shared-with-me'],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getSharedWithMe();
-        console.log('Shared with me response:', response);
-        
+        const response = await shareAPI.getSharedWithMe();        
         // Access the data correctly: response.data.data.sharedWithMe
         return response.data?.sharedWithMe || {
           files: [],
@@ -59,9 +57,7 @@ export const useMySharedResources = () => {
     queryKey: ['my-shared-resources'],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getMySharedResources();
-        console.log('My shared resources response:', response);
-        
+        const response = await shareAPI.getMySharedResources();        
         // Access the data correctly: response.data.data.mySharedResources
         return response.data?.mySharedResources || {
           files: [],
@@ -87,10 +83,7 @@ export const useFilePermissions = (fileId: string) => {
     queryKey: ['file-permissions', fileId],
     queryFn: async () => {
       try {
-        console.log('Fetching file permissions for:', fileId);
-        const response = await shareAPI.getFilePermissions(fileId);
-        console.log('File permissions response:', response);
-        
+        const response = await shareAPI.getFilePermissions(fileId);        
         // Return a default structure if response is empty or invalid
         return response.data?.data || {
           file: {
@@ -125,10 +118,7 @@ export const useFolderPermissions = (folderId: string) => {
     queryKey: ['folder-permissions', folderId],
     queryFn: async () => {
       try {
-        console.log('Fetching folder permissions for:', folderId);
-        const response = await shareAPI.getFolderPermissions(folderId);
-        console.log('Folder permissions response:', response);
-        
+        const response = await shareAPI.getFolderPermissions(folderId);        
         // Return a default structure if response is empty or invalid
         return response.data?.data || {
           folder: {

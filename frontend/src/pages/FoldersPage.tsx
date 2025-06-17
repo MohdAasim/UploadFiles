@@ -17,9 +17,7 @@ import {
   IconButton,
   Chip,
   Card,
-  CardContent,
-  Grid,
-} from "@mui/material";
+  CardContent,} from "@mui/material";
 import {
   Folder,
   Add,
@@ -76,10 +74,10 @@ const FoldersPage: React.FC = () => {
           "Folder has been deleted successfully."
         );
       }
-    } catch (error: any) {
+    } catch (error) {
       await showErrorAlert(
         "Delete Failed",
-        error?.message || "Failed to delete folder"
+        (error as Error)?.message || "Failed to delete folder"
       );
     }
   };
@@ -117,8 +115,15 @@ const FoldersPage: React.FC = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          mb: 3,
+        }}
+      >
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -132,8 +137,8 @@ const FoldersPage: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -147,8 +152,8 @@ const FoldersPage: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -162,8 +167,8 @@ const FoldersPage: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       <Paper sx={{ p: 3 }}>
         {/* Action Buttons */}

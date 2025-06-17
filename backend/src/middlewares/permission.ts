@@ -14,7 +14,7 @@ export const checkPermission =
   async (
     req: AuthRequest,
     res: Response,
-    next: NextFunction,
+    next: NextFunction
   ): Promise<void> => {
     try {
       const resourceId = req.params.id || req.body.resourceId;
@@ -51,7 +51,7 @@ export const checkPermission =
 
       // Find user's permission
       const shared = resource.sharedWith.find(
-        (entry: any) => entry.user.toString() === userId,
+        (entry: any) => entry.user.toString() === userId
       );
 
       if (!shared) {

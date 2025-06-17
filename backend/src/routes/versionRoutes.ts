@@ -16,7 +16,7 @@ router.post(
   authenticate,
   checkPermission('file', 'edit'),
   upload.single('file'),
-  uploadNewVersion,
+  uploadNewVersion
 );
 
 // View version history (requires view permission)
@@ -24,7 +24,7 @@ router.get(
   '/history/:id',
   authenticate,
   checkPermission('file', 'view'),
-  getVersionHistory,
+  getVersionHistory
 );
 
 // Restore version (requires admin permission)
@@ -32,7 +32,7 @@ router.post(
   '/restore/:id',
   authenticate,
   checkPermission('file', 'admin'),
-  restoreVersion,
+  restoreVersion
 );
 
 export default router;

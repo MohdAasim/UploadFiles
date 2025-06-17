@@ -147,6 +147,27 @@ export interface BulkDeleteResponse {
   deletedFolders: number;
 }
 
+export interface BulkDownloadData {
+  files: string[];
+  folders: string[];
+}
+
+export interface FileDownloadInfo {
+  id: string;
+  name: string;
+  downloadUrl: string;
+  size: number;
+  mimetype: string;
+}
+
+export interface BulkDownloadResponse {
+  success: boolean;
+  data: {
+    files: FileDownloadInfo[];
+    folders: string[];
+  };
+}
+
 export interface ShareResourceData {
   resourceId: string;
   resourceType: 'file' | 'folder';

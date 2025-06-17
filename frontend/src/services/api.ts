@@ -222,22 +222,22 @@ export const versionsAPI = {
 // Bulk API
 export const bulkAPI = {
   bulkAction: (data: BulkActionData) =>
-    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', data),
+    api.post<ApiResponse<BulkDeleteResponse>>('/bulk', data),
   
   bulkDelete: (data: BulkDeleteData) =>
-    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', {
+    api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'delete',
       ...data,
     }),
   
   bulkMove: (data: { files: string[]; folders: string[]; targetFolder: string }) =>
-    api.post<ApiResponse<BulkDeleteResponse>>('/api/v1/bulk', {
+    api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'move',
       ...data,
     }),
   
   bulkDownload: (data: { files: string[]; folders: string[] }) =>
-    api.post<ApiResponse<{ files: Array<{ id: string; name: string; downloadUrl: string; size: number; mimetype: string }>; folders: string[] }>>('/api/v1/bulk', {
+    api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'download',
       ...data,
     }),

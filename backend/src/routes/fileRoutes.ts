@@ -13,6 +13,6 @@ const router = Router();
 router.post('/upload', authenticate, upload.single('file'), uploadFile);
 router.get('/', authenticate, listFiles);
 router.get('/preview/:id', authenticate, previewFile);
-router.delete('/:id', authenticate, deleteFile);  // Make sure this route exists
+router.delete('/:id', authenticate, deleteFile); // Make sure this route exists
 
 export default router;

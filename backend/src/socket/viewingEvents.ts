@@ -1,4 +1,4 @@
-import { AuthenticatedSocket, SocketServer } from "./socketServer";
+import { AuthenticatedSocket, SocketServer } from './socketServer';
 import { Server as SocketIOServer } from 'socket.io';
 
 // Define the viewer info type
@@ -15,7 +15,7 @@ const fileViewers = new Map<string, Set<ViewerInfo>>(); // fileId -> Set of view
 
 export const handleViewingEvents = (
   io: SocketIOServer,
-  socket: AuthenticatedSocket,
+  socket: AuthenticatedSocket
 ) => {
   // User starts viewing a file
   socket.on('start-viewing-file', async ({ fileId }: { fileId: string }) => {
@@ -43,7 +43,9 @@ export const handleViewingEvents = (
       };
 
       // Remove any existing entry for this user and add new one
-      const existingViewer = Array.from(viewers).find((v: ViewerInfo) => v.id === userId);
+      const existingViewer = Array.from(viewers).find(
+        (v: ViewerInfo) => v.id === userId
+      );
       if (existingViewer) {
         viewers.delete(existingViewer);
       }
@@ -81,7 +83,9 @@ export const handleViewingEvents = (
       const viewers = fileViewers.get(fileId);
       if (viewers) {
         // Remove user from viewers
-        const viewerToRemove = Array.from(viewers).find((v: ViewerInfo) => v.id === userId);
+        const viewerToRemove = Array.from(viewers).find(
+          (v: ViewerInfo) => v.id === userId
+        );
         if (viewerToRemove) {
           viewers.delete(viewerToRemove);
 
@@ -107,7 +111,7 @@ export const handleViewingEvents = (
           });
 
           console.log(
-            `User ${socket.userData?.name} stopped viewing file ${fileId}`,
+            `User ${socket.userData?.name} stopped viewing file ${fileId}`
           );
         }
       }
@@ -123,7 +127,9 @@ export const handleViewingEvents = (
 
     // Remove user from all file viewing sessions
     for (const [fileId, viewers] of fileViewers.entries()) {
-      const viewerToRemove = Array.from(viewers).find((v: ViewerInfo) => v.id === userId);
+      const viewerToRemove = Array.from(viewers).find(
+        (v: ViewerInfo) => v.id === userId
+      );
       if (viewerToRemove) {
         viewers.delete(viewerToRemove);
 
