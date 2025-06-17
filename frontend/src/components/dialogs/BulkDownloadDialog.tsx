@@ -16,11 +16,7 @@ import {
   Divider,
   CircularProgress,
 } from '@mui/material';
-import {
-  InsertDriveFile,
-  Folder,
-  Download,
-} from '@mui/icons-material';
+import { InsertDriveFile, Folder, Download } from '@mui/icons-material';
 // Fix: Import the main hook, not individual hooks
 import { useBulkActions } from '../../hooks/useBulkActions';
 import type { SelectableItem } from '../../types';
@@ -41,16 +37,16 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
   // Fix: Use the main hook and destructure
   const { bulkDownload } = useBulkActions();
 
-  const fileItems = selectedItems.filter(item => item.type === 'file');
-  const folderItems = selectedItems.filter(item => item.type === 'folder');
+  const fileItems = selectedItems.filter((item) => item.type === 'file');
+  const folderItems = selectedItems.filter((item) => item.type === 'folder');
 
   const handleDownload = async () => {
     try {
       await bulkDownload.mutateAsync({
-        files: fileItems.map(item => item.id),
-        folders: folderItems.map(item => item.id),
+        files: fileItems.map((item) => item.id),
+        folders: folderItems.map((item) => item.id),
       });
-      
+
       onDownloadComplete();
       onClose();
     } catch (error) {
@@ -83,13 +79,13 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
           <Typography variant="body2">
             <strong>Download Information:</strong>
             <br />
-            • Files will be downloaded individually to your browser's download folder
+            • Files will be downloaded individually to your browser's download
+            folder
             <br />
             • Folders will have all their contents downloaded as separate files
             <br />
             • Downloads will be staggered to prevent browser overload
-            <br />
-            • Large files may take longer to prepare for download
+            <br />• Large files may take longer to prepare for download
           </Typography>
         </Alert>
 
@@ -123,8 +119,16 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
         <Typography variant="subtitle1" gutterBottom>
           Items to be downloaded:
         </Typography>
-        
-        <Box sx={{ maxHeight: 300, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+
+        <Box
+          sx={{
+            maxHeight: 300,
+            overflow: 'auto',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+          }}
+        >
           <List dense>
             {folderItems.map((item, index) => (
               <ListItem key={`folder-${index}`}>
@@ -137,11 +141,9 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
                 />
               </ListItem>
             ))}
-            
-            {folderItems.length > 0 && fileItems.length > 0 && (
-              <Divider />
-            )}
-            
+
+            {folderItems.length > 0 && fileItems.length > 0 && <Divider />}
+
             {fileItems.map((item, index) => (
               <ListItem key={`file-${index}`}>
                 <ListItemIcon>
@@ -149,7 +151,9 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary={item.name}
-                  secondary={item.size ? formatFileSize(item.size) : 'Unknown size'}
+                  secondary={
+                    item.size ? formatFileSize(item.size) : 'Unknown size'
+                  }
                 />
               </ListItem>
             ))}
@@ -157,16 +161,24 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
         </Box>
 
         {selectedItems.length === 0 && (
-          <Alert severity="info">
-            No items selected for download.
-          </Alert>
+          <Alert severity="info">No items selected for download.</Alert>
         )}
 
         {bulkDownload.isPending && (
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, p: 2, bgcolor: 'primary.50', borderRadius: 1 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              mt: 2,
+              p: 2,
+              bgcolor: 'primary.50',
+              borderRadius: 1,
+            }}
+          >
             <CircularProgress size={20} sx={{ mr: 2 }} />
             <Typography variant="body2">
-              Preparing downloads... This may take a moment for large files or folders.
+              Preparing downloads... This may take a moment for large files or
+              folders.
             </Typography>
           </Box>
         )}
@@ -181,9 +193,17 @@ const BulkDownloadDialog: React.FC<BulkDownloadDialogProps> = ({
           variant="contained"
           color="primary"
           disabled={selectedItems.length === 0 || bulkDownload.isPending}
-          startIcon={bulkDownload.isPending ? <CircularProgress size={20} /> : <Download />}
+          startIcon={
+            bulkDownload.isPending ? (
+              <CircularProgress size={20} />
+            ) : (
+              <Download />
+            )
+          }
         >
-          {bulkDownload.isPending ? 'Preparing...' : `Download ${selectedItems.length} Item${selectedItems.length !== 1 ? 's' : ''}`}
+          {bulkDownload.isPending
+            ? 'Preparing...'
+            : `Download ${selectedItems.length} Item${selectedItems.length !== 1 ? 's' : ''}`}
         </Button>
       </DialogActions>
     </Dialog>

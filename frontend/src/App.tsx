@@ -1,20 +1,25 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import toast, { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { UploadProvider } from "./contexts/UploadContext";
+import { UploadProvider } from './contexts/UploadContext';
 import { ViewingProvider } from './contexts/ViewingContext';
-import Layout from "./components/layout/Layout";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import FilesPage from "./pages/FilesPage";
-import FoldersPage from "./pages/FoldersPage";
-import UploadQueue from "./components/files/UploadQueue";
-import { useUploadContext } from "./contexts/UploadContext";
+import Layout from './components/layout/Layout';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import FilesPage from './pages/FilesPage';
+import FoldersPage from './pages/FoldersPage';
+import UploadQueue from './components/files/UploadQueue';
+import { useUploadContext } from './contexts/UploadContext';
 import SharedPage from './pages/SharedPage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoadingSpinner from './components/common/LoadingSpinner';
@@ -60,12 +65,12 @@ queryClient.getMutationCache().config = {
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: 'light',
     primary: {
-      main: "#1976d2",
+      main: '#1976d2',
     },
     secondary: {
-      main: "#dc004e",
+      main: '#dc004e',
     },
   },
   typography: {
@@ -81,7 +86,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div><LoadingSpinner /></div>;
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return user ? <>{children}</> : <Navigate to="/login" />;
@@ -91,7 +100,11 @@ const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div><LoadingSpinner /></div>;
+    return (
+      <div>
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return user ? <Navigate to="/dashboard" /> : <>{children}</>;
@@ -157,13 +170,13 @@ function App() {
                           </ErrorBoundary>
                         }
                       />
-                      
+
                       {/* Root redirect */}
                       <Route
                         path="/"
                         element={<Navigate to="/dashboard" replace />}
                       />
-                      
+
                       {/* Protected Routes with Layout */}
                       <Route
                         path="/dashboard"
@@ -213,7 +226,7 @@ function App() {
                           </ErrorBoundary>
                         }
                       />
-                      
+
                       {/* 404 Not Found - Standalone page without Layout */}
                       <Route
                         path="*"
@@ -225,34 +238,34 @@ function App() {
                       />
                     </Routes>
                   </ErrorBoundary>
-                  
+
                   {/* Upload Queue - Only show for authenticated users */}
                   <ProtectedRoute>
                     <UploadQueueContainer />
                   </ProtectedRoute>
                 </Router>
-                
+
                 {/* Toast Notifications */}
                 <Toaster
                   position="top-right"
                   toastOptions={{
                     duration: 4000,
                     style: {
-                      background: "#363636",
-                      color: "#fff",
+                      background: '#363636',
+                      color: '#fff',
                     },
                     success: {
                       duration: 3000,
                       iconTheme: {
-                        primary: "#4aed88",
-                        secondary: "#fff",
+                        primary: '#4aed88',
+                        secondary: '#fff',
                       },
                     },
                     error: {
                       duration: 5000,
                       iconTheme: {
-                        primary: "#ff6b6b",
-                        secondary: "#fff",
+                        primary: '#ff6b6b',
+                        secondary: '#fff',
                       },
                     },
                   }}

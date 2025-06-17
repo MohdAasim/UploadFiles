@@ -1,14 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef } from 'react';
 import {
   Box,
   TextField,
   InputAdornment,
   IconButton,
   Tooltip,
-} from "@mui/material";
-import { Search, Clear } from "@mui/icons-material";
-import { useSearch } from "../../hooks/useSearch";
-import { useNavigate } from "react-router-dom";
+} from '@mui/material';
+import { Search, Clear } from '@mui/icons-material';
+import { useSearch } from '../../hooks/useSearch';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderSearchProps {
   compact?: boolean;
@@ -46,7 +46,7 @@ const HeaderSearch: React.FC<HeaderSearchProps> = ({ compact = false }) => {
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter") {
+    if (event.key === 'Enter') {
       handleSearchSubmit();
     }
   };
@@ -56,7 +56,7 @@ const HeaderSearch: React.FC<HeaderSearchProps> = ({ compact = false }) => {
       <Tooltip title="Search files and folders">
         <IconButton
           color="inherit"
-          onClick={() => navigate("/search")}
+          onClick={() => navigate('/search')}
           sx={{ mr: 1 }}
         >
           <Search />
@@ -66,7 +66,7 @@ const HeaderSearch: React.FC<HeaderSearchProps> = ({ compact = false }) => {
   }
 
   return (
-    <Box sx={{ position: "relative", width: { xs: "100%", sm: 400 } }}>
+    <Box sx={{ position: 'relative', width: { xs: '100%', sm: 400 } }}>
       <TextField
         ref={inputRef}
         fullWidth
@@ -79,22 +79,22 @@ const HeaderSearch: React.FC<HeaderSearchProps> = ({ compact = false }) => {
         variant="outlined"
         size="small"
         sx={{
-          "& .MuiOutlinedInput-root": {
+          '& .MuiOutlinedInput-root': {
             borderRadius: 3,
-            backgroundColor: "rgba(255, 255, 255, 0.15)",
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.25)",
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
             },
-            "&.Mui-focused": {
-              backgroundColor: "background.paper",
-              color: "text.primary",
+            '&.Mui-focused': {
+              backgroundColor: 'background.paper',
+              color: 'text.primary',
             },
-            "& input": {
-              color: isFocused ? "text.primary" : "inherit",
-              "&::placeholder": {
+            '& input': {
+              color: isFocused ? 'text.primary' : 'inherit',
+              '&::placeholder': {
                 color: isFocused
-                  ? "text.secondary"
-                  : "rgba(255, 255, 255, 0.7)",
+                  ? 'text.secondary'
+                  : 'rgba(255, 255, 255, 0.7)',
               },
             },
           },
@@ -102,21 +102,20 @@ const HeaderSearch: React.FC<HeaderSearchProps> = ({ compact = false }) => {
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
-              <Search color={isFocused ? "action" : "inherit"} />
+              <Search color={isFocused ? 'action' : 'inherit'} />
             </InputAdornment>
           ),
-          endAdornment:
-            query && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={handleClear}
-                  title="Clear search"
-                >
-                  <Clear />
-                </IconButton>
-              </InputAdornment>
-            ),
+          endAdornment: query && (
+            <InputAdornment position="end">
+              <IconButton
+                size="small"
+                onClick={handleClear}
+                title="Clear search"
+              >
+                <Clear />
+              </IconButton>
+            </InputAdornment>
+          ),
         }}
       />
     </Box>

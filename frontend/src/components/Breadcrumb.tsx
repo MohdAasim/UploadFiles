@@ -1,7 +1,7 @@
 import React from 'react';
-import { Breadcrumbs, Typography, Link, Box, IconButton } from "@mui/material";
-import { Home, NavigateNext, ArrowBack } from "@mui/icons-material";
-import { useFolders } from "../hooks/useFiles";
+import { Breadcrumbs, Typography, Link, Box, IconButton } from '@mui/material';
+import { Home, NavigateNext, ArrowBack } from '@mui/icons-material';
+import { useFolders } from '../hooks/useFiles';
 
 interface BreadcrumbProps {
   currentFolder?: string;
@@ -20,9 +20,9 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   const { data: folders } = useFolders();
 
   const buildBreadcrumbPath = (folderId?: string): BreadcrumbItem[] => {
-    if (!folderId || !folders) return [{ name: "Home" }];
+    if (!folderId || !folders) return [{ name: 'Home' }];
 
-    const path: BreadcrumbItem[] = [{ name: "Home" }];
+    const path: BreadcrumbItem[] = [{ name: 'Home' }];
     let current = folders.find((f) => f._id === folderId);
 
     const visited = new Set<string>();
@@ -51,11 +51,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
+        display: 'flex',
+        alignItems: 'center',
         mb: 2,
         p: 1,
-        bgcolor: "grey.50",
+        bgcolor: 'grey.50',
         borderRadius: 1,
       }}
     >
@@ -79,11 +79,11 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
           if (isLast) {
             return (
               <Typography
-                key={item.id || "home"}
+                key={item.id || 'home'}
                 color="text.primary"
-                sx={{ display: "flex", alignItems: "center" }}
+                sx={{ display: 'flex', alignItems: 'center' }}
               >
-                {index === 0 && <Home sx={{ mr: 0.5, fontSize: "1rem" }} />}
+                {index === 0 && <Home sx={{ mr: 0.5, fontSize: '1rem' }} />}
                 {item.name}
               </Typography>
             );
@@ -91,18 +91,18 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 
           return (
             <Link
-              key={item.id || "home"}
+              key={item.id || 'home'}
               component="button"
               variant="body2"
               onClick={() => onFolderClick(item.id)}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
+                display: 'flex',
+                alignItems: 'center',
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
               }}
             >
-              {index === 0 && <Home sx={{ mr: 0.5, fontSize: "1rem" }} />}
+              {index === 0 && <Home sx={{ mr: 0.5, fontSize: '1rem' }} />}
               {item.name}
             </Link>
           );

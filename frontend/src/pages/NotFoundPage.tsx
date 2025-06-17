@@ -9,12 +9,7 @@ import {
   CardContent,
   Stack,
 } from '@mui/material';
-import {
-  Home,
-  ArrowBack,
-  SearchOff,
-  CloudUpload,
-} from '@mui/icons-material';
+import { Home, ArrowBack, SearchOff, CloudUpload } from '@mui/icons-material';
 
 const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
@@ -103,7 +98,8 @@ const NotFoundPage: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              Sorry, the page you're looking for doesn't exist. It might have been moved, deleted, or you entered the wrong URL.
+              Sorry, the page you're looking for doesn't exist. It might have
+              been moved, deleted, or you entered the wrong URL.
             </Typography>
 
             {/* Action Buttons */}
@@ -186,11 +182,7 @@ const NotFoundPage: React.FC = () => {
         </Card>
 
         {/* Footer */}
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ mt: 4 }}
-        >
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
           © 2024 UploadFiles. All rights reserved.
         </Typography>
       </Box>

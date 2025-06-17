@@ -1,21 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { shareAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import type { ShareResourceRequest} from '../types/sharing';
+import type { ShareResourceRequest } from '../types/sharing';
 
 // Hook to share a resource
 export const useShareResource = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: ShareResourceRequest) => shareAPI.shareResource(data),
     onSuccess: (_, variables) => {
-      toast.success(`${variables.resourceType === 'file' ? 'File' : 'Folder'} shared successfully!`);
-      
+      toast.success(
+        `${variables.resourceType === 'file' ? 'File' : 'Folder'} shared successfully!`
+      );
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['my-shared-resources'] });
-      queryClient.invalidateQueries({ queryKey: ['file-permissions', variables.resourceId] });
-      queryClient.invalidateQueries({ queryKey: ['folder-permissions', variables.resourceId] });
+      queryClient.invalidateQueries({
+        queryKey: ['file-permissions', variables.resourceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['folder-permissions', variables.resourceId],
+      });
       queryClient.invalidateQueries({ queryKey: ['shared-with-me'] });
     },
     onError: (error) => {
@@ -31,18 +37,20 @@ export const useSharedWithMe = () => {
     queryKey: ['shared-with-me'],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getSharedWithMe();        
+        const response = await shareAPI.getSharedWithMe();
         // Access the data correctly: response.data.data.sharedWithMe
-        return response.data?.sharedWithMe || {
-          files: [],
-          folders: [],
-        };
+        return (
+          response.data?.sharedWithMe || {
+            files: [],
+            folders: [],
+          }
+        );
       } catch (error) {
         console.error('Error fetching shared with me:', error);
         // Return default structure on error to prevent undefined
         return {
           files: [],
-          folders: []
+          folders: [],
         };
       }
     },
@@ -57,18 +65,20 @@ export const useMySharedResources = () => {
     queryKey: ['my-shared-resources'],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getMySharedResources();        
+        const response = await shareAPI.getMySharedResources();
         // Access the data correctly: response.data.data.mySharedResources
-        return response.data?.mySharedResources || {
-          files: [],
-          folders: [],
-        };
+        return (
+          response.data?.mySharedResources || {
+            files: [],
+            folders: [],
+          }
+        );
       } catch (error) {
         console.error('Error fetching my shared resources:', error);
         // Return default structure on error to prevent undefined
         return {
           files: [],
-          folders: []
+          folders: [],
         };
       }
     },
@@ -83,16 +93,18 @@ export const useFilePermissions = (fileId: string) => {
     queryKey: ['file-permissions', fileId],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getFilePermissions(fileId);        
+        const response = await shareAPI.getFilePermissions(fileId);
         // Return a default structure if response is empty or invalid
-        return response.data?.data || {
-          file: {
-            id: fileId,
-            name: 'Unknown File',
-            owner: 'Unknown'
-          },
-          permissions: []
-        };
+        return (
+          response.data?.data || {
+            file: {
+              id: fileId,
+              name: 'Unknown File',
+              owner: 'Unknown',
+            },
+            permissions: [],
+          }
+        );
       } catch (error) {
         console.error('Error fetching file permissions:', error);
         // Return default structure on error to prevent undefined
@@ -100,9 +112,9 @@ export const useFilePermissions = (fileId: string) => {
           file: {
             id: fileId,
             name: 'Unknown File',
-            owner: 'Unknown'
+            owner: 'Unknown',
           },
-          permissions: []
+          permissions: [],
         };
       }
     },
@@ -118,16 +130,18 @@ export const useFolderPermissions = (folderId: string) => {
     queryKey: ['folder-permissions', folderId],
     queryFn: async () => {
       try {
-        const response = await shareAPI.getFolderPermissions(folderId);        
+        const response = await shareAPI.getFolderPermissions(folderId);
         // Return a default structure if response is empty or invalid
-        return response.data?.data || {
-          folder: {
-            id: folderId,
-            name: 'Unknown Folder',
-            owner: 'Unknown'
-          },
-          permissions: []
-        };
+        return (
+          response.data?.data || {
+            folder: {
+              id: folderId,
+              name: 'Unknown Folder',
+              owner: 'Unknown',
+            },
+            permissions: [],
+          }
+        );
       } catch (error) {
         console.error('Error fetching folder permissions:', error);
         // Return default structure on error to prevent undefined
@@ -135,9 +149,9 @@ export const useFolderPermissions = (folderId: string) => {
           folder: {
             id: folderId,
             name: 'Unknown Folder',
-            owner: 'Unknown'
+            owner: 'Unknown',
           },
-          permissions: []
+          permissions: [],
         };
       }
     },
@@ -150,7 +164,7 @@ export const useFolderPermissions = (folderId: string) => {
 // Hook to remove permission
 export const useRemovePermission = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: {
       resourceId: string;
@@ -159,11 +173,15 @@ export const useRemovePermission = () => {
     }) => shareAPI.removePermission(data),
     onSuccess: (_, variables) => {
       toast.success('Permission removed successfully!');
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['my-shared-resources'] });
-      queryClient.invalidateQueries({ queryKey: ['file-permissions', variables.resourceId] });
-      queryClient.invalidateQueries({ queryKey: ['folder-permissions', variables.resourceId] });
+      queryClient.invalidateQueries({
+        queryKey: ['file-permissions', variables.resourceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['folder-permissions', variables.resourceId],
+      });
       queryClient.invalidateQueries({ queryKey: ['shared-with-me'] });
     },
     onError: (error) => {

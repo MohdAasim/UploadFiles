@@ -1,5 +1,5 @@
 /*eslint-disable */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Table,
@@ -20,7 +20,7 @@ import {
   Button,
   ListItemIcon,
   ListItemText,
-} from "@mui/material";
+} from '@mui/material';
 import {
   MoreVert,
   CloudUpload,
@@ -32,45 +32,46 @@ import {
   History,
   SelectAll,
   Clear,
-} from "@mui/icons-material";
-import { formatDistanceToNow } from "date-fns";
+} from '@mui/icons-material';
+import { formatDistanceToNow } from 'date-fns';
 import {
   useFolderTree,
   useDeleteFile,
   useDeleteFolder,
-} from "../../hooks/useFiles";
+} from '../../hooks/useFiles';
 import {
   showDeleteConfirmation,
   showSuccessAlert,
   showErrorAlert,
-} from "../../utils/sweetAlert";
-import type { FileType, FolderType, SelectableItem } from "../../types";
-import { api } from "../../services/api";
-import FileViewersIndicator from "./FileViewersIndicator";
-import { useViewing } from "../../contexts/ViewingContext";
-import ShareDialog from "../dialogs/ShareDialog";
-import PreviewDialog from "../dialogs/PreviewDialog";
+} from '../../utils/sweetAlert';
+import type { FileType, FolderType, SelectableItem } from '../../types';
+import { api } from '../../services/api';
+import FileViewersIndicator from './FileViewersIndicator';
+import { useViewing } from '../../contexts/ViewingContext';
+import ShareDialog from '../dialogs/ShareDialog';
+import PreviewDialog from '../dialogs/PreviewDialog';
 import VersionHistoryDialog from '../dialogs/VersionHistoryDialog';
 import BulkDeleteDialog from '../dialogs/BulkDeleteDialog';
 import BulkDownloadDialog from '../dialogs/BulkDownloadDialog';
 
-
 interface FileManagerProps {
   currentFolder?: string;
   onFolderClick: (folderId?: string) => void;
-  searchResults?: {data:{
-    files: FileType[];
-    folders: FolderType[];
-  } }| null;
+  searchResults?: {
+    data: {
+      files: FileType[];
+      folders: FolderType[];
+    };
+  } | null;
 }
 
 // Create extended types with the type property
 interface FileWithType extends FileType {
-  type: "file";
+  type: 'file';
 }
 
 interface FolderWithType extends FolderType {
-  type: "folder";
+  type: 'folder';
 }
 
 type ItemWithType = FileWithType | FolderWithType;
@@ -84,6 +85,7 @@ const FileManager: React.FC<FileManagerProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedItem, setSelectedItem] = useState<ItemWithType | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const selectionMode = selectedItems.length > 0;
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<{
     id: string;
@@ -126,35 +128,41 @@ const FileManager: React.FC<FileManagerProps> = ({
   const folders = displayData?.folders || [];
 
   // Create combined items array
-  const allItems: ItemWithType[] = useMemo(() => [
-    ...folders.map(
-      (folder: FolderType) => ({ ...folder, type: "folder" as const })
-    ),
-    ...files.map((file: FileType) => ({ ...file, type: "file" as const })),
-  ], [files, folders]);
+  const allItems: ItemWithType[] = useMemo(
+    () => [
+      ...folders.map((folder: FolderType) => ({
+        ...folder,
+        type: 'folder' as const,
+      })),
+      ...files.map((file: FileType) => ({ ...file, type: 'file' as const })),
+    ],
+    [files, folders]
+  );
 
   // Convert selected items to SelectableItem format for bulk dialogs
   const selectedSelectableItems: SelectableItem[] = useMemo(() => {
-    return selectedItems.map(itemId => {
-      const item = allItems.find(item => item._id === itemId);
-      if (!item) return null;
-      
-      return {
-        id: item._id,
-        name: item.type === 'file' ? item.originalName : item.name,
-        type: item.type,
-        size: item.type === 'file' ? item.size : undefined,
-        parentFolder: item.type === 'file' ? item.parentFolder : item.parent,
-      };
-    }).filter(Boolean) as SelectableItem[];
+    return selectedItems
+      .map((itemId) => {
+        const item = allItems.find((item) => item._id === itemId);
+        if (!item) return null;
+
+        return {
+          id: item._id,
+          name: item.type === 'file' ? item.originalName : item.name,
+          type: item.type,
+          size: item.type === 'file' ? item.size : undefined,
+          parentFolder: item.type === 'file' ? item.parentFolder : item.parent,
+        };
+      })
+      .filter(Boolean) as SelectableItem[];
   }, [selectedItems, allItems]);
 
   // Add viewing handlers
-  const handleFileClick = (file: FileWithType) => {
-    startViewing(file._id);
+  const handleFileClick = (id: string) => {
+    startViewing(id);
   };
 
-  console.log("FileManager: Display data:", {
+  console.log('FileManager: Display data:', {
     files: files.length,
     folders: folders.length,
     isSearchResults: !!searchResults,
@@ -164,7 +172,7 @@ const FileManager: React.FC<FileManagerProps> = ({
   // Show loading state
   if (isLoading) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
+      <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography>Loading files and folders...</Typography>
       </Box>
     );
@@ -172,9 +180,9 @@ const FileManager: React.FC<FileManagerProps> = ({
 
   // Show error state
   if (error) {
-    console.error("Folder tree error:", error);
+    console.error('Folder tree error:', error);
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
+      <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography color="error">Error loading files and folders</Typography>
         <Typography variant="body2" color="text.secondary">
           {error.message}
@@ -185,9 +193,9 @@ const FileManager: React.FC<FileManagerProps> = ({
 
   // Selection handlers
   const handleItemSelect = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
+    setSelectedItems((prev) =>
+      prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
         : [...prev, itemId]
     );
   };
@@ -196,7 +204,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     if (selectedItems.length === allItems.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(allItems.map(item => item._id));
+      setSelectedItems(allItems.map((item) => item._id));
     }
   };
 
@@ -239,32 +247,32 @@ const FileManager: React.FC<FileManagerProps> = ({
     if (!selectedItem) return;
 
     const itemName =
-      selectedItem.type === "file"
+      selectedItem.type === 'file'
         ? (selectedItem as FileWithType).originalName
         : (selectedItem as FolderWithType).name;
 
-    const itemType = selectedItem.type === "file" ? "file" : "folder";
+    const itemType = selectedItem.type === 'file' ? 'file' : 'folder';
 
     try {
       const confirmed = await showDeleteConfirmation(
         `Delete ${itemType}?`,
         `Are you sure you want to delete "${itemName}"?${
-          selectedItem.type === "folder"
-            ? " This will also delete all contents of the folder."
-            : ""
+          selectedItem.type === 'folder'
+            ? ' This will also delete all contents of the folder.'
+            : ''
         }`,
         `Yes, delete ${itemType}!`
       );
 
       if (confirmed) {
-        if (selectedItem.type === "file") {
+        if (selectedItem.type === 'file') {
           await deleteFile.mutateAsync(selectedItem._id);
         } else {
           await deleteFolder.mutateAsync(selectedItem._id);
         }
 
         await showSuccessAlert(
-          "Deleted!",
+          'Deleted!',
           `${
             itemType.charAt(0).toUpperCase() + itemType.slice(1)
           } has been deleted.`
@@ -272,7 +280,7 @@ const FileManager: React.FC<FileManagerProps> = ({
       }
     } catch (error: any) {
       await showErrorAlert(
-        "Delete Failed",
+        'Delete Failed',
         error?.message || `Failed to delete ${itemType}`
       );
     }
@@ -297,13 +305,13 @@ const FileManager: React.FC<FileManagerProps> = ({
   const handleDownload = async (file: FileWithType) => {
     try {
       const response = await api.get(`/files/preview/${file._id}`, {
-        responseType: "blob",
+        responseType: 'blob',
       });
 
       const blob = response.data;
       const url = URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = file.originalName;
       document.body.appendChild(link);
@@ -313,8 +321,8 @@ const FileManager: React.FC<FileManagerProps> = ({
       URL.revokeObjectURL(url);
     } catch (error: any) {
       await showErrorAlert(
-        "Download Failed",
-        error?.message || "Failed to download file"
+        'Download Failed',
+        error?.message || 'Failed to download file'
       );
     }
   };
@@ -326,30 +334,30 @@ const FileManager: React.FC<FileManagerProps> = ({
   };
 
   const getFileIcon = (mimetype: string) => {
-    if (mimetype.startsWith("image/")) {
-      return "🖼️";
-    } else if (mimetype.startsWith("video/")) {
-      return "🎥";
-    } else if (mimetype.startsWith("audio/")) {
-      return "🎵";
-    } else if (mimetype.includes("pdf")) {
-      return "📄";
-    } else if (mimetype.includes("word") || mimetype.includes("document")) {
-      return "📝";
-    } else if (mimetype.includes("excel") || mimetype.includes("spreadsheet")) {
-      return "📊";
-    } else if (mimetype.includes("zip") || mimetype.includes("archive")) {
-      return "📦";
+    if (mimetype.startsWith('image/')) {
+      return '🖼️';
+    } else if (mimetype.startsWith('video/')) {
+      return '🎥';
+    } else if (mimetype.startsWith('audio/')) {
+      return '🎵';
+    } else if (mimetype.includes('pdf')) {
+      return '📄';
+    } else if (mimetype.includes('word') || mimetype.includes('document')) {
+      return '📝';
+    } else if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) {
+      return '📊';
+    } else if (mimetype.includes('zip') || mimetype.includes('archive')) {
+      return '📦';
     }
-    return "📄";
+    return '📄';
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const handleShare = (item: ItemWithType) => {
@@ -357,7 +365,7 @@ const FileManager: React.FC<FileManagerProps> = ({
       id: item._id,
       type: item.type,
       name:
-        item.type === "file"
+        item.type === 'file'
           ? (item as FileWithType).originalName
           : (item as FolderWithType).name,
     });
@@ -381,22 +389,23 @@ const FileManager: React.FC<FileManagerProps> = ({
 
   if (allItems.length === 0) {
     return (
-      <Box sx={{ p: 4, textAlign: "center" }}>
-        <CloudUpload sx={{ fontSize: 64, color: "grey.400", mb: 2 }} />
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <CloudUpload sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
         <Typography variant="h6" color="text.secondary" gutterBottom>
-          {searchResults ? "No search results found" : "This folder is empty"}
+          {searchResults ? 'No search results found' : 'This folder is empty'}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {searchResults
-            ? "Try different search terms"
-            : "Upload files or create folders to get started"}
+            ? 'Try different search terms'
+            : 'Upload files or create folders to get started'}
         </Typography>
       </Box>
     );
   }
 
   const isAllSelected = selectedItems.length === allItems.length;
-  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < allItems.length;
+  const isIndeterminate =
+    selectedItems.length > 0 && selectedItems.length < allItems.length;
 
   return (
     <Box>
@@ -420,9 +429,9 @@ const FileManager: React.FC<FileManagerProps> = ({
 
         {selectedItems.length > 0 && (
           <>
-            <Chip 
-              label={`${selectedItems.length} selected`} 
-              size="small" 
+            <Chip
+              label={`${selectedItems.length} selected`}
+              size="small"
               color="primary"
               sx={{ mr: 2 }}
             />
@@ -479,21 +488,24 @@ const FileManager: React.FC<FileManagerProps> = ({
           <TableBody>
             {allItems.map((item) => {
               const isSelected = selectedItems.includes(item._id);
-              
+
               return (
                 <TableRow
                   key={`${item.type}-${item._id}`}
                   hover
                   selected={isSelected}
                   sx={{
-                    cursor: item.type === "folder" ? "pointer" : "default",
-                    "&:hover": {
-                      backgroundColor: "action.hover",
+                    cursor: item.type === 'folder' ? 'pointer' : 'default',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
                     },
                   }}
-                  onClick={() => handleItemSelect(item._id)}
+                  onClick={() => {
+                    if (!selectionMode) handleFileClick(item._id);
+                    else handleItemSelect(item._id);
+                  }}
                   onDoubleClick={() => {
-                    if (item.type === "folder") {
+                    if (item.type === 'folder') {
                       handleFolderDoubleClick(item as FolderWithType);
                     }
                   }}
@@ -506,43 +518,45 @@ const FileManager: React.FC<FileManagerProps> = ({
                     />
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <Avatar
                         sx={{
                           mr: 2,
                           bgcolor:
-                            item.type === "folder" ? "primary.main" : "grey.100",
+                            item.type === 'folder'
+                              ? 'primary.main'
+                              : 'grey.100',
                           width: 40,
                           height: 40,
                         }}
                       >
-                        {item.type === "folder" ? (
+                        {item.type === 'folder' ? (
                           <Folder />
                         ) : (
-                          <span style={{ fontSize: "1.2rem" }}>
+                          <span style={{ fontSize: '1.2rem' }}>
                             {getFileIcon((item as FileWithType).mimetype)}
                           </span>
                         )}
                       </Avatar>
                       <Box>
                         <Typography variant="subtitle2">
-                          {item.type === "file"
+                          {item.type === 'file'
                             ? (item as FileWithType).originalName
                             : (item as FolderWithType).name}
                         </Typography>
                         <Box
                           sx={{
-                            display: "flex",
-                            alignItems: "center",
+                            display: 'flex',
+                            alignItems: 'center',
                             gap: 1,
-                            flexWrap: "wrap",
+                            flexWrap: 'wrap',
                           }}
                         >
                           <Typography variant="caption" color="text.secondary">
-                            {item.type === "file" ? "File" : "Folder"}
+                            {item.type === 'file' ? 'File' : 'Folder'}
                           </Typography>
                           {/* Add viewing indicator for files */}
-                          {item.type === "file" && (
+                          {item.type === 'file' && (
                             <FileViewersIndicator
                               fileId={item._id}
                               variant="compact"
@@ -555,16 +569,16 @@ const FileManager: React.FC<FileManagerProps> = ({
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={item.type === "file" ? "File" : "Folder"}
+                      label={item.type === 'file' ? 'File' : 'Folder'}
                       size="small"
-                      color={item.type === "file" ? "primary" : "secondary"}
+                      color={item.type === 'file' ? 'primary' : 'secondary'}
                       variant="outlined"
                     />
                   </TableCell>
                   <TableCell>
-                    {item.type === "file"
+                    {item.type === 'file'
                       ? formatFileSize((item as FileWithType).size)
-                      : "-"}
+                      : '-'}
                   </TableCell>
                   <TableCell>
                     {formatDistanceToNow(new Date(item.createdAt), {
@@ -592,11 +606,11 @@ const FileManager: React.FC<FileManagerProps> = ({
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "left",
+          vertical: 'bottom',
+          horizontal: 'left',
         }}
       >
-        {selectedItem?.type === "file" && (
+        {selectedItem?.type === 'file' && (
           <MenuItem
             onClick={() => {
               handlePreview(selectedItem as FileWithType);
@@ -609,15 +623,17 @@ const FileManager: React.FC<FileManagerProps> = ({
             <ListItemText>Preview</ListItemText>
           </MenuItem>
         )}
-        {selectedItem?.type === "file" && (
-          <MenuItem onClick={() => handleVersionHistory(selectedItem as FileWithType)}>
+        {selectedItem?.type === 'file' && (
+          <MenuItem
+            onClick={() => handleVersionHistory(selectedItem as FileWithType)}
+          >
             <ListItemIcon>
               <History fontSize="small" />
             </ListItemIcon>
             <ListItemText>Version History</ListItemText>
           </MenuItem>
         )}
-        {selectedItem?.type === "folder" && (
+        {selectedItem?.type === 'folder' && (
           <MenuItem
             onClick={() => {
               onFolderClick(selectedItem._id);
@@ -636,7 +652,7 @@ const FileManager: React.FC<FileManagerProps> = ({
           </ListItemIcon>
           <ListItemText>Share</ListItemText>
         </MenuItem>
-        {selectedItem?.type === "file" && (
+        {selectedItem?.type === 'file' && (
           <MenuItem
             onClick={() => {
               handleDownload(selectedItem as FileWithType);
@@ -649,7 +665,7 @@ const FileManager: React.FC<FileManagerProps> = ({
             <ListItemText>Download</ListItemText>
           </MenuItem>
         )}
-        <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+        <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
           <ListItemIcon>
             <Delete fontSize="small" color="error" />
           </ListItemIcon>

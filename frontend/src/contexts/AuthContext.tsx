@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import { authAPI } from '../services/api';
 import type { User } from '../types';
 import socketService from '../services/socketService';
@@ -31,12 +37,12 @@ const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message;
   }
-  
+
   if (typeof error === 'object' && error !== null && 'response' in error) {
     const axiosError = error as { response?: { data?: { message?: string } } };
     return axiosError.response?.data?.message || 'Request failed';
   }
-  
+
   return 'An unexpected error occurred';
 };
 

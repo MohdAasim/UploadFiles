@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -17,29 +17,30 @@ import {
   IconButton,
   Chip,
   Card,
-  CardContent,} from "@mui/material";
+  CardContent,
+} from '@mui/material';
 import {
   Folder,
   Add,
   Delete,
   FolderOpen,
   SubdirectoryArrowRight,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import {
   useFolders,
   useCreateFolder,
   useDeleteFolder,
-} from "../hooks/useFiles";
-import { formatDistanceToNow } from "date-fns";
+} from '../hooks/useFiles';
+import { formatDistanceToNow } from 'date-fns';
 import {
   showDeleteConfirmation,
   showSuccessAlert,
   showErrorAlert,
-} from "../utils/sweetAlert";
+} from '../utils/sweetAlert';
 
 const FoldersPage: React.FC = () => {
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderName, setNewFolderName] = useState('');
 
   const { data: folders, isLoading, error } = useFolders();
   const createFolder = useCreateFolder();
@@ -51,10 +52,10 @@ const FoldersPage: React.FC = () => {
         await createFolder.mutateAsync({
           name: newFolderName.trim(),
         });
-        setNewFolderName("");
+        setNewFolderName('');
         setCreateFolderDialogOpen(false);
       } catch (error) {
-        console.error("Failed to create folder:", error);
+        console.error('Failed to create folder:', error);
       }
     }
   };
@@ -62,22 +63,22 @@ const FoldersPage: React.FC = () => {
   const handleDeleteFolder = async (folderId: string, folderName: string) => {
     try {
       const confirmed = await showDeleteConfirmation(
-        "Delete Folder?",
+        'Delete Folder?',
         `Are you sure you want to delete "${folderName}"? This will also delete all contents of the folder.`,
-        "Yes, delete folder!"
+        'Yes, delete folder!'
       );
 
       if (confirmed) {
         await deleteFolder.mutateAsync(folderId);
         await showSuccessAlert(
-          "Deleted!",
-          "Folder has been deleted successfully."
+          'Deleted!',
+          'Folder has been deleted successfully.'
         );
       }
     } catch (error) {
       await showErrorAlert(
-        "Delete Failed",
-        (error as Error)?.message || "Failed to delete folder"
+        'Delete Failed',
+        (error as Error)?.message || 'Failed to delete folder'
       );
     }
   };
@@ -117,17 +118,17 @@ const FoldersPage: React.FC = () => {
       {/* Stats Cards */}
       <Box
         sx={{
-          display: "flex",
-          flexWrap: "wrap",
+          display: 'flex',
+          flexWrap: 'wrap',
           gap: 3,
           mb: 3,
         }}
       >
-        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
+        <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <FolderOpen sx={{ mr: 2, color: "primary.main" }} />
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FolderOpen sx={{ mr: 2, color: 'primary.main' }} />
                 <Box>
                   <Typography variant="h6">{folders?.length || 0}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -138,11 +139,11 @@ const FoldersPage: React.FC = () => {
             </CardContent>
           </Card>
         </Box>
-        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
+        <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Folder sx={{ mr: 2, color: "success.main" }} />
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Folder sx={{ mr: 2, color: 'success.main' }} />
                 <Box>
                   <Typography variant="h6">{rootFolders.length}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -153,11 +154,11 @@ const FoldersPage: React.FC = () => {
             </CardContent>
           </Card>
         </Box>
-        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
+        <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center" }}>
-                <SubdirectoryArrowRight sx={{ mr: 2, color: "warning.main" }} />
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <SubdirectoryArrowRight sx={{ mr: 2, color: 'warning.main' }} />
                 <Box>
                   <Typography variant="h6">{nestedFolders.length}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -172,7 +173,7 @@ const FoldersPage: React.FC = () => {
 
       <Paper sx={{ p: 3 }}>
         {/* Action Buttons */}
-        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
           <Button
             variant="contained"
             startIcon={<Add />}
@@ -197,7 +198,7 @@ const FoldersPage: React.FC = () => {
                       key={folder._id}
                       sx={{
                         border: 1,
-                        borderColor: "grey.200",
+                        borderColor: 'grey.200',
                         borderRadius: 1,
                         mb: 1,
                       }}
@@ -210,13 +211,13 @@ const FoldersPage: React.FC = () => {
                         secondary={
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Created:{" "}
+                              Created:{' '}
                               {formatDistanceToNow(new Date(folder.createdAt), {
                                 addSuffix: true,
                               })}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Owner: {folder.owner?.name || "Unknown"}
+                              Owner: {folder.owner?.name || 'Unknown'}
                             </Typography>
                           </Box>
                         }
@@ -251,7 +252,7 @@ const FoldersPage: React.FC = () => {
                       key={folder._id}
                       sx={{
                         border: 1,
-                        borderColor: "grey.200",
+                        borderColor: 'grey.200',
                         borderRadius: 1,
                         mb: 1,
                       }}
@@ -264,13 +265,13 @@ const FoldersPage: React.FC = () => {
                         secondary={
                           <Box sx={{ mt: 1 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Created:{" "}
+                              Created:{' '}
                               {formatDistanceToNow(new Date(folder.createdAt), {
                                 addSuffix: true,
                               })}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Owner: {folder.owner?.name || "Unknown"}
+                              Owner: {folder.owner?.name || 'Unknown'}
                             </Typography>
                             <Chip
                               label="Nested Folder"
@@ -300,8 +301,8 @@ const FoldersPage: React.FC = () => {
             )}
           </Box>
         ) : (
-          <Box sx={{ textAlign: "center", py: 6 }}>
-            <Folder sx={{ fontSize: 64, color: "grey.400", mb: 2 }} />
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Folder sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
               No folders yet
             </Typography>
@@ -335,7 +336,7 @@ const FoldersPage: React.FC = () => {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === 'Enter') {
                 handleCreateFolder();
               }
             }}
@@ -350,7 +351,7 @@ const FoldersPage: React.FC = () => {
             variant="contained"
             disabled={createFolder.isPending}
           >
-            {createFolder.isPending ? "Creating..." : "Create"}
+            {createFolder.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>

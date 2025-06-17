@@ -31,7 +31,12 @@ import {
   AdminPanelSettings,
   Close,
 } from '@mui/icons-material';
-import { useShareResource, useFilePermissions, useFolderPermissions, useRemovePermission } from '../../hooks/useSharing';
+import {
+  useShareResource,
+  useFilePermissions,
+  useFolderPermissions,
+  useRemovePermission,
+} from '../../hooks/useSharing';
 import toast from 'react-hot-toast';
 
 interface ShareDialogProps {
@@ -50,34 +55,37 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
   resourceName,
 }) => {
   const [email, setEmail] = useState('');
-  const [permission, setPermission] = useState<'view' | 'edit' | 'admin'>('view');
+  const [permission, setPermission] = useState<'view' | 'edit' | 'admin'>(
+    'view'
+  );
 
   const shareResource = useShareResource();
   const removePermission = useRemovePermission();
-  
+
   // Get current permissions based on resource type
-  const { 
-    data: filePermissions, 
-    isLoading: fileLoading, 
-    error: fileError 
+  const {
+    data: filePermissions,
+    isLoading: fileLoading,
+    error: fileError,
   } = useFilePermissions(resourceType === 'file' ? resourceId : '');
-  
-  const { 
-    data: folderPermissions, 
-    isLoading: folderLoading, 
-    error: folderError 
+
+  const {
+    data: folderPermissions,
+    isLoading: folderLoading,
+    error: folderError,
   } = useFolderPermissions(resourceType === 'folder' ? resourceId : '');
 
-  const permissions = resourceType === 'file' ? filePermissions : folderPermissions;
+  const permissions =
+    resourceType === 'file' ? filePermissions : folderPermissions;
   const isLoading = resourceType === 'file' ? fileLoading : folderLoading;
   const error = resourceType === 'file' ? fileError : folderError;
 
-  console.log('ShareDialog data:', { 
-    resourceType, 
-    resourceId, 
-    permissions, 
-    isLoading, 
-    error 
+  console.log('ShareDialog data:', {
+    resourceType,
+    resourceId,
+    permissions,
+    isLoading,
+    error,
   });
 
   const handleShare = async () => {
@@ -100,7 +108,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
         targetUserEmail: email.trim(),
         permission,
       });
-      
+
       setEmail('');
       setPermission('view');
     } catch {
@@ -115,7 +123,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
         resourceType,
         targetUserEmail: userEmail,
       });
-    } catch{
+    } catch {
       // Error is handled by the hook
     }
   };
@@ -147,13 +155,13 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={onClose} 
-      maxWidth="sm" 
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: { minHeight: '500px' }
+        sx: { minHeight: '500px' },
       }}
     >
       <DialogTitle>
@@ -179,7 +187,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
           <Typography variant="subtitle2" gutterBottom>
             Share with others
           </Typography>
-          
+
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
             <TextField
               fullWidth
@@ -189,15 +197,23 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter user's email"
               size="small"
-              error={email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-              helperText={email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? 'Please enter a valid email' : ''}
+              error={
+                email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+              }
+              helperText={
+                email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+                  ? 'Please enter a valid email'
+                  : ''
+              }
             />
-            
+
             <FormControl sx={{ minWidth: 120 }} size="small">
               <InputLabel>Permission</InputLabel>
               <Select
                 value={permission}
-                onChange={(e) => setPermission(e.target.value as 'view' | 'edit' | 'admin')}
+                onChange={(e) =>
+                  setPermission(e.target.value as 'view' | 'edit' | 'admin')
+                }
                 label="Permission"
               >
                 <MenuItem value="view">
@@ -225,8 +241,18 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
           <Button
             variant="contained"
             onClick={handleShare}
-            disabled={!email.trim() || shareResource.isPending || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-            startIcon={shareResource.isPending ? <CircularProgress size={16} /> : <PersonAdd />}
+            disabled={
+              !email.trim() ||
+              shareResource.isPending ||
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+            }
+            startIcon={
+              shareResource.isPending ? (
+                <CircularProgress size={16} />
+              ) : (
+                <PersonAdd />
+              )
+            }
             fullWidth
           >
             {shareResource.isPending ? 'Sharing...' : 'Share'}
@@ -250,7 +276,8 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
             </Box>
           ) : error ? (
             <Alert severity="warning" sx={{ mt: 1 }}>
-              Unable to load current permissions. You can still share this {resourceType}.
+              Unable to load current permissions. You can still share this{' '}
+              {resourceType}.
             </Alert>
           ) : permissions?.permissions && permissions.permissions.length > 0 ? (
             <List dense>
@@ -266,7 +293,10 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
                       icon={getPermissionIcon(perm.permission)}
-                      label={perm.permission.charAt(0).toUpperCase() + perm.permission.slice(1)}
+                      label={
+                        perm.permission.charAt(0).toUpperCase() +
+                        perm.permission.slice(1)
+                      }
                       size="small"
                       color={getPermissionColor(perm.permission)}
                       variant="outlined"
@@ -293,7 +323,12 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
 
         {/* Permission explanations */}
         <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-          <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+            gutterBottom
+          >
             <strong>Permission levels:</strong>
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">
@@ -309,9 +344,7 @@ const ShareDialog: React.FC<ShareDialogProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>
-          Close
-        </Button>
+        <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>
   );

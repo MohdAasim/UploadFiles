@@ -47,20 +47,18 @@ interface TabPanelProps {
 }
 
 interface Resourcetype {
-
-    type: "file";
-    id: string;
+  type: 'file';
+  id: string;
+  name: string;
+  owner?: {
     name: string;
-    owner?: {
-      name: string;
-      email: string;
-    };
-    permission?: "view" | "edit" | "admin";
-    sharedAt?: string;
-    size?: number;
-    mimetype?: string;
-    path?: string;
-  
+    email: string;
+  };
+  permission?: 'view' | 'edit' | 'admin';
+  sharedAt?: string;
+  size?: number;
+  mimetype?: string;
+  path?: string;
 }
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
@@ -80,8 +78,10 @@ function TabPanel(props: TabPanelProps) {
 const SharedPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedResource, setSelectedResource] = useState<Resourcetype | null>(null);
-  
+  const [selectedResource, setSelectedResource] = useState<Resourcetype | null>(
+    null
+  );
+
   // Preview Dialog state
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedFileForPreview, setSelectedFileForPreview] = useState<{
@@ -97,12 +97,23 @@ const SharedPage: React.FC = () => {
     name: string;
   } | null>(null);
 
-  const { data: sharedWithMe, isLoading: sharedWithMeLoading, error: sharedWithMeError } = useSharedWithMe();
-  const { data: mySharedResources, isLoading: mySharedLoading, error: mySharedError } = useMySharedResources();
+  const {
+    data: sharedWithMe,
+    isLoading: sharedWithMeLoading,
+    error: sharedWithMeError,
+  } = useSharedWithMe();
+  const {
+    data: mySharedResources,
+    isLoading: mySharedLoading,
+    error: mySharedError,
+  } = useMySharedResources();
 
-  console.log(mySharedResources, "-----------------");
-  
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, resource: Resourcetype) => {
+  console.log(mySharedResources, '-----------------');
+
+  const handleMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    resource: Resourcetype
+  ) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
     setSelectedResource(resource);
@@ -114,11 +125,11 @@ const SharedPage: React.FC = () => {
   };
 
   const handlePreview = (resource: Resourcetype) => {
-    if (resource.type === "file") {
+    if (resource.type === 'file') {
       setSelectedFileForPreview({
         id: resource.id,
         name: resource.name,
-        type: resource.mimetype || "application/octet-stream",
+        type: resource.mimetype || 'application/octet-stream',
       });
       setPreviewDialogOpen(true);
     }
@@ -147,17 +158,17 @@ const SharedPage: React.FC = () => {
   };
 
   const handleDownload = async (resource: Resourcetype) => {
-    if (resource.type !== "file") return;
+    if (resource.type !== 'file') return;
 
     try {
       const response = await api.get(`/files/preview/${resource.id}`, {
-        responseType: "blob",
+        responseType: 'blob',
       });
 
       const blob = response.data;
       const url = URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = resource.name;
       document.body.appendChild(link);
@@ -167,8 +178,8 @@ const SharedPage: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       await showErrorAlert(
-        "Download Failed",
-        (error as Error)?.message || "Failed to download file"
+        'Download Failed',
+        (error as Error)?.message || 'Failed to download file'
       );
     }
     handleMenuClose();
@@ -176,7 +187,7 @@ const SharedPage: React.FC = () => {
 
   const getFileIcon = (mimetype?: string) => {
     if (!mimetype) return <InsertDriveFile />;
-    
+
     if (mimetype.startsWith('image/')) return '🖼️';
     if (mimetype.startsWith('video/')) return '🎥';
     if (mimetype.startsWith('audio/')) return '🎵';
@@ -188,10 +199,10 @@ const SharedPage: React.FC = () => {
 
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '-';
-    
+
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   const getPermissionIcon = (permission: string) => {
@@ -238,8 +249,14 @@ const SharedPage: React.FC = () => {
     }
 
     const allResources = [
-      ...(sharedWithMe?.files || []).map(f => ({ ...f, type: 'file' as const })),
-      ...(sharedWithMe?.folders || []).map(f => ({ ...f, type: 'folder' as const }))
+      ...(sharedWithMe?.files || []).map((f) => ({
+        ...f,
+        type: 'file' as const,
+      })),
+      ...(sharedWithMe?.folders || []).map((f) => ({
+        ...f,
+        type: 'folder' as const,
+      })),
     ];
 
     if (allResources.length === 0) {
@@ -271,8 +288,8 @@ const SharedPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {allResources.map((resource) => (
-              <TableRow 
-                key={`${resource.type}-${resource.id}`} 
+              <TableRow
+                key={`${resource.type}-${resource.id}`}
                 hover
                 sx={{ cursor: 'pointer' }}
                 onClick={() => {
@@ -305,7 +322,8 @@ const SharedPage: React.FC = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip onClick={(e) => e.stopPropagation()}
+                  <Chip
+                    onClick={(e) => e.stopPropagation()}
                     label={resource.type === 'file' ? 'File' : 'Folder'}
                     size="small"
                     color={resource.type === 'file' ? 'primary' : 'secondary'}
@@ -323,16 +341,22 @@ const SharedPage: React.FC = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip onClick={(e) => e.stopPropagation()}
+                  <Chip
+                    onClick={(e) => e.stopPropagation()}
                     icon={getPermissionIcon(resource.permission)}
-                    label={resource.permission.charAt(0).toUpperCase() + resource.permission.slice(1)}
+                    label={
+                      resource.permission.charAt(0).toUpperCase() +
+                      resource.permission.slice(1)
+                    }
                     size="small"
                     color={getPermissionColor(resource.permission)}
                     variant="outlined"
                   />
                 </TableCell>
                 <TableCell>
-                  {formatDistanceToNow(new Date(resource.sharedAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(resource.sharedAt), {
+                    addSuffix: true,
+                  })}
                 </TableCell>
                 <TableCell align="right">
                   <IconButton
@@ -368,8 +392,14 @@ const SharedPage: React.FC = () => {
     }
 
     const allResources = [
-      ...(mySharedResources?.files || []).map(f => ({ ...f, type: 'file' as const })),
-      ...(mySharedResources?.folders || []).map(f => ({ ...f, type: 'folder' as const }))
+      ...(mySharedResources?.files || []).map((f) => ({
+        ...f,
+        type: 'file' as const,
+      })),
+      ...(mySharedResources?.folders || []).map((f) => ({
+        ...f,
+        type: 'folder' as const,
+      })),
     ];
 
     if (allResources.length === 0) {
@@ -399,8 +429,8 @@ const SharedPage: React.FC = () => {
           </TableHead>
           <TableBody>
             {allResources.map((resource) => (
-              <TableRow 
-                key={`${resource.type}-${resource.id}`} 
+              <TableRow
+                key={`${resource.type}-${resource.id}`}
                 hover
                 sx={{ cursor: 'pointer' }}
                 onClick={() => {
@@ -433,7 +463,8 @@ const SharedPage: React.FC = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip onClick={(e) => e.stopPropagation()}
+                  <Chip
+                    onClick={(e) => e.stopPropagation()}
                     label={resource.type === 'file' ? 'File' : 'Folder'}
                     size="small"
                     color={resource.type === 'file' ? 'primary' : 'secondary'}
@@ -443,18 +474,24 @@ const SharedPage: React.FC = () => {
                 <TableCell>
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                     {resource.sharedWith.slice(0, 3).map((share, index) => (
-                      <Chip onClick={(e) => e.stopPropagation()}
+                      <Chip
+                        onClick={(e) => e.stopPropagation()}
                         key={index}
                         label={share.user.name}
                         size="small"
                         variant="outlined"
-                        avatar={<Avatar sx={{ width: 20, height: 20, fontSize: '0.75rem' }}>
-                          {share.user.name.charAt(0)}
-                        </Avatar>}
+                        avatar={
+                          <Avatar
+                            sx={{ width: 20, height: 20, fontSize: '0.75rem' }}
+                          >
+                            {share.user.name.charAt(0)}
+                          </Avatar>
+                        }
                       />
                     ))}
                     {resource.sharedWith.length > 3 && (
-                      <Chip onClick={(e) => e.stopPropagation()}
+                      <Chip
+                        onClick={(e) => e.stopPropagation()}
                         label={`+${resource.sharedWith.length - 3} more`}
                         size="small"
                         variant="outlined"
@@ -500,8 +537,8 @@ const SharedPage: React.FC = () => {
               </Avatar>
               <Box>
                 <Typography variant="h5">
-                  {((sharedWithMe?.files?.length || 0) + 
-                    (sharedWithMe?.folders?.length || 0))}
+                  {(sharedWithMe?.files?.length || 0) +
+                    (sharedWithMe?.folders?.length || 0)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Shared with me
@@ -519,8 +556,8 @@ const SharedPage: React.FC = () => {
               </Avatar>
               <Box>
                 <Typography variant="h5">
-                  {((mySharedResources?.files?.length || 0) + 
-                    (mySharedResources?.folders?.length || 0))}
+                  {(mySharedResources?.files?.length || 0) +
+                    (mySharedResources?.folders?.length || 0)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Shared by me
@@ -534,7 +571,10 @@ const SharedPage: React.FC = () => {
       {/* Main Content */}
       <Paper>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+          <Tabs
+            value={tabValue}
+            onChange={(_, newValue) => setTabValue(newValue)}
+          >
             <Tab label="Shared with me" />
             <Tab label="Shared by me" />
           </Tabs>

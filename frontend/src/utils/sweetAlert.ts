@@ -2,7 +2,7 @@ import Swal from 'sweetalert2';
 
 export const showDeleteConfirmation = async (
   title: string = 'Are you sure?',
-  text: string = 'You won\'t be able to revert this!',
+  text: string = "You won't be able to revert this!",
   confirmButtonText: string = 'Yes, delete it!'
 ): Promise<boolean> => {
   const result = await Swal.fire({
@@ -13,38 +13,38 @@ export const showDeleteConfirmation = async (
     confirmButtonColor: '#d33',
     cancelButtonColor: '#3085d6',
     confirmButtonText,
-    cancelButtonText: 'Cancel'
+    cancelButtonText: 'Cancel',
   });
 
   return result.isConfirmed;
 };
 export const showConfirmation = async (
-  title: string ,
-  text: string ,
-  confirmButtonText: string 
+  title: string,
+  text: string,
+  confirmButtonText: string
 ): Promise<boolean> => {
   const result = await Swal.fire({
     title,
     text,
-    icon: "warning",
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
     confirmButtonText,
-    cancelButtonText: "Cancel",
+    cancelButtonText: 'Cancel',
     backdrop: true,
     allowOutsideClick: false,
     allowEscapeKey: true,
     customClass: {
-      container: "sweet-alert-high-z",
+      container: 'sweet-alert-high-z',
     },
     didOpen: () => {
       // Set z-index after the popup opens
       const container = document.querySelector(
-        ".swal2-container"
+        '.swal2-container'
       ) as HTMLElement;
       if (container) {
-        container.style.zIndex = "10000";
+        container.style.zIndex = '10000';
       }
     },
   });
@@ -62,18 +62,18 @@ export const showSuccessAlert = (
     text,
     icon: 'success',
     timer,
-    showConfirmButton: false
+    showConfirmButton: false,
   });
 };
 
 export const showErrorAlert = (
   title: string = 'Error!',
-  text: string = 'Something went wrong.',
+  text: string = 'Something went wrong.'
 ) => {
   return Swal.fire({
     title,
     text,
     icon: 'error',
-    confirmButtonText: 'OK'
+    confirmButtonText: 'OK',
   });
 };

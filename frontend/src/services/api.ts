@@ -9,8 +9,12 @@ import type {
   BulkActionData,
   BulkDeleteResponse,
   BulkDeleteData,
-} from "../types";
-import type { MySharedResource, SharedResource, SharePermission } from '../types/sharing';
+} from '../types';
+import type {
+  MySharedResource,
+  SharedResource,
+  SharePermission,
+} from '../types/sharing';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,7 +27,7 @@ export const api = axios.create({
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -37,9 +41,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/login";
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -48,29 +52,29 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: (email: string, password: string) =>
-    api.post<AuthResponse>("/auth/login", { email, password }),
+    api.post<AuthResponse>('/auth/login', { email, password }),
 
   register: (name: string, email: string, password: string) =>
-    api.post<AuthResponse>("/auth/register", { name, email, password }),
+    api.post<AuthResponse>('/auth/register', { name, email, password }),
 
-  getCurrentUser: () => api.get<ApiResponse<User>>("/auth/me"),
+  getCurrentUser: () => api.get<ApiResponse<User>>('/auth/me'),
 };
 
 // Files API
 export const filesAPI = {
   uploadFile: (formData: FormData) =>
-    api.post<ApiResponse<FileType>>("/files/upload", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    api.post<ApiResponse<FileType>>('/files/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     }),
 
   getFiles: (parentFolder?: string) =>
-    api.get<ApiResponse<FileType[]>>("/files", {
+    api.get<ApiResponse<FileType[]>>('/files', {
       params: { parentFolder },
     }),
 
   previewFile: (fileId: string) =>
     api.get(`/files/preview/${fileId}`, {
-      responseType: "blob",
+      responseType: 'blob',
     }),
 
   deleteFile: (fileId: string) => api.delete<ApiResponse>(`/files/${fileId}`),
@@ -95,7 +99,7 @@ export const foldersAPI = {
       parent,
       ...options,
     };
-    return api.post<ApiResponse<FolderType>>("/folders/create", data);
+    return api.post<ApiResponse<FolderType>>('/folders/create', data);
   },
 
   // Get folder tree (files + folders in current directory)
@@ -108,14 +112,14 @@ export const foldersAPI = {
         fileCount: number;
         currentFolder: string | null;
       }>
-    >("/folders/tree", {
+    >('/folders/tree', {
       params: { parent: parentFolder },
     }),
 
   // Get all folders (for navigation/stats)
   getAllFolders: () =>
     api.get<ApiResponse<{ folders: FolderType[]; count: number }>>(
-      "/folders/all"
+      '/folders/all'
     ),
 
   // Delete folder
@@ -134,7 +138,7 @@ export const searchAPI = {
     q?: string;
     type?: string;
     inFolder?: string;
-    kind?: "file" | "folder" | "all";
+    kind?: 'file' | 'folder' | 'all';
   }) => {
     console.log('API: Making search request with params:', params);
     return api.get<
@@ -149,7 +153,7 @@ export const searchAPI = {
           searchKind: string;
         };
       }>
-    >("/search", { params });
+    >('/search', { params });
   },
 };
 
@@ -161,14 +165,16 @@ export const shareAPI = {
     targetUserEmail: string;
     permission: 'view' | 'edit' | 'admin';
   }) =>
-    api.post<ApiResponse<{
-      sharedWith: {
-        user: { id: string; name: string; email: string };
-        permission: string;
-        resourceType: string;
-      };
-    }>>('/share', data),
-  
+    api.post<
+      ApiResponse<{
+        sharedWith: {
+          user: { id: string; name: string; email: string };
+          permission: string;
+          resourceType: string;
+        };
+      }>
+    >('/share', data),
+
   getSharedWithMe: () =>
     api.get<{
       sharedWithMe: {
@@ -176,7 +182,7 @@ export const shareAPI = {
         folders: SharedResource[];
       };
     }>('/share/shared-with-me'),
-  
+
   getMySharedResources: () =>
     api.get<{
       mySharedResources: {
@@ -184,25 +190,28 @@ export const shareAPI = {
         folders: MySharedResource[];
       };
     }>('/share/my-shared'),
-  
+
   getFilePermissions: (fileId: string) =>
-    api.get<ApiResponse<{
-      file: { id: string; name: string; owner: string };
-      permissions: SharePermission[];
-    }>>(`/share/file/${fileId}/permissions`),
-  
+    api.get<
+      ApiResponse<{
+        file: { id: string; name: string; owner: string };
+        permissions: SharePermission[];
+      }>
+    >(`/share/file/${fileId}/permissions`),
+
   getFolderPermissions: (folderId: string) =>
-    api.get<ApiResponse<{
-      folder: { id: string; name: string; owner: string };
-      permissions: SharePermission[];
-    }>>(`/share/folder/${folderId}/permissions`),
-  
+    api.get<
+      ApiResponse<{
+        folder: { id: string; name: string; owner: string };
+        permissions: SharePermission[];
+      }>
+    >(`/share/folder/${folderId}/permissions`),
+
   removePermission: (data: {
     resourceId: string;
     resourceType: 'file' | 'folder';
     targetUserEmail: string;
-  }) =>
-    api.delete<ApiResponse>('/share/permission', { data }),
+  }) => api.delete<ApiResponse>('/share/permission', { data }),
 };
 
 // Versions API
@@ -211,10 +220,10 @@ export const versionsAPI = {
     api.post<ApiResponse>(`/versions/upload/${fileId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-  
+
   getVersionHistory: (fileId: string) =>
     api.get<ApiResponse>(`/versions/history/${fileId}`),
-  
+
   restoreVersion: (fileId: string, versionNumber: number) =>
     api.post<ApiResponse>(`/versions/restore/${fileId}`, { versionNumber }),
 };
@@ -223,19 +232,23 @@ export const versionsAPI = {
 export const bulkAPI = {
   bulkAction: (data: BulkActionData) =>
     api.post<ApiResponse<BulkDeleteResponse>>('/bulk', data),
-  
+
   bulkDelete: (data: BulkDeleteData) =>
     api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'delete',
       ...data,
     }),
-  
-  bulkMove: (data: { files: string[]; folders: string[]; targetFolder: string }) =>
+
+  bulkMove: (data: {
+    files: string[];
+    folders: string[];
+    targetFolder: string;
+  }) =>
     api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'move',
       ...data,
     }),
-  
+
   bulkDownload: (data: { files: string[]; folders: string[] }) =>
     api.post<ApiResponse<BulkDeleteResponse>>('/bulk', {
       action: 'download',
@@ -247,15 +260,14 @@ export const bulkAPI = {
 export const realtimeAPI = {
   getOnlineUsers: () =>
     api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
-  
+
   getFileEditingStatus: (fileId: string) =>
     api.get<ApiResponse>(`/realtime/file-status/${fileId}`),
-  
+
   sendNotification: (data: {
     targetUserId: string;
     type: string;
     message: string;
     resourceId?: string;
-  }) =>
-    api.post<ApiResponse>('/realtime/notify', data),
+  }) => api.post<ApiResponse>('/realtime/notify', data),
 };

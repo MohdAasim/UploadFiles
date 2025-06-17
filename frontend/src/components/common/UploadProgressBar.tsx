@@ -4,9 +4,11 @@ import { useUploadContext } from '../../contexts/UploadContext';
 
 const UploadProgressBar: React.FC = () => {
   const { uploads, totalProgress } = useUploadContext();
-  
-  const activeUploads = uploads.filter(upload => upload.status === 'uploading');
-  
+
+  const activeUploads = uploads.filter(
+    (upload) => upload.status === 'uploading'
+  );
+
   if (activeUploads.length === 0) return null;
 
   return (
@@ -25,8 +27,13 @@ const UploadProgressBar: React.FC = () => {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 'fit-content' }}>
-            Uploading {activeUploads.length} file{activeUploads.length > 1 ? 's' : ''}...
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ minWidth: 'fit-content' }}
+          >
+            Uploading {activeUploads.length} file
+            {activeUploads.length > 1 ? 's' : ''}...
           </Typography>
           <LinearProgress
             variant="determinate"

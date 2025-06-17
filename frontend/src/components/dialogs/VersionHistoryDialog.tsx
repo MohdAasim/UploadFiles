@@ -20,14 +20,13 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import {
-  Close,
-  Restore,
-  CloudUpload,
-  History,
-} from '@mui/icons-material';
+import { Close, Restore, CloudUpload, History } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
-import { useVersionHistory, useUploadNewVersion, useRestoreVersion } from '../../hooks/useVersions';
+import {
+  useVersionHistory,
+  useUploadNewVersion,
+  useRestoreVersion,
+} from '../../hooks/useVersions';
 import { showConfirmation } from '../../utils/sweetAlert';
 import type { FileVersion, VersionHistoryData } from '../../types';
 
@@ -140,7 +139,13 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <History sx={{ mr: 1 }} />
             <Typography variant="h6">Version History</Typography>
@@ -159,7 +164,8 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
               {fileName}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Current Version: {file?.currentVersion || 1} • Total Versions: {versions.length + 1}
+              Current Version: {file?.currentVersion || 1} • Total Versions:{' '}
+              {versions.length + 1}
             </Typography>
           </CardContent>
         </Card>
@@ -170,7 +176,7 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
             <Typography variant="h6" gutterBottom>
               Upload New Version
             </Typography>
-            
+
             <Box sx={{ mb: 2 }}>
               <input
                 accept="*"
@@ -191,7 +197,8 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
               </label>
               {selectedFile && (
                 <Typography variant="body2" sx={{ mt: 1 }}>
-                  Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                  Selected: {selectedFile.name} (
+                  {formatFileSize(selectedFile.size)})
                 </Typography>
               )}
             </Box>
@@ -235,7 +242,8 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
 
         {versions.length === 0 ? (
           <Alert severity="info">
-            No previous versions available. Upload a new version to start tracking changes.
+            No previous versions available. Upload a new version to start
+            tracking changes.
           </Alert>
         ) : (
           <List>
@@ -254,12 +262,24 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                   }
                   secondary={
                     <Box component="div">
-                      <Typography variant="body2" color="text.secondary" component="div">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        component="div"
+                      >
                         {version.remark || 'No description provided'}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" component="div">
-                        Uploaded {formatDistanceToNow(new Date(version.uploadedAt), { addSuffix: true })}
-                        {version.uploadedBy?.name && ` by ${version.uploadedBy.name}`}
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        component="div"
+                      >
+                        Uploaded{' '}
+                        {formatDistanceToNow(new Date(version.uploadedAt), {
+                          addSuffix: true,
+                        })}
+                        {version.uploadedBy?.name &&
+                          ` by ${version.uploadedBy.name}`}
                       </Typography>
                     </Box>
                   }
@@ -269,7 +289,9 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                     {version.versionNumber !== file?.currentVersion && (
                       <IconButton
                         size="small"
-                        onClick={() => handleRestoreVersion(version.versionNumber)}
+                        onClick={() =>
+                          handleRestoreVersion(version.versionNumber)
+                        }
                         disabled={restoreVersion.isPending}
                         title="Restore this version"
                       >
@@ -286,8 +308,9 @@ const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
         {versions.length > 0 && (
           <Alert severity="warning" sx={{ mt: 2 }}>
             <Typography variant="body2">
-              <strong>Note:</strong> Restoring a previous version will create a new version with the restored content. 
-              The current version will be preserved in the history.
+              <strong>Note:</strong> Restoring a previous version will create a
+              new version with the restored content. The current version will be
+              preserved in the history.
             </Typography>
           </Alert>
         )}

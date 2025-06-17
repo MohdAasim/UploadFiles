@@ -34,8 +34,8 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       setFolderName('');
       onClose();
     } catch (error) {
-        console.log(error);
-        
+      console.log(error);
+
       // Error is handled by the mutation
     }
   };
@@ -66,8 +66,8 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button 
-          onClick={handleCreate} 
+        <Button
+          onClick={handleCreate}
           variant="contained"
           disabled={!folderName.trim() || createFolder.isPending}
         >

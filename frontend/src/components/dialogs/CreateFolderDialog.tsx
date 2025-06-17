@@ -50,7 +50,14 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   ];
 
   // Common tags
-  const commonTags = ['Work', 'Personal', 'Important', 'Archive', 'Project', 'Shared'];
+  const commonTags = [
+    'Work',
+    'Personal',
+    'Important',
+    'Archive',
+    'Project',
+    'Shared',
+  ];
 
   const handleClose = () => {
     setFolderName('');
@@ -83,7 +90,9 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
     // Check if folder already exists in current directory
     if (folders && Array.isArray(folders)) {
       const existingFolder = folders.find(
-        f => f.parent === parentFolder && f.name.toLowerCase() === name.toLowerCase()
+        (f) =>
+          f.parent === parentFolder &&
+          f.name.toLowerCase() === name.toLowerCase()
       );
       if (existingFolder) {
         return 'A folder with this name already exists';
@@ -115,7 +124,7 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
     }
   };
 
-  const handleTemplateSelect = (template: typeof folderTemplates[0]) => {
+  const handleTemplateSelect = (template: (typeof folderTemplates)[0]) => {
     setFolderName(template.name);
     setError('');
   };
@@ -130,7 +139,7 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   // Get parent folder name for display
   const getParentFolderName = () => {
     if (!parentFolder || !folders) return 'Root';
-    const parent = folders.find(f => f._id === parentFolder);
+    const parent = folders.find((f) => f._id === parentFolder);
     return parent?.name || 'Unknown Folder';
   };
 
@@ -142,7 +151,7 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
           <Typography variant="h6">Create New Folder</Typography>
         </Box>
       </DialogTitle>
-      
+
       <DialogContent>
         <Box sx={{ pt: 1 }}>
           {/* Location Info */}
@@ -250,8 +259,13 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
             }
           />
           {isTemplate && (
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 4, display: 'block' }}>
-              Template folders can be reused to create new folders with the same structure
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ ml: 4, display: 'block' }}
+            >
+              Template folders can be reused to create new folders with the same
+              structure
             </Typography>
           )}
 
@@ -261,22 +275,17 @@ const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
               <strong>Tips:</strong>
               <br />
               • Use descriptive names to keep your files organized
-              <br />
-              • Folder names can't contain: {`< > : " / \\ | ? *`}
+              <br />• Folder names can't contain: {`< > : " / \\ | ? *`}
               <br />
               • Add tags to make folders easier to find
-              <br />
-              • You can always rename or reorganize folders later
+              <br />• You can always rename or reorganize folders later
             </Typography>
           </Box>
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button 
-          onClick={handleClose}
-          disabled={createFolder.isPending}
-        >
+        <Button onClick={handleClose} disabled={createFolder.isPending}>
           Cancel
         </Button>
         <Button

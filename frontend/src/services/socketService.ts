@@ -16,6 +16,17 @@ interface FileUploadedData {
   };
   parentFolder?: string;
 }
+interface viewerType {
+  fileId: string;
+  viewers: ViewerInfo[];
+}
+interface ViewerInfo {
+  id: string;
+  name: string;
+  email: string;
+  socketId: string;
+  joinedAt: Date;
+}
 
 interface UserEditingData {
   fileId: string;
@@ -66,14 +77,13 @@ class SocketService {
     }
 
     this.isConnecting = true;
-    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-
-    console.log('Attempting to connect to socket server:', SOCKET_URL);
+    const SOCKET_URL =
+      import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
     try {
       this.socket = io(SOCKET_URL, {
         auth: { token },
-        transports: ["websocket", "polling"],
+        transports: ['websocket', 'polling'],
         timeout: 20000,
         reconnection: true,
         reconnectionDelay: this.reconnectDelay,
@@ -81,43 +91,43 @@ class SocketService {
         autoConnect: true,
       });
 
-      this.socket.on("connect", () => {
-        console.log("Connected to real-time server");
+      this.socket.on('connect', () => {
         this.isConnected = true;
         this.isConnecting = false;
         this.connectionAttempts = 0;
-        toast.success("Connected to real-time server");
+        toast.success('Connected to real-time server');
+
+        // Re-register all listeners when reconnected
+        this.reregisterListeners();
       });
 
-      this.socket.on("disconnect", (reason) => {
-        console.log("Disconnected from real-time server:", reason);
+      this.socket.on('disconnect', (reason) => {
         this.isConnected = false;
         this.isConnecting = false;
-        
+
         // Only show error toast for unexpected disconnections
         if (reason !== 'io client disconnect') {
-          toast.error("Disconnected from real-time server");
+          toast.error('Disconnected from real-time server');
         }
       });
 
-      this.socket.on("connect_error", (error) => {
-        console.error("Socket connection error:", error);
+      this.socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
         this.isConnecting = false;
         this.connectionAttempts++;
-        
+
         if (this.connectionAttempts >= this.maxReconnectAttempts) {
-          toast.error("Failed to connect to real-time server");
+          toast.error('Failed to connect to real-time server');
         }
       });
 
-      this.socket.on("reconnect", (attemptNumber) => {
-        console.log(`Reconnected after ${attemptNumber} attempts`);
-        toast.success("Reconnected to real-time server");
+      this.socket.on('reconnect', () => {
+        toast.success('Reconnected to real-time server');
       });
 
-      this.socket.on("reconnect_failed", () => {
-        console.error("Failed to reconnect to socket server");
-        toast.error("Failed to reconnect to real-time server");
+      this.socket.on('reconnect_failed', () => {
+        console.error('Failed to reconnect to socket server');
+        toast.error('Failed to reconnect to real-time server');
         this.isConnecting = false;
       });
 
@@ -125,66 +135,88 @@ class SocketService {
     } catch (error) {
       console.error('Error creating socket connection:', error);
       this.isConnecting = false;
-      toast.error("Failed to initialize real-time connection");
+      toast.error('Failed to initialize real-time connection');
     }
   }
 
   private setupEventListeners(): void {
     if (!this.socket) return;
 
+    // IMPORTANT: Register socket events and trigger local events
+    this.socket.on(
+      'file-viewers-updated',
+      (data: { fileId: string; viewers: viewerType[] }) => {
+        this.triggerEvent('file-viewers-updated', data);
+      }
+    );
+
+    this.socket.on(
+      'user-started-viewing-file',
+      (data: { fileId: string; viewer: viewerType }) => {
+        this.triggerEvent('user-started-viewing-file', data);
+      }
+    );
+
+    this.socket.on(
+      'user-stopped-viewing-file',
+      (data: { fileId: string; userId: string }) => {
+        this.triggerEvent('user-stopped-viewing-file', data);
+      }
+    );
+
     // File events
-    this.socket.on("new-file-uploaded", (data: FileUploadedData) => {
+    this.socket.on('new-file-uploaded', (data: FileUploadedData) => {
       toast.success(`New file uploaded: ${data.file.originalName}`);
-      this.triggerEvent("fileListUpdated");
+      this.triggerEvent('fileListUpdated');
     });
 
-    this.socket.on("user-started-editing", (data: UserEditingData) => {
+    this.socket.on('user-started-editing', (data: UserEditingData) => {
       toast(`${data.userName} started editing a file`, {
-        icon: "ℹ️",
+        icon: 'ℹ️',
         duration: 3000,
       });
-      this.triggerEvent("userStartedEditing", data);
+      this.triggerEvent('userStartedEditing', data);
     });
 
-    this.socket.on("user-stopped-editing", (data: UserEditingData) => {
-      this.triggerEvent("userStoppedEditing", data);
+    this.socket.on('user-stopped-editing', (data: UserEditingData) => {
+      this.triggerEvent('userStoppedEditing', data);
     });
 
-    this.socket.on("file-being-edited", (data: FileBeingEditedData) => {
+    this.socket.on('file-being-edited', (data: FileBeingEditedData) => {
       toast(`File is being edited by ${data.editor.userName}`, {
-        icon: "⚠️",
+        icon: '⚠️',
         duration: 4000,
       });
     });
 
     // Sharing events
-    this.socket.on("resource-shared-with-you", (data: ResourceSharedData) => {
+    this.socket.on('resource-shared-with-you', (data: ResourceSharedData) => {
       toast.success(
         `${data.sharedBy.name} shared a ${data.resourceType} with you`
       );
-      this.triggerEvent("resourceShared", data);
+      this.triggerEvent('resourceShared', data);
     });
 
-    this.socket.on("permission-updated", (data: PermissionUpdatedData) => {
+    this.socket.on('permission-updated', (data: PermissionUpdatedData) => {
       toast(`Your permission was updated by ${data.updatedBy.name}`, {
-        icon: "ℹ️",
+        icon: 'ℹ️',
         duration: 4000,
       });
-      this.triggerEvent("permissionUpdated", data);
+      this.triggerEvent('permissionUpdated', data);
     });
 
     // Notifications
-    this.socket.on("notification", (data: NotificationData) => {
+    this.socket.on('notification', (data: NotificationData) => {
       const getIcon = (type: string): string => {
         switch (type) {
-          case "error":
-            return "❌";
-          case "warning":
-            return "⚠️";
-          case "success":
-            return "✅";
+          case 'error':
+            return '❌';
+          case 'warning':
+            return '⚠️';
+          case 'success':
+            return '✅';
           default:
-            return "ℹ️";
+            return 'ℹ️';
         }
       };
 
@@ -192,31 +224,36 @@ class SocketService {
         icon: getIcon(data.type),
         duration: 4000,
       });
-      this.triggerEvent("notification", data);
+      this.triggerEvent('notification', data);
     });
 
     // Online users
-    this.socket.on("online-users", (users: OnlineUser[]) => {
-      this.triggerEvent("onlineUsersUpdated", users);
+    this.socket.on('online-users', (users: OnlineUser[]) => {
+      this.triggerEvent('onlineUsersUpdated', users);
     });
+  }
+
+  // Re-register all listeners after reconnection
+  private reregisterListeners(): void {
+    if (!this.socket) return;
+
+    this.setupEventListeners();
   }
 
   // File viewing events
   startViewingFile(fileId: string) {
     if (this.socket?.connected) {
-      console.log("Starting to view file:", fileId);
-      this.socket.emit("start-viewing-file", { fileId });
+      this.socket.emit('start-viewing-file', { fileId });
     } else {
-      console.warn("Cannot start viewing file - socket not connected");
+      console.warn('Cannot start viewing file - socket not connected');
     }
   }
 
   stopViewingFile(fileId: string) {
     if (this.socket?.connected) {
-      console.log("Stopping viewing file:", fileId);
-      this.socket.emit("stop-viewing-file", { fileId });
+      this.socket.emit('stop-viewing-file', { fileId });
     } else {
-      console.warn("Cannot stop viewing file - socket not connected");
+      console.warn('Cannot stop viewing file - socket not connected');
     }
   }
 
@@ -238,11 +275,22 @@ class SocketService {
     }
   }
 
-  // Make this method private since it's for internal event triggering
+  // FIXED: Make this method properly trigger registered listeners
   private triggerEvent<T = unknown>(event: string, data?: T): void {
     const callbacks = this.listeners.get(event);
-    if (callbacks) {
-      callbacks.forEach((callback) => callback(data));
+    if (callbacks && callbacks.length > 0) {
+      callbacks.forEach((callback, index) => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(
+            `❌ Error in listener ${index + 1} for event '${event}':`,
+            error
+          );
+        }
+      });
+    } else {
+      console.warn(`⚠️ SocketService: No listeners found for event '${event}'`);
     }
   }
 
@@ -253,32 +301,32 @@ class SocketService {
     if (this.socket?.connected) {
       this.socket.emit(event, data);
     } else {
-      console.warn("Socket not connected, cannot emit event:", event);
+      console.warn('Socket not connected, cannot emit event:', event);
     }
   }
 
   /*eslint-disable @typescript-eslint/no-explicit-any */
   // Specific method for file upload events
   public notifyFileUploaded(fileData: any, parentFolder?: string): void {
-    this.emit("file-uploaded", { fileData, parentFolder });
+    this.emit('file-uploaded', { fileData, parentFolder });
   }
 
   // File editing methods
   startEditingFile(fileId: string): void {
-    this.emit("start-editing-file", { fileId });
+    this.emit('start-editing-file', { fileId });
   }
 
   stopEditingFile(fileId: string): void {
-    this.emit("stop-editing-file", { fileId });
+    this.emit('stop-editing-file', { fileId });
   }
 
   // Collaboration methods
   joinCollaboration(resourceId: string): void {
-    this.emit("join-collaboration", { resourceId });
+    this.emit('join-collaboration', { resourceId });
   }
 
   leaveCollaboration(resourceId: string): void {
-    this.emit("leave-collaboration", { resourceId });
+    this.emit('leave-collaboration', { resourceId });
   }
 
   // Notification methods
@@ -288,7 +336,7 @@ class SocketService {
     message: string,
     resourceId?: string
   ): void {
-    this.emit("send-notification", {
+    this.emit('send-notification', {
       targetUserId,
       type,
       message,
@@ -298,36 +346,48 @@ class SocketService {
 
   // Utility methods
   getOnlineUsers(): void {
-    this.emit("get-online-users");
+    this.emit('get-online-users');
   }
 
   checkUserOnline(userId: string): void {
-    this.emit("check-user-online", { userId });
+    this.emit('check-user-online', { userId });
+  }
+
+  // Method to test if listeners are working
+  public testListeners(): void {
+    // Test trigger with dummy data
+    this.triggerEvent('file-viewers-updated', {
+      fileId: 'test-file-id',
+      viewers: [
+        { id: 'test-user', name: 'Test User', email: 'test@example.com' },
+      ],
+    });
   }
 
   disconnect(): void {
     if (this.socket) {
-      console.log('Disconnecting socket...');
       this.isConnected = false;
       this.isConnecting = false;
-      
+
       // Remove all listeners before disconnecting
       this.socket.removeAllListeners();
-      
+
       // Gracefully disconnect
       this.socket.disconnect();
       this.socket = null;
-      
+
       // Clear local listeners
       this.listeners.clear();
-      
-      console.log('Socket disconnected successfully');
     }
   }
 
   // Method to check if socket should reconnect
   public shouldReconnect(): boolean {
-    return !this.isConnected && !this.isConnecting && this.connectionAttempts < this.maxReconnectAttempts;
+    return (
+      !this.isConnected &&
+      !this.isConnecting &&
+      this.connectionAttempts < this.maxReconnectAttempts
+    );
   }
 
   // Method to force reconnect

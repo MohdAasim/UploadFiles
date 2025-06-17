@@ -25,8 +25,9 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
   showCount = true,
   maxVisible = 3,
 }) => {
-  const { getFileViewers, getCurrentViewersCount, isCurrentlyViewing } = useViewing();
-  
+  const { getFileViewers, getCurrentViewersCount, isCurrentlyViewing } =
+    useViewing();
+
   const viewers = getFileViewers(fileId);
   const viewersCount = getCurrentViewersCount(fileId);
   const isViewing = isCurrentlyViewing(fileId);
@@ -38,7 +39,7 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -54,7 +55,16 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {viewersCount > 0 && (
           <>
-            <AvatarGroup max={maxVisible} sx={{ '& .MuiAvatar-root': { width: 24, height: 24, fontSize: '0.75rem' } }}>
+            <AvatarGroup
+              max={maxVisible}
+              sx={{
+                '& .MuiAvatar-root': {
+                  width: 24,
+                  height: 24,
+                  fontSize: '0.75rem',
+                },
+              }}
+            >
               {viewers.map((viewer) => (
                 <Tooltip key={viewer.id} title={getViewerTooltip(viewer)} arrow>
                   <Avatar
@@ -105,7 +115,7 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
           Currently Viewing ({viewersCount})
         </Typography>
       </Box>
-      
+
       <Box sx={{ display: 'flex', flex: 1, alignItems: 'center', gap: 1 }}>
         <AvatarGroup max={maxVisible}>
           {viewers.map((viewer) => (
@@ -124,7 +134,7 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
             </Tooltip>
           ))}
         </AvatarGroup>
-        
+
         <Box sx={{ ml: 1 }}>
           {viewers.slice(0, 2).map((viewer, index) => (
             <Typography key={viewer.id} variant="caption" display="block">

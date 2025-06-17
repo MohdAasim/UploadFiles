@@ -20,6 +20,7 @@ export const handleViewingEvents = (
   // User starts viewing a file
   socket.on('start-viewing-file', async ({ fileId }: { fileId: string }) => {
     try {
+      io.emit('test', 'test');
       const userId = socket.userId;
       const userName = socket.userData?.name;
       const userEmail = socket.userData?.email;
@@ -52,10 +53,17 @@ export const handleViewingEvents = (
       viewers.add(viewerInfo);
 
       // Join the file room
-      socket.join(`file:${fileId}`);
+      await socket.join(`file:${fileId}`);
+     
 
       // Broadcast to all users in the file room
       const viewersList = Array.from(viewers);
+      io.emit('file-viewers-updated', {
+        fileId,
+        viewers: viewersList,
+      });
+
+      // Also emit specifically to the file room
       io.to(`file:${fileId}`).emit('file-viewers-updated', {
         fileId,
         viewers: viewersList,
@@ -67,7 +75,9 @@ export const handleViewingEvents = (
         viewer: viewerInfo,
       });
 
-      console.log(`User ${userName} started viewing file ${fileId}`);
+      console.log(
+        `✅ Successfully handled start-viewing-file for ${userName} on file ${fileId}`
+      );
     } catch (error) {
       console.error('Error handling start-viewing-file:', error);
     }
