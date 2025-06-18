@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.75% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>11/16</span>
+                <span class='fraction'>0/16</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/4</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">61.53% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/13</span>
+                <span class='fraction'>0/13</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -122,17 +122,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -162,8 +162,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,17 +174,17 @@ export interface CustomError extends Error {
   isOperational?: boolean;
 }
 &nbsp;
-export const createError = (
+export const <span class="cstat-no" title="statement not covered" >createError = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(</span></span></span>
   message: string,
   statusCode: number = <span class="branch-0 cbranch-no" title="branch not covered" >500</span>
 ): CustomError =&gt; {
-  const error: CustomError = new Error(message);
-  error.statusCode = statusCode;
-  error.isOperational = true;
-  return error;
+  const error: CustomError = <span class="cstat-no" title="statement not covered" >new Error(message);</span>
+<span class="cstat-no" title="statement not covered" >  error.statusCode = statusCode;</span>
+<span class="cstat-no" title="statement not covered" >  error.isOperational = true;</span>
+<span class="cstat-no" title="statement not covered" >  return error;</span>
 };
 &nbsp;
-export const globalErrorHandler = <span class="fstat-no" title="function not covered" >(</span>
+export const <span class="cstat-no" title="statement not covered" >globalErrorHandler = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(</span></span></span>
   err: CustomError,
   req: Request,
   res: Response,
@@ -214,8 +214,8 @@ export const globalErrorHandler = <span class="fstat-no" title="function not cov
   });
 };
 &nbsp;
-export const asyncHandler = (fn: Function) =&gt; {
-  return <span class="fstat-no" title="function not covered" >(r</span>eq: Request, res: Response, next: NextFunction) =&gt; {
+export const <span class="cstat-no" title="statement not covered" >asyncHandler = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(</span>f</span>n: Function) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  return <span class="fstat-no" title="function not covered" >(r</span>eq: Request, res: Response, next: NextFunction) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    Promise.resolve(fn(req, res, next)).catch(next);</span>
   };
 };
@@ -226,7 +226,7 @@ export const asyncHandler = (fn: Function) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-06-18T04:48:28.941Z
+                at 2025-06-18T08:16:54.225Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

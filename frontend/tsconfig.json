@@ -1,8 +1,5 @@
 {
   "files": [],
-  "compilerOptions": {
-    "types": ["node", "react", "react-dom", "jest", "@testing-library/jest-dom"]
-  },
   "references": [
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }

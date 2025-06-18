@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box } from '@mui/material';
 
-interface StatItem {
+export interface StatItem {
   label: string;
   value: string;
   icon: React.ReactElement;
