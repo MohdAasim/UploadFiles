@@ -98,6 +98,10 @@ export interface NotificationData {
   timestamp: string;
 }
 
+export interface searchResultsType {
+  data: { files: FileType[]; folders: FolderType[] };
+}
+
 // Additional types for better API responses
 export interface UploadProgress {
   fileId: string;

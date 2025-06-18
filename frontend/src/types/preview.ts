@@ -12,14 +12,14 @@ export interface PreviewDialogProps {
   onDownload?: () => void;
 }
 
-export type SupportedPreviewTypes = 
-  | "image"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "text"
-  | "json"
-  | "unsupported";
+export type SupportedPreviewTypes =
+  | 'image'
+  | 'video'
+  | 'audio'
+  | 'pdf'
+  | 'text'
+  | 'json'
+  | 'unsupported';
 
 /*eslint-disable*/
 export interface PreviewHandlers {

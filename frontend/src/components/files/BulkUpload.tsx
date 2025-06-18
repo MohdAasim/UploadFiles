@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from 'react';
 import {
   Box,
   Button,
@@ -19,7 +19,7 @@ import {
   DialogActions,
   Tabs,
   Tab,
-} from "@mui/material";
+} from '@mui/material';
 import {
   CloudUpload,
   Close,
@@ -28,9 +28,9 @@ import {
   Error,
   Warning,
   InsertDriveFile,
-} from "@mui/icons-material";
-import { useDropzone } from "react-dropzone";
-import { useBatchUpload } from "../../hooks/useFiles";
+} from '@mui/icons-material';
+import { useDropzone } from 'react-dropzone';
+import { useBatchUpload } from '../../hooks/useFiles';
 
 interface BulkUploadProps {
   parentFolder?: string;
@@ -43,7 +43,7 @@ interface FileWithPath {
   file: File;
   relativePath: string;
   id: string;
-  status: "pending" | "uploading" | "completed" | "error";
+  status: 'pending' | 'uploading' | 'completed' | 'error';
   progress: number;
   error?: string;
 }
@@ -92,7 +92,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
         file,
         relativePath,
         id: `${Date.now()}-${index}`,
-        status: "pending" as const,
+        status: 'pending' as const,
         progress: 0,
       };
     });
@@ -126,7 +126,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
     }
     // Reset the input so the same folder can be selected again
     if (folderInputRef.current) {
-      folderInputRef.current.value = "";
+      folderInputRef.current.value = '';
     }
   };
 
@@ -137,7 +137,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
     }
     // Reset the input so the same files can be selected again
     if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
@@ -163,7 +163,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
                 ? {
                     ...f,
                     progress,
-                    status: progress === 100 ? "completed" : "uploading",
+                    status: progress === 100 ? 'completed' : 'uploading',
                   }
                 : f
             )
@@ -173,7 +173,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
           setFiles((prev) =>
             prev.map((f, index) =>
               index === fileIndex
-                ? { ...f, status: "completed", progress: 100 }
+                ? { ...f, status: 'completed', progress: 100 }
                 : f
             )
           );
@@ -182,12 +182,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 
       onUploadComplete?.();
     } catch (error: any) {
-      console.error("Bulk upload failed:", error);
+      console.error('Bulk upload failed:', error);
       // Mark failed files
       setFiles((prev) =>
         prev.map((f) =>
-          f.status === "uploading"
-            ? { ...f, status: "error", error: error.message }
+          f.status === 'uploading'
+            ? { ...f, status: 'error', error: error.message }
             : f
         )
       );
@@ -197,20 +197,20 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
   };
 
   const clearCompleted = () => {
-    setFiles((prev) => prev.filter((f) => f.status !== "completed"));
+    setFiles((prev) => prev.filter((f) => f.status !== 'completed'));
   };
 
   const clearAll = () => {
     setFiles([]);
   };
 
-  const getStatusIcon = (status: FileWithPath["status"]) => {
+  const getStatusIcon = (status: FileWithPath['status']) => {
     switch (status) {
-      case "completed":
+      case 'completed':
         return <CheckCircle color="success" />;
-      case "error":
+      case 'error':
         return <Error color="error" />;
-      case "uploading":
+      case 'uploading':
         return <CloudUpload color="primary" />;
       default:
         return <FolderOpen color="action" />;
@@ -218,45 +218,52 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
   };
 
   const getStatusColor = (
-    status: FileWithPath["status"]
-  ): "default" | "primary" | "success" | "error" => {
+    status: FileWithPath['status']
+  ): 'default' | 'primary' | 'success' | 'error' => {
     switch (status) {
-      case "completed":
-        return "success";
-      case "error":
-        return "error";
-      case "uploading":
-        return "primary";
+      case 'completed':
+        return 'success';
+      case 'error':
+        return 'error';
+      case 'uploading':
+        return 'primary';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getProgressColor = (
-    status: FileWithPath["status"]
-  ): "primary" | "secondary" | "error" | "info" | "success" | "warning" | "inherit" => {
+    status: FileWithPath['status']
+  ):
+    | 'primary'
+    | 'secondary'
+    | 'error'
+    | 'info'
+    | 'success'
+    | 'warning'
+    | 'inherit' => {
     switch (status) {
-      case "completed":
-        return "success";
-      case "error":
-        return "error";
-      case "uploading":
-        return "primary";
+      case 'completed':
+        return 'success';
+      case 'error':
+        return 'error';
+      case 'uploading':
+        return 'primary';
       default:
-        return "primary";
+        return 'primary';
     }
   };
 
-  const completedCount = files.filter((f) => f.status === "completed").length;
-  const errorCount = files.filter((f) => f.status === "error").length;
+  const completedCount = files.filter((f) => f.status === 'completed').length;
+  const errorCount = files.filter((f) => f.status === 'error').length;
   const totalProgress =
     files.length > 0 ? (completedCount / files.length) * 100 : 0;
 
   // Group files by folder structure for better display
   const groupedFiles = files.reduce(
     (acc, file) => {
-      const pathParts = file.relativePath.split("/");
-      const folder = pathParts.length > 1 ? pathParts[0] : "Root";
+      const pathParts = file.relativePath.split('/');
+      const folder = pathParts.length > 1 ? pathParts[0] : 'Root';
 
       if (!acc[folder]) {
         acc[folder] = [];
@@ -273,7 +280,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
         Bulk File Upload
         {files.length > 0 && (
           <Typography variant="body2" color="text.secondary">
-            {files.length} files selected • {completedCount} completed •{" "}
+            {files.length} files selected • {completedCount} completed •{' '}
             {errorCount} errors
           </Typography>
         )}
@@ -296,15 +303,15 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
             <Paper
               sx={{
                 p: 4,
-                textAlign: "center",
-                cursor: "pointer",
-                border: "2px dashed",
-                borderColor: "grey.300",
-                backgroundColor: "grey.50",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  borderColor: "primary.main",
-                  backgroundColor: "primary.50",
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: '2px dashed',
+                borderColor: 'grey.300',
+                backgroundColor: 'grey.50',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  backgroundColor: 'primary.50',
                 },
               }}
               onClick={() => folderInputRef.current?.click()}
@@ -312,12 +319,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
               <input
                 ref={folderInputRef}
                 type="file"
-                {...({ webkitdirectory: "" } as any)}
+                {...({ webkitdirectory: '' } as any)}
                 multiple
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
                 onChange={handleFolderSelect}
               />
-              <FolderOpen sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+              <FolderOpen sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
               <Typography variant="h6" gutterBottom>
                 Select Folders
               </Typography>
@@ -335,15 +342,15 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
             <Paper
               sx={{
                 p: 4,
-                textAlign: "center",
-                cursor: "pointer",
-                border: "2px dashed",
-                borderColor: "grey.300",
-                backgroundColor: "grey.50",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  borderColor: "primary.main",
-                  backgroundColor: "primary.50",
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: '2px dashed',
+                borderColor: 'grey.300',
+                backgroundColor: 'grey.50',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  backgroundColor: 'primary.50',
                 },
               }}
               onClick={() => fileInputRef.current?.click()}
@@ -352,10 +359,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
                 ref={fileInputRef}
                 type="file"
                 multiple
-                style={{ display: "none" }}
+                style={{ display: 'none' }}
                 onChange={handleFileSelect}
               />
-              <InsertDriveFile sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+              <InsertDriveFile
+                sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
+              />
               <Typography variant="h6" gutterBottom>
                 Select Multiple Files
               </Typography>
@@ -374,22 +383,24 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
               {...getRootProps()}
               sx={{
                 p: 4,
-                textAlign: "center",
-                cursor: "pointer",
-                border: "2px dashed",
-                borderColor: isDragActive ? "primary.main" : "grey.300",
-                backgroundColor: isDragActive ? "primary.50" : "grey.50",
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  borderColor: "primary.main",
-                  backgroundColor: "primary.50",
+                textAlign: 'center',
+                cursor: 'pointer',
+                border: '2px dashed',
+                borderColor: isDragActive ? 'primary.main' : 'grey.300',
+                backgroundColor: isDragActive ? 'primary.50' : 'grey.50',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  backgroundColor: 'primary.50',
                 },
               }}
             >
               <input {...getInputProps()} />
-              <CloudUpload sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+              <CloudUpload
+                sx={{ fontSize: 48, color: 'primary.main', mb: 2 }}
+              />
               <Typography variant="h6" gutterBottom>
-                {isDragActive ? "Drop files here" : "Drag & drop files here"}
+                {isDragActive ? 'Drop files here' : 'Drag & drop files here'}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 or click to select files
@@ -412,7 +423,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 
           {/* Action Buttons */}
           {files.length > 0 && (
-            <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
               <Button
                 variant="contained"
                 onClick={startUpload}
@@ -440,77 +451,95 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 
           {/* Files List - Grouped by Folder */}
           {files.length > 0 && (
-            <Paper sx={{ mt: 2, maxHeight: 400, overflow: "auto" }}>
+            <Paper sx={{ mt: 2, maxHeight: 400, overflow: 'auto' }}>
               <List>
-                {Object.entries(groupedFiles).map(([folderName, folderFiles]) => (
-                  <React.Fragment key={folderName}>
-                    {/* Folder Header */}
-                    <ListItem sx={{ bgcolor: "grey.100" }}>
-                      <FolderOpen sx={{ mr: 1 }} />
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {folderName} ({folderFiles.length} files)
-                      </Typography>
-                    </ListItem>
-
-                    {/* Files in Folder */}
-                    {folderFiles.map((fileWithPath) => (
-                      <ListItem key={fileWithPath.id} divider sx={{ pl: 4 }}>
-                        <Box sx={{ mr: 2 }}>
-                          {getStatusIcon(fileWithPath.status)}
-                        </Box>
-                        <ListItemText
-                          primary={
-                            <Box
-                              sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                            >
-                              <Typography variant="body2" noWrap>
-                                {fileWithPath.relativePath.split("/").pop()}
-                              </Typography>
-                              <Chip
-                                label={fileWithPath.status}
-                                size="small"
-                                color={getStatusColor(fileWithPath.status)}
-                                variant="outlined"
-                              />
-                            </Box>
-                          }
-                          secondary={
-                            <Box>
-                              {fileWithPath.status === "uploading" && (
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={fileWithPath.progress}
-                                  color={getProgressColor(fileWithPath.status)}
-                                  sx={{ mt: 0.5, mb: 0.5 }}
-                                />
-                              )}
-                              <Typography variant="caption" color="text.secondary">
-                                {fileWithPath.error ? (
-                                  <span style={{ color: "red" }}>
-                                    Error: {fileWithPath.error}
-                                  </span>
-                                ) : (
-                                  `${(fileWithPath.file.size / 1024 / 1024).toFixed(
-                                    2
-                                  )} MB • ${fileWithPath.relativePath}`
-                                )}
-                              </Typography>
-                            </Box>
-                          }
-                        />
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            size="small"
-                            onClick={() => removeFile(fileWithPath.id)}
-                            disabled={uploading}
-                          >
-                            <Close />
-                          </IconButton>
-                        </ListItemSecondaryAction>
+                {Object.entries(groupedFiles).map(
+                  ([folderName, folderFiles]) => (
+                    <React.Fragment key={folderName}>
+                      {/* Folder Header */}
+                      <ListItem sx={{ bgcolor: 'grey.100' }}>
+                        <FolderOpen sx={{ mr: 1 }} />
+                        <Typography
+                          variant="subtitle2"
+                          sx={{ fontWeight: 600 }}
+                        >
+                          {folderName} ({folderFiles.length} files)
+                        </Typography>
                       </ListItem>
-                    ))}
-                  </React.Fragment>
-                ))}
+
+                      {/* Files in Folder */}
+                      {folderFiles.map((fileWithPath) => (
+                        <ListItem key={fileWithPath.id} divider sx={{ pl: 4 }}>
+                          <Box sx={{ mr: 2 }}>
+                            {getStatusIcon(fileWithPath.status)}
+                          </Box>
+                          <ListItemText
+                            primary={
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                }}
+                              >
+                                <Typography variant="body2" noWrap>
+                                  {fileWithPath.relativePath.split('/').pop()}
+                                </Typography>
+                                <Chip
+                                  label={fileWithPath.status}
+                                  size="small"
+                                  color={getStatusColor(fileWithPath.status)}
+                                  variant="outlined"
+                                />
+                              </Box>
+                            }
+                            secondary={
+                              <Box>
+                                {fileWithPath.status === 'uploading' && (
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={fileWithPath.progress}
+                                    color={getProgressColor(
+                                      fileWithPath.status
+                                    )}
+                                    sx={{ mt: 0.5, mb: 0.5 }}
+                                  />
+                                )}
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                >
+                                  {fileWithPath.error ? (
+                                    <span style={{ color: 'red' }}>
+                                      Error: {fileWithPath.error}
+                                    </span>
+                                  ) : (
+                                    `${(
+                                      fileWithPath.file.size /
+                                      1024 /
+                                      1024
+                                    ).toFixed(
+                                      2
+                                    )} MB • ${fileWithPath.relativePath}`
+                                  )}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                          <ListItemSecondaryAction>
+                            <IconButton
+                              size="small"
+                              onClick={() => removeFile(fileWithPath.id)}
+                              disabled={uploading}
+                            >
+                              <Close />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      ))}
+                    </React.Fragment>
+                  )
+                )}
               </List>
             </Paper>
           )}
@@ -520,16 +549,12 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>Bulk Upload Options:</strong>
-                <br />
-                • <strong>Folders:</strong> Upload entire folders with structure
-                preserved
-                <br />
-                • <strong>Files:</strong> Select multiple individual files
-                <br />
-                • <strong>Drag & Drop:</strong> Drag files or folders from your file
-                manager
-                <br />
-                • Progress tracking and error handling for each file
+                <br />• <strong>Folders:</strong> Upload entire folders with
+                structure preserved
+                <br />• <strong>Files:</strong> Select multiple individual files
+                <br />• <strong>Drag & Drop:</strong> Drag files or folders from
+                your file manager
+                <br />• Progress tracking and error handling for each file
               </Typography>
             </Alert>
           )}
@@ -538,7 +563,7 @@ const BulkUpload: React.FC<BulkUploadProps> = ({
 
       <DialogActions>
         <Button onClick={onClose} disabled={uploading}>
-          {uploading ? "Uploading..." : "Close"}
+          {uploading ? 'Uploading...' : 'Close'}
         </Button>
       </DialogActions>
     </Dialog>

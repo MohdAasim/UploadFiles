@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -11,18 +11,18 @@ import {
   TextField,
   Card,
   CardContent,
-} from "@mui/material";
+} from '@mui/material';
 import {
   CloudUpload,
   CloudQueue,
   Folder,
   FolderOpen,
-} from "@mui/icons-material";
-import { useCreateFolder, useFolderTree } from "../hooks/useFiles";
-import FileManager from "../components/files/FileManager";
-import FileUpload from "../components/files/FileUpload";
-import BulkUpload from "../components/files/BulkUpload";
-import Breadcrumb from "../components/Breadcrumb";
+} from '@mui/icons-material';
+import { useCreateFolder, useFolderTree } from '../hooks/useFiles';
+import FileManager from '../components/files/FileManager';
+import FileUpload from '../components/files/FileUpload';
+import BulkUpload from '../components/files/BulkUpload';
+import Breadcrumb from '../components/Breadcrumb';
 
 const FilesPage: React.FC = () => {
   const [currentFolder, setCurrentFolder] = useState<string | undefined>(
@@ -31,7 +31,7 @@ const FilesPage: React.FC = () => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
   const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderName, setNewFolderName] = useState('');
 
   const createFolder = useCreateFolder();
   const { data: folderTree } = useFolderTree(currentFolder);
@@ -47,10 +47,10 @@ const FilesPage: React.FC = () => {
           name: newFolderName.trim(),
           parent: currentFolder,
         });
-        setNewFolderName("");
+        setNewFolderName('');
         setCreateFolderDialogOpen(false);
       } catch (error) {
-        console.error("Failed to create folder:", error);
+        console.error('Failed to create folder:', error);
       }
     }
   };
@@ -65,12 +65,12 @@ const FilesPage: React.FC = () => {
         <Typography variant="body1" color="text.secondary">
           {currentFolder ? (
             <>
-              Browsing folder • {folderTree?.fileCount || 0} files,{" "}
+              Browsing folder • {folderTree?.fileCount || 0} files,{' '}
               {folderTree?.folderCount || 0} folders
             </>
           ) : (
             <>
-              Root directory • {folderTree?.fileCount || 0} files,{" "}
+              Root directory • {folderTree?.fileCount || 0} files,{' '}
               {folderTree?.folderCount || 0} folders
             </>
           )}
@@ -80,11 +80,11 @@ const FilesPage: React.FC = () => {
       {/* Stats Card */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <FolderOpen sx={{ mr: 2, color: "primary.main" }} />
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <FolderOpen sx={{ mr: 2, color: 'primary.main' }} />
             <Box>
               <Typography variant="h6">
-                {folderTree?.fileCount || 0} Files •{" "}
+                {folderTree?.fileCount || 0} Files •{' '}
                 {folderTree?.folderCount || 0} Folders
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -97,7 +97,7 @@ const FilesPage: React.FC = () => {
 
       <Paper sx={{ p: 3 }}>
         {/* Action Buttons */}
-        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
           <Button
             variant="contained"
             startIcon={<CloudUpload />}
@@ -181,7 +181,7 @@ const FilesPage: React.FC = () => {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === 'Enter') {
                 handleCreateFolder();
               }
             }}
@@ -196,7 +196,7 @@ const FilesPage: React.FC = () => {
             variant="contained"
             disabled={createFolder.isPending}
           >
-            {createFolder.isPending ? "Creating..." : "Create"}
+            {createFolder.isPending ? 'Creating...' : 'Create'}
           </Button>
         </DialogActions>
       </Dialog>

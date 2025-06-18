@@ -13,12 +13,14 @@ export const useBulkActions = () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['folderTree'] });
-      
+
       toast.success(response.data.message || 'Items deleted successfully');
     },
     onError: (error: Error) => {
       console.error('Bulk delete error:', error);
-      toast.error(`Failed to delete items: ${error.message || 'Unknown error'}`);
+      toast.error(
+        `Failed to delete items: ${error.message || 'Unknown error'}`
+      );
     },
   });
 
@@ -33,14 +35,17 @@ export const useBulkActions = () => {
   });
 
   const bulkMove = useMutation({
-    mutationFn: (data: { files: string[]; folders: string[]; targetFolder: string }) => 
-      bulkAPI.bulkMove(data),
+    mutationFn: (data: {
+      files: string[];
+      folders: string[];
+      targetFolder: string;
+    }) => bulkAPI.bulkMove(data),
     onSuccess: () => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ['files'] });
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['folderTree'] });
-      
+
       toast.success('Items moved successfully');
     },
     onError: (error: Error) => {

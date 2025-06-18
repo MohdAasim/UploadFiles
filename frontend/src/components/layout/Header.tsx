@@ -20,9 +20,9 @@ import {
   Logout,
   Settings,
   Person,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   onMenuToggle: () => void;
@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
 
   const { user, logout } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -58,9 +58,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
         position="fixed"
         sx={{
           zIndex: theme.zIndex.drawer + 1,
-          backgroundColor: "background.paper",
-          color: "text.primary",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          backgroundColor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         }}
       >
         <Toolbar>
@@ -78,11 +78,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           )}
 
           {/* Logo and Title */}
-          <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
             <CloudUpload
               sx={{
                 fontSize: 32,
-                color: "primary.main",
+                color: 'primary.main',
                 mr: 1,
               }}
             />
@@ -91,8 +91,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
               component="div"
               sx={{
                 fontWeight: 600,
-                color: "primary.main",
-                display: { xs: "none", sm: "block" },
+                color: 'primary.main',
+                display: { xs: 'none', sm: 'block' },
               }}
             >
               UploadFiles
@@ -102,21 +102,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           {/* Search Bar */}
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
+              display: 'flex',
+              alignItems: 'center',
               flexGrow: 1,
               maxWidth: 600,
               mx: 2,
             }}
-          >
-          </Box>
+          ></Box>
 
           {/* Notifications */}
           <Tooltip title="Notifications">
             <IconButton
               color="inherit"
               sx={{ mr: 1 }}
-              onClick={() => console.log("Notifications clicked")}
+              onClick={() => console.log('Notifications clicked')}
             >
               <Badge badgeContent={notificationCount} color="error">
                 <Notifications />
@@ -139,8 +138,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: "primary.main",
-                  fontSize: "0.875rem",
+                  bgcolor: 'primary.main',
+                  fontSize: '0.875rem',
                 }}
               >
                 {user?.name?.charAt(0).toUpperCase()}
@@ -154,14 +153,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
       <Menu
         anchorEl={anchorEl}
         anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
+          vertical: 'bottom',
+          horizontal: 'right',
         }}
         id="primary-search-account-menu"
         keepMounted
         transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
+          vertical: 'top',
+          horizontal: 'right',
         }}
         open={isMenuOpen}
         onClose={handleMenuClose}
@@ -171,8 +170,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle }) => {
           sx={{
             px: 2,
             py: 1,
-            borderBottom: "1px solid",
-            borderColor: "divider",
+            borderBottom: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>

@@ -1,5 +1,5 @@
 /*eslint-disable*/
-import React, { useCallback, useState, useRef } from "react";
+import React, { useCallback, useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -21,7 +21,7 @@ import {
   Tab,
   TextField,
   InputAdornment,
-} from "@mui/material";
+} from '@mui/material';
 import {
   CloudUpload,
   Close,
@@ -33,10 +33,10 @@ import {
   CheckCircle,
   Error,
   Info,
-} from "@mui/icons-material";
-import { useDropzone } from "react-dropzone";
-import { useUploadFile, useBatchUpload } from "../../hooks/useFiles";
-import { useUploadContext } from "../../contexts/UploadContext";
+} from '@mui/icons-material';
+import { useDropzone } from 'react-dropzone';
+import { useUploadFile, useBatchUpload } from '../../hooks/useFiles';
+import { useUploadContext } from '../../contexts/UploadContext';
 
 interface FileUploadProps {
   parentFolder?: string;
@@ -50,7 +50,7 @@ interface UploadingFile {
   file: File;
   progress: number;
   id: string;
-  status: "waiting" | "uploading" | "completed" | "error" | "paused";
+  status: 'waiting' | 'uploading' | 'completed' | 'error' | 'paused';
   error?: string;
   uploadedFile?: any;
 }
@@ -89,7 +89,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [tabValue, setTabValue] = useState(0);
   const [batchMode, setBatchMode] = useState(false);
   const [autoUpload, setAutoUpload] = useState(true);
-  const [urlInput, setUrlInput] = useState("");
+  const [urlInput, setUrlInput] = useState('');
   const [isDragActive, setIsDragActive] = useState(false);
 
   const intervalRefs = useRef<Map<string, number>>(new Map());
@@ -114,7 +114,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const updateFileProgress = (
     fileId: string,
     progress: number,
-    status?: UploadingFile["status"],
+    status?: UploadingFile['status'],
     error?: string
   ) => {
     setUploadingFiles((prev) =>
@@ -136,31 +136,31 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const pauseUpload = (fileId: string) => {
-    updateFileProgress(fileId, 0, "paused");
+    updateFileProgress(fileId, 0, 'paused');
     // In a real implementation, you'd pause the actual upload
   };
 
   const resumeUpload = (fileId: string) => {
-    updateFileProgress(fileId, 0, "uploading");
+    updateFileProgress(fileId, 0, 'uploading');
     // In a real implementation, you'd resume the actual upload
   };
 
   const uploadSingleFile = async (uploadingFile: UploadingFile) => {
     const formData = new FormData();
-    formData.append("file", uploadingFile.file);
+    formData.append('file', uploadingFile.file);
     if (parentFolder) {
-      formData.append("parentFolder", parentFolder);
+      formData.append('parentFolder', parentFolder);
     }
 
     try {
       const result = await uploadFile.mutateAsync({
         formData,
         onProgress: (progress) => {
-          updateFileProgress(uploadingFile.id, progress, "uploading");
+          updateFileProgress(uploadingFile.id, progress, 'uploading');
         },
       });
 
-      updateFileProgress(uploadingFile.id, 100, "completed");
+      updateFileProgress(uploadingFile.id, 100, 'completed');
 
       setTimeout(() => {
         removeFile(uploadingFile.id);
@@ -168,7 +168,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
       return result;
     } catch (error: any) {
-      updateFileProgress(uploadingFile.id, 0, "error", error.message);
+      updateFileProgress(uploadingFile.id, 0, 'error', error.message);
       return null;
     }
   };
@@ -205,7 +205,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       file,
       progress: 0,
       id: Math.random().toString(36).substr(2, 9),
-      status: autoUpload ? ("uploading" as const) : ("waiting" as const),
+      status: autoUpload ? ('uploading' as const) : ('waiting' as const),
     }));
 
     // Add to local state
@@ -221,26 +221,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
             onProgress: (fileIndex, progress) => {
               const fileId = newUploadingFiles[fileIndex]?.id;
               if (fileId) {
-                updateFileProgress(fileId, progress, "uploading");
+                updateFileProgress(fileId, progress, 'uploading');
               }
             },
             onFileComplete: (fileIndex, response) => {
               const fileId = newUploadingFiles[fileIndex]?.id;
               if (fileId) {
-                updateFileProgress(fileId, 100, "completed");
+                updateFileProgress(fileId, 100, 'completed');
                 setTimeout(() => removeFile(fileId), 3000);
               }
             },
           });
         } catch (error) {
-          console.error("Batch upload failed:", error);
+          console.error('Batch upload failed:', error);
           // Update error status for all files
           newUploadingFiles.forEach((uploadingFile) => {
             updateFileProgress(
               uploadingFile.id,
               0,
-              "error",
-              "Batch upload failed"
+              'error',
+              'Batch upload failed'
             );
           });
         }
@@ -276,7 +276,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   });
 
   const startManualUpload = async () => {
-    const waitingFiles = uploadingFiles.filter((f) => f.status === "waiting");
+    const waitingFiles = uploadingFiles.filter((f) => f.status === 'waiting');
 
     if (batchMode) {
       const files = waitingFiles.map((f) => f.file);
@@ -287,19 +287,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
           onProgress: (fileIndex, progress) => {
             const fileId = waitingFiles[fileIndex]?.id;
             if (fileId) {
-              updateFileProgress(fileId, progress, "uploading");
+              updateFileProgress(fileId, progress, 'uploading');
             }
           },
           onFileComplete: (fileIndex, response) => {
             const fileId = waitingFiles[fileIndex]?.id;
             if (fileId) {
-              updateFileProgress(fileId, 100, "completed");
+              updateFileProgress(fileId, 100, 'completed');
               setTimeout(() => removeFile(fileId), 3000);
             }
           },
         });
       } catch (error) {
-        console.error("Manual batch upload failed:", error);
+        console.error('Manual batch upload failed:', error);
       }
     } else {
       for (const uploadingFile of waitingFiles) {
@@ -315,24 +315,24 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
     try {
       // In a real implementation, you'd have an API endpoint to handle URL uploads
-      console.log("URL upload not implemented yet:", urlInput);
-      setUrlInput("");
+      console.log('URL upload not implemented yet:', urlInput);
+      setUrlInput('');
     } catch (error) {
-      console.error("URL upload failed:", error);
+      console.error('URL upload failed:', error);
     }
   };
 
-  const getStatusIcon = (status: UploadingFile["status"]) => {
+  const getStatusIcon = (status: UploadingFile['status']) => {
     switch (status) {
-      case "completed":
+      case 'completed':
         return <CheckCircle color="success" />;
-      case "error":
+      case 'error':
         return <Error color="error" />;
-      case "uploading":
+      case 'uploading':
         return <PlayArrow color="primary" />;
-      case "paused":
+      case 'paused':
         return <Pause color="warning" />;
-      case "waiting":
+      case 'waiting':
         return <Info color="info" />;
       default:
         return <Info />;
@@ -340,26 +340,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const getProgressColor = (
-    status: UploadingFile["status"]
-  ): "primary" | "success" | "error" | "warning" => {
+    status: UploadingFile['status']
+  ): 'primary' | 'success' | 'error' | 'warning' => {
     switch (status) {
-      case "completed":
-        return "success";
-      case "error":
-        return "error";
-      case "paused":
-        return "warning";
+      case 'completed':
+        return 'success';
+      case 'error':
+        return 'error';
+      case 'paused':
+        return 'warning';
       default:
-        return "primary";
+        return 'primary';
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -374,15 +374,15 @@ const FileUpload: React.FC<FileUploadProps> = ({
           {/* Replace Grid with Box and flexbox */}
           <Box
             sx={{
-              display: "flex",
+              display: 'flex',
               gap: 2,
-              flexWrap: "wrap",
-              "@media (max-width: 600px)": {
-                flexDirection: "column",
+              flexWrap: 'wrap',
+              '@media (max-width: 600px)': {
+                flexDirection: 'column',
               },
             }}
           >
-            <Box sx={{ flex: "1 1 250px", minWidth: "200px" }}>
+            <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -393,7 +393,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 label="Auto Upload"
               />
             </Box>
-            <Box sx={{ flex: "1 1 250px", minWidth: "200px" }}>
+            <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -410,7 +410,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             <Typography variant="body2" color="text.secondary">
               Max file size: {maxFileSize}MB • Max files: {maxFiles}
               {allowedTypes.length > 0 && (
-                <> • Allowed types: {allowedTypes.join(", ")}</>
+                <> • Allowed types: {allowedTypes.join(', ')}</>
               )}
             </Typography>
           </Box>
@@ -434,26 +434,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
             {...getRootProps()}
             sx={{
               p: 4,
-              textAlign: "center",
-              cursor: "pointer",
-              border: "2px dashed",
+              textAlign: 'center',
+              cursor: 'pointer',
+              border: '2px dashed',
               borderColor:
-                isDragActive || dropzoneActive ? "primary.main" : "grey.300",
+                isDragActive || dropzoneActive ? 'primary.main' : 'grey.300',
               backgroundColor:
-                isDragActive || dropzoneActive ? "primary.50" : "grey.50",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                borderColor: "primary.main",
-                backgroundColor: "primary.50",
+                isDragActive || dropzoneActive ? 'primary.50' : 'grey.50',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                borderColor: 'primary.main',
+                backgroundColor: 'primary.50',
               },
             }}
           >
             <input {...getInputProps()} />
-            <CloudUpload sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+            <CloudUpload sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h6" gutterBottom>
               {isDragActive || dropzoneActive
-                ? "Drop files here"
-                : "Drag & drop files here"}
+                ? 'Drop files here'
+                : 'Drag & drop files here'}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               or click to select files
@@ -466,8 +466,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
         <TabPanel value={tabValue} index={1}>
           {/* File Browser */}
-          <Box sx={{ textAlign: "center", p: 4 }}>
-            <Folder sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+          <Box sx={{ textAlign: 'center', p: 4 }}>
+            <Folder sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
             <Typography variant="h6" gutterBottom>
               Browse and Select Files
             </Typography>
@@ -528,8 +528,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
       </Paper>
 
       {/* Manual Upload Control */}
-      {!autoUpload && uploadingFiles.some((f) => f.status === "waiting") && (
-        <Box sx={{ mb: 3, textAlign: "center" }}>
+      {!autoUpload && uploadingFiles.some((f) => f.status === 'waiting') && (
+        <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Button
             variant="contained"
             size="large"
@@ -537,7 +537,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             startIcon={<PlayArrow />}
           >
             Start Upload (
-            {uploadingFiles.filter((f) => f.status === "waiting").length} files)
+            {uploadingFiles.filter((f) => f.status === 'waiting').length} files)
           </Button>
         </Box>
       )}
@@ -554,14 +554,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
               .map((uploadingFile, index) => (
                 <ListItem
                   key={uploadingFile.id || index}
-                  sx={{ px: 0, flexDirection: "column", alignItems: "stretch" }}
+                  sx={{ px: 0, flexDirection: 'column', alignItems: 'stretch' }}
                 >
                   {/* Primary content */}
                   <Box
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
+                      display: 'flex',
+                      alignItems: 'center',
+                      width: '100%',
                       mb: 1,
                     }}
                   >
@@ -571,8 +571,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
                     <Box
                       sx={{
                         flex: 1,
-                        display: "flex",
-                        alignItems: "center",
+                        display: 'flex',
+                        alignItems: 'center',
                         gap: 1,
                       }}
                     >
@@ -587,8 +587,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       />
                     </Box>
                     {/* Action buttons */}
-                    <Box sx={{ display: "flex", gap: 1, ml: 2 }}>
-                      {uploadingFile.status === "uploading" && (
+                    <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                      {uploadingFile.status === 'uploading' && (
                         <IconButton
                           size="small"
                           onClick={() => pauseUpload(uploadingFile.id)}
@@ -597,7 +597,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                           <Pause />
                         </IconButton>
                       )}
-                      {uploadingFile.status === "paused" && (
+                      {uploadingFile.status === 'paused' && (
                         <IconButton
                           size="small"
                           onClick={() => resumeUpload(uploadingFile.id)}
@@ -617,7 +617,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   </Box>
 
                   {/* Progress bar and status */}
-                  <Box sx={{ width: "100%", pl: 6 }}>
+                  <Box sx={{ width: '100%', pl: 6 }}>
                     <LinearProgress
                       variant="determinate"
                       value={uploadingFile.progress}
@@ -625,12 +625,12 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       sx={{ mb: 0.5 }}
                     />
                     <Typography variant="caption" color="text.secondary">
-                      {uploadingFile.status === "error" ? (
-                        <span style={{ color: "red" }}>
+                      {uploadingFile.status === 'error' ? (
+                        <span style={{ color: 'red' }}>
                           Error: {uploadingFile.error}
                         </span>
-                      ) : uploadingFile.status === "completed" ? (
-                        "Upload completed"
+                      ) : uploadingFile.status === 'completed' ? (
+                        'Upload completed'
                       ) : (
                         `${uploadingFile.progress}% of ${formatFileSize(
                           uploadingFile.file.size

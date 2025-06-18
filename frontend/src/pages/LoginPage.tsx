@@ -44,7 +44,7 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -82,8 +82,8 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <Container 
-      component="main" 
+    <Container
+      component="main"
       maxWidth="sm"
       sx={{
         display: 'flex',
@@ -115,7 +115,12 @@ const LoginPage: React.FC = () => {
         {/* Login Form */}
         <Card sx={{ width: '100%', maxWidth: 400 }}>
           <CardContent sx={{ p: 4 }}>
-            <Typography variant="h5" component="h2" gutterBottom textAlign="center">
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              textAlign="center"
+            >
               Welcome Back
             </Typography>
 

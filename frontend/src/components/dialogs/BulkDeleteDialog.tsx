@@ -15,12 +15,7 @@ import {
   Chip,
   Divider,
 } from '@mui/material';
-import {
-  InsertDriveFile,
-  Folder,
-  Warning,
-  Delete,
-} from '@mui/icons-material';
+import { InsertDriveFile, Folder, Warning, Delete } from '@mui/icons-material';
 // Fix: Import the main hook, not individual hooks
 import { useBulkActions } from '../../hooks/useBulkActions';
 import type { SelectableItem } from '../../types';
@@ -41,16 +36,16 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
   // Fix: Use the main hook and destructure
   const { bulkDelete } = useBulkActions();
 
-  const fileItems = selectedItems.filter(item => item.type === 'file');
-  const folderItems = selectedItems.filter(item => item.type === 'folder');
+  const fileItems = selectedItems.filter((item) => item.type === 'file');
+  const folderItems = selectedItems.filter((item) => item.type === 'folder');
 
   const handleDelete = async () => {
     try {
       await bulkDelete.mutateAsync({
-        files: fileItems.map(item => item.id),
-        folders: folderItems.map(item => item.id),
+        files: fileItems.map((item) => item.id),
+        folders: folderItems.map((item) => item.id),
       });
-      
+
       onDeleteComplete();
       onClose();
     } catch (error) {
@@ -81,11 +76,13 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
       <DialogContent>
         <Alert severity="warning" sx={{ mb: 3 }}>
           <Typography variant="body2">
-            <strong>Warning:</strong> This action cannot be undone. All selected files and folders will be permanently deleted.
+            <strong>Warning:</strong> This action cannot be undone. All selected
+            files and folders will be permanently deleted.
             {folderItems.length > 0 && (
               <>
                 <br />
-                <strong>Note:</strong> Deleting folders will also delete all their contents.
+                <strong>Note:</strong> Deleting folders will also delete all
+                their contents.
               </>
             )}
           </Typography>
@@ -121,8 +118,16 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
         <Typography variant="subtitle1" gutterBottom>
           Items to be deleted:
         </Typography>
-        
-        <Box sx={{ maxHeight: 300, overflow: 'auto', border: 1, borderColor: 'divider', borderRadius: 1 }}>
+
+        <Box
+          sx={{
+            maxHeight: 300,
+            overflow: 'auto',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+          }}
+        >
           <List dense>
             {folderItems.map((item, index) => (
               <ListItem key={`folder-${index}`}>
@@ -135,11 +140,9 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
                 />
               </ListItem>
             ))}
-            
-            {folderItems.length > 0 && fileItems.length > 0 && (
-              <Divider />
-            )}
-            
+
+            {folderItems.length > 0 && fileItems.length > 0 && <Divider />}
+
             {fileItems.map((item, index) => (
               <ListItem key={`file-${index}`}>
                 <ListItemIcon>
@@ -147,7 +150,9 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
                 </ListItemIcon>
                 <ListItemText
                   primary={item.name}
-                  secondary={item.size ? formatFileSize(item.size) : 'Unknown size'}
+                  secondary={
+                    item.size ? formatFileSize(item.size) : 'Unknown size'
+                  }
                 />
               </ListItem>
             ))}
@@ -155,9 +160,7 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
         </Box>
 
         {selectedItems.length === 0 && (
-          <Alert severity="info">
-            No items selected for deletion.
-          </Alert>
+          <Alert severity="info">No items selected for deletion.</Alert>
         )}
       </DialogContent>
 
@@ -172,7 +175,9 @@ const BulkDeleteDialog: React.FC<BulkDeleteDialogProps> = ({
           disabled={selectedItems.length === 0 || bulkDelete.isPending}
           startIcon={<Delete />}
         >
-          {bulkDelete.isPending ? 'Deleting...' : `Delete ${selectedItems.length} Item${selectedItems.length !== 1 ? 's' : ''}`}
+          {bulkDelete.isPending
+            ? 'Deleting...'
+            : `Delete ${selectedItems.length} Item${selectedItems.length !== 1 ? 's' : ''}`}
         </Button>
       </DialogActions>
     </Dialog>

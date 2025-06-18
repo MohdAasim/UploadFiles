@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env.prod
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--openssl-legacy-provider
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:80"  # Map container's nginx port 80 to host port 5173
+    depends_on:
+      - backend

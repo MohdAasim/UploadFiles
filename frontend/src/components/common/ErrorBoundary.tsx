@@ -72,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo: null,
       errorId: '',
     });
-    
+
     // Refresh the page
     window.location.reload();
   };
@@ -85,14 +85,14 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo: null,
       errorId: '',
     });
-    
+
     // Navigate to home
     window.location.href = '/dashboard';
   };
 
   handleReportError = () => {
     const { error, errorInfo, errorId } = this.state;
-    
+
     // Create error report
     const errorReport = {
       errorId,
@@ -106,7 +106,7 @@ class ErrorBoundary extends Component<Props, State> {
 
     // Copy to clipboard or send to support
     navigator.clipboard?.writeText(JSON.stringify(errorReport, null, 2));
-    
+
     // You could also send to your error reporting service
     console.log('Error Report:', errorReport);
     alert('Error details copied to clipboard. Please share with support.');
@@ -159,20 +159,21 @@ class ErrorBoundary extends Component<Props, State> {
                       mb: 2,
                     }}
                   />
-                  
+
                   <Typography variant="h4" component="h1" gutterBottom>
                     Something went wrong
                   </Typography>
-                  
+
                   <Typography variant="body1" color="text.secondary" paragraph>
-                    We're sorry, but an unexpected error occurred. Our team has been notified.
+                    We're sorry, but an unexpected error occurred. Our team has
+                    been notified.
                   </Typography>
                 </Box>
 
                 {/* Error Details */}
                 {this.state.error && (
-                  <Alert 
-                    severity="error" 
+                  <Alert
+                    severity="error"
                     sx={{ mb: 3 }}
                     action={
                       <Button
@@ -211,7 +212,7 @@ class ErrorBoundary extends Component<Props, State> {
                   >
                     Refresh Page
                   </Button>
-                  
+
                   <Button
                     variant="outlined"
                     size="large"
@@ -230,24 +231,32 @@ class ErrorBoundary extends Component<Props, State> {
                       Development Details:
                     </Typography>
                     <Alert severity="info" sx={{ mb: 2 }}>
-                      <Typography variant="body2" component="pre" sx={{ 
-                        whiteSpace: 'pre-wrap',
-                        fontSize: '0.75rem',
-                        maxHeight: 200,
-                        overflow: 'auto',
-                      }}>
-                        {this.state.error.stack}
-                      </Typography>
-                    </Alert>
-                    
-                    {this.state.errorInfo && (
-                      <Alert severity="warning">
-                        <Typography variant="body2" component="pre" sx={{ 
+                      <Typography
+                        variant="body2"
+                        component="pre"
+                        sx={{
                           whiteSpace: 'pre-wrap',
                           fontSize: '0.75rem',
                           maxHeight: 200,
                           overflow: 'auto',
-                        }}>
+                        }}
+                      >
+                        {this.state.error.stack}
+                      </Typography>
+                    </Alert>
+
+                    {this.state.errorInfo && (
+                      <Alert severity="warning">
+                        <Typography
+                          variant="body2"
+                          component="pre"
+                          sx={{
+                            whiteSpace: 'pre-wrap',
+                            fontSize: '0.75rem',
+                            maxHeight: 200,
+                            overflow: 'auto',
+                          }}
+                        >
                           {this.state.errorInfo.componentStack}
                         </Typography>
                       </Alert>

@@ -22,10 +22,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* Header */}
       <Header onMenuToggle={handleDrawerToggle} mobileOpen={mobileOpen} />
-      
+
       {/* Sidebar */}
       <Sidebar mobileOpen={mobileOpen} onMobileClose={handleDrawerClose} />
-      
+
       {/* Main Content */}
       <Box
         component="main"
@@ -37,9 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         }}
       >
         <Toolbar />
-        <Box sx={{ p: 3 }}>
-          {children}
-        </Box>
+        <Box sx={{ p: 3 }}>{children}</Box>
       </Box>
     </Box>
   );

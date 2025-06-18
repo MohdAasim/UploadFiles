@@ -59,7 +59,7 @@ const RegisterPage: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
 
@@ -86,7 +86,8 @@ const RegisterPage: React.FC = () => {
       toast.success('Registration successful! Welcome aboard!');
       navigate('/dashboard');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Registration failed';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -103,8 +104,8 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <Container 
-      component="main" 
+    <Container
+      component="main"
       maxWidth="sm"
       sx={{
         display: 'flex',
@@ -136,7 +137,12 @@ const RegisterPage: React.FC = () => {
         {/* Registration Form */}
         <Card sx={{ width: '100%', maxWidth: 400 }}>
           <CardContent sx={{ p: 4 }}>
-            <Typography variant="h5" component="h2" gutterBottom textAlign="center">
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              textAlign="center"
+            >
               Create Account
             </Typography>
 
@@ -260,7 +266,11 @@ const RegisterPage: React.FC = () => {
                             onClick={toggleConfirmPasswordVisibility}
                             edge="end"
                           >
-                            {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            {showConfirmPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
                           </IconButton>
                         </InputAdornment>
                       ),

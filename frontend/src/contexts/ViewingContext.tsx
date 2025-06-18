@@ -9,9 +9,18 @@ interface ViewingState {
 }
 
 type ViewingAction =
-  | { type: 'SET_FILE_VIEWERS'; payload: { fileId: string; viewers: ViewerInfo[] } }
-  | { type: 'USER_STARTED_VIEWING'; payload: { fileId: string; viewer: ViewerInfo } }
-  | { type: 'USER_STOPPED_VIEWING'; payload: { fileId: string; userId: string } }
+  | {
+      type: 'SET_FILE_VIEWERS';
+      payload: { fileId: string; viewers: ViewerInfo[] };
+    }
+  | {
+      type: 'USER_STARTED_VIEWING';
+      payload: { fileId: string; viewer: ViewerInfo };
+    }
+  | {
+      type: 'USER_STOPPED_VIEWING';
+      payload: { fileId: string; userId: string };
+    }
   | { type: 'SET_CURRENTLY_VIEWING'; payload: string | null }
   | { type: 'CLEAR_FILE_VIEWERS'; payload: string };
 
@@ -20,7 +29,10 @@ const initialState: ViewingState = {
   currentlyViewing: null,
 };
 
-function viewingReducer(state: ViewingState, action: ViewingAction): ViewingState {
+function viewingReducer(
+  state: ViewingState,
+  action: ViewingAction
+): ViewingState {
   switch (action.type) {
     case 'SET_FILE_VIEWERS': {
       const { fileId, viewers } = action.payload;
@@ -43,13 +55,15 @@ function viewingReducer(state: ViewingState, action: ViewingAction): ViewingStat
       };
 
       // Add viewer if not already present
-      const existingViewerIndex = currentViewers.viewers.findIndex(v => v.id === viewer.id);
+      const existingViewerIndex = currentViewers.viewers.findIndex(
+        (v) => v.id === viewer.id
+      );
       if (existingViewerIndex === -1) {
         currentViewers.viewers.push(viewer);
       } else {
         currentViewers.viewers[existingViewerIndex] = viewer;
       }
-      
+
       currentViewers.lastUpdated = new Date();
       newFileViewers.set(fileId, currentViewers);
       return { ...state, fileViewers: newFileViewers };
@@ -61,7 +75,9 @@ function viewingReducer(state: ViewingState, action: ViewingAction): ViewingStat
       const currentViewers = newFileViewers.get(fileId);
 
       if (currentViewers) {
-        currentViewers.viewers = currentViewers.viewers.filter(v => v.id !== userId);
+        currentViewers.viewers = currentViewers.viewers.filter(
+          (v) => v.id !== userId
+        );
         currentViewers.lastUpdated = new Date();
 
         if (currentViewers.viewers.length === 0) {
@@ -111,17 +127,22 @@ interface ViewingProviderProps {
   children: React.ReactNode;
 }
 
-export const ViewingProvider: React.FC<ViewingProviderProps> = ({ children }) => {
+export const ViewingProvider: React.FC<ViewingProviderProps> = ({
+  children,
+}) => {
   const [state, dispatch] = useReducer(viewingReducer, initialState);
   const { user, token } = useAuth();
 
   // Connect socket when user is authenticated
   useEffect(() => {
+    console.log('🔌 ViewingProvider: Setting up socket connection...');
+
     if (user && token) {
       socketService.connect(token);
     }
 
     return () => {
+      console.log('🔌 ViewingProvider cleanup...');
       if (state.currentlyViewing) {
         socketService.stopViewingFile(state.currentlyViewing);
       }
@@ -131,25 +152,60 @@ export const ViewingProvider: React.FC<ViewingProviderProps> = ({ children }) =>
 
   // Socket event listeners
   useEffect(() => {
-    // Listen for file viewer updates
-    socketService.on('file-viewers-updated', (data: { fileId: string; viewers: ViewerInfo[] }) => {
+    console.log('🎧 Setting up viewing event listeners...');
+
+    // Only set up listeners if socket is connected
+    if (!socketService.connected) {
+      console.log('⚠️ Socket not connected yet, waiting...');
+      return;
+    }
+
+    // Define handlers with proper logging
+    const handleFileViewersUpdated = (data: {
+      fileId: string;
+      viewers: ViewerInfo[];
+    }) => {
+      console.log(
+        '📨 ViewingContext received file-viewers-updated:-----------------------',
+        data
+      );
       dispatch({ type: 'SET_FILE_VIEWERS', payload: data });
-    });
+    };
 
-    socketService.on('user-started-viewing-file', (data: { fileId: string; viewer: ViewerInfo }) => {
+    const handleUserStartedViewing = (data: {
+      fileId: string;
+      viewer: ViewerInfo;
+    }) => {
+      console.log(
+        '📨 ViewingContext received user-started-viewing-file:',
+        data
+      );
       dispatch({ type: 'USER_STARTED_VIEWING', payload: data });
-    });
+    };
 
-    socketService.on('user-stopped-viewing-file', (data: { fileId: string; userId: string }) => {
+    const handleUserStoppedViewing = (data: {
+      fileId: string;
+      userId: string;
+    }) => {
+      console.log(
+        '📨 ViewingContext received user-stopped-viewing-file:',
+        data
+      );
       dispatch({ type: 'USER_STOPPED_VIEWING', payload: data });
-    });
+    };
+
+    // Register listeners
+    socketService.on('file-viewers-updated', handleFileViewersUpdated);
+    socketService.on('user-started-viewing-file', handleUserStartedViewing);
+    socketService.on('user-stopped-viewing-file', handleUserStoppedViewing);
 
     return () => {
-      socketService.off('file-viewers-updated');
-      socketService.off('user-started-viewing-file');
-      socketService.off('user-stopped-viewing-file');
+      console.log('🎧 Cleaning up viewing event listeners...');
+      socketService.off('file-viewers-updated', handleFileViewersUpdated);
+      socketService.off('user-started-viewing-file', handleUserStartedViewing);
+      socketService.off('user-stopped-viewing-file', handleUserStoppedViewing);
     };
-  }, []);
+  }, [socketService.connected]); // Add dependency on socket connection status
 
   const startViewing = (fileId: string) => {
     // Stop viewing current file if any

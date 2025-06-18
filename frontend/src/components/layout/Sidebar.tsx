@@ -21,7 +21,7 @@ import {
   People,
   Storage,
   Settings,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
@@ -39,41 +39,41 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    text: "Dashboard",
+    text: 'Dashboard',
     icon: <Dashboard />,
-    path: "/dashboard",
+    path: '/dashboard',
   },
   {
-    text: "My Files",
+    text: 'My Files',
     icon: <CloudUpload />,
-    path: "/files",
+    path: '/files',
   },
   {
-    text: "Folders",
+    text: 'Folders',
     icon: <Folder />,
-    path: "/folders",
+    path: '/folders',
   },
   {
-    text: "Shared with Me",
+    text: 'Shared with Me',
     icon: <Share />,
-    path: "/shared",
+    path: '/shared',
     badge: 0,
   },
   {
-    text: "Team",
+    text: 'Team',
     icon: <People />,
-    path: "/team",
+    path: '/team',
     divider: true,
   },
   {
-    text: "Storage",
+    text: 'Storage',
     icon: <Storage />,
-    path: "/storage",
+    path: '/storage',
   },
   {
-    text: "Settings",
+    text: 'Settings',
     icon: <Settings />,
-    path: "/settings",
+    path: '/settings',
   },
 ];
 
@@ -96,7 +96,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Sidebar Header */}
       <Box sx={{ p: 2, pt: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+        <Typography
+          variant="h6"
+          sx={{ fontWeight: 600, color: 'text.secondary' }}
+        >
           File Manager
         </Typography>
       </Box>
@@ -132,12 +135,15 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                 <ListItemIcon
                   sx={{
                     minWidth: 40,
-                    color: location.pathname === item.path ? 'inherit' : 'text.secondary',
+                    color:
+                      location.pathname === item.path
+                        ? 'inherit'
+                        : 'text.secondary',
                   }}
                 >
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText 
+                <ListItemText
                   primary={item.text}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
@@ -151,7 +157,10 @@ const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
                     sx={{
                       height: 20,
                       fontSize: '0.75rem',
-                      backgroundColor: location.pathname === item.path ? 'rgba(255,255,255,0.2)' : 'primary.main',
+                      backgroundColor:
+                        location.pathname === item.path
+                          ? 'rgba(255,255,255,0.2)'
+                          : 'primary.main',
                       color: 'white',
                     }}
                   />
