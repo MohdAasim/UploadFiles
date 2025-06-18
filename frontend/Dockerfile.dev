@@ -1,0 +1,24 @@
+# Use an official Node.js image as a base image for development
+FROM node:20
+
+# Set the working directory
+WORKDIR /app
+
+# Set environment variables to fix SSL issues and disable husky
+ENV NODE_OPTIONS=--openssl-legacy-provider
+ENV HUSKY=0
+
+# Copy package.json and package-lock.json (or yarn.lock)
+COPY package*.json ./
+
+# Disable husky installation during npm install
+RUN npm pkg delete scripts.prepare && npm install
+
+# Copy the rest of the project files
+COPY . .
+
+# Expose port for Vite dev server
+EXPOSE 5173
+
+# Start Vite in development mode - listening on all interfaces
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

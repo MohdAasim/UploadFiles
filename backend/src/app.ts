@@ -22,7 +22,7 @@ connectDB();
 
 const app = express();
 const httpServer = createServer(app);
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 const message =
   process.env.MESSAGE || 'Hello, TypeScript + Express with Socket.IO!';
 

@@ -288,7 +288,7 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                     </Box>
                   }
                   secondary={
-                    <Box component="div" sx={{ mt: 0.5 }}>
+                    <React.Fragment>
                       {(item.status === 'uploading' ||
                         item.status === 'paused') && (
                         <LinearProgress
@@ -301,12 +301,12 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                       <Typography
                         variant="caption"
                         color="text.secondary"
-                        component="div"
                       >
                         {item.error ? (
                           <Typography
                             component="span"
                             sx={{ color: 'error.main' }}
+                            variant="caption"
                           >
                             Error: {item.error}
                           </Typography>
@@ -324,7 +324,7 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                           `${formatFileSize(item.fileSize)}`
                         )}
                       </Typography>
-                    </Box>
+                    </React.Fragment>
                   }
                 />
                 <ListItemSecondaryAction>
