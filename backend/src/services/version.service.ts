@@ -70,7 +70,9 @@ export async function uploadNewVersionService({
   );
   const newVersionNumber = currentVersionNumber + 1;
 
-  logger.info(`Creating version ${newVersionNumber} for file: ${file.originalName}`);
+  logger.info(
+    `Creating version ${newVersionNumber} for file: ${file.originalName}`
+  );
 
   // Add current file as a version before updating
   file.versions.push({
@@ -124,7 +126,9 @@ export async function versionHistoryService({
   fileId: string;
   userId: string;
 }) {
-  logger.info(`Version history service requested - File: ${fileId}, User: ${userId}`);
+  logger.info(
+    `Version history service requested - File: ${fileId}, User: ${userId}`
+  );
 
   const file = await getFileVersoinHistoryByFileId(fileId);
   if (!file) {
@@ -149,8 +153,13 @@ export async function versionHistoryService({
     throw createError('You do not have permission to view this file', 403);
   }
 
-  const currentVersion = Math.max(...file.versions.map(v => v.versionNumber), 1);
-  const sortedVersions = file.versions.sort((a, b) => b.versionNumber - a.versionNumber);
+  const currentVersion = Math.max(
+    ...file.versions.map(v => v.versionNumber),
+    1
+  );
+  const sortedVersions = file.versions.sort(
+    (a, b) => b.versionNumber - a.versionNumber
+  );
 
   logger.info(
     `Version history retrieved - File: ${fileId}, Current version: ${currentVersion}, Total versions: ${sortedVersions.length}`
@@ -229,17 +238,23 @@ export async function restoreVersionService({
 
   // Check if the version file still exists
   if (!fs.existsSync(version.path)) {
-    logger.error(`Version restore failed - version file missing: ${version.path}`);
+    logger.error(
+      `Version restore failed - version file missing: ${version.path}`
+    );
     throw createError('Version file not found on server', 404);
   }
 
-  logger.info(`Restoring version ${versionNumber} for file: ${file.originalName}`);
+  logger.info(
+    `Restoring version ${versionNumber} for file: ${file.originalName}`
+  );
 
   // Save current file as a new version before restoring
   const newVersionNumber =
     Math.max(...file.versions.map(v => v.versionNumber)) + 1;
 
-  logger.debug(`Saving current state as version ${newVersionNumber} before restore`);
+  logger.debug(
+    `Saving current state as version ${newVersionNumber} before restore`
+  );
 
   file.versions.push({
     versionNumber: newVersionNumber,

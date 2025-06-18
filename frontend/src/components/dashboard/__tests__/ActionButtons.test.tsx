@@ -21,7 +21,7 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Check if buttons are rendered with correct text
     expect(screen.getByText('Upload Files')).toBeInTheDocument();
     expect(screen.getByText('Bulk Upload')).toBeInTheDocument();
@@ -36,11 +36,11 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Check if the container has the buttons with icons
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(3);
-    
+
     // Check if icons are present (indirectly)
     // MUI renders icons as SVGs, so we can check if SVGs are present
     const svgIcons = document.querySelectorAll('svg');
@@ -55,10 +55,10 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Click the Upload Files button
     fireEvent.click(screen.getByText('Upload Files'));
-    
+
     // Verify the handler was called
     expect(handleUploadClick).toHaveBeenCalledTimes(1);
     expect(handleBulkUploadClick).not.toHaveBeenCalled();
@@ -73,10 +73,10 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Click the Bulk Upload button
     fireEvent.click(screen.getByText('Bulk Upload'));
-    
+
     // Verify the handler was called
     expect(handleBulkUploadClick).toHaveBeenCalledTimes(1);
     expect(handleUploadClick).not.toHaveBeenCalled();
@@ -91,10 +91,10 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Click the New Folder button
     fireEvent.click(screen.getByText('New Folder'));
-    
+
     // Verify the handler was called
     expect(handleCreateFolderClick).toHaveBeenCalledTimes(1);
     expect(handleUploadClick).not.toHaveBeenCalled();
@@ -109,15 +109,15 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Check that the first button (Upload Files) is a contained button
     const uploadButton = screen.getByText('Upload Files').closest('button');
     expect(uploadButton).toHaveClass('MuiButton-contained');
-    
+
     // Check that the other buttons are outlined buttons
     const bulkUploadButton = screen.getByText('Bulk Upload').closest('button');
     const newFolderButton = screen.getByText('New Folder').closest('button');
-    
+
     expect(bulkUploadButton).toHaveClass('MuiButton-outlined');
     expect(newFolderButton).toHaveClass('MuiButton-outlined');
   });
@@ -130,7 +130,7 @@ describe('ActionButtons Component', () => {
         onCreateFolderClick={handleCreateFolderClick}
       />
     );
-    
+
     // Check that the container div has the flex class and gap
     const buttonContainer = container.firstChild;
     expect(buttonContainer).toHaveClass('flex');

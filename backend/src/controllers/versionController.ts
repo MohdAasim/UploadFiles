@@ -33,7 +33,9 @@ export const uploadNewVersion = asyncHandler(
     const userId = req.user.id;
     const remark = req.body.remark;
 
-    logger.info(`New version upload initiated - File: ${fileId}, User: ${userId}, Remark: ${remark || 'No remark'}`);
+    logger.info(
+      `New version upload initiated - File: ${fileId}, User: ${userId}, Remark: ${remark || 'No remark'}`
+    );
 
     if (!req.file) {
       logger.warn('Version upload attempted without file');
@@ -69,7 +71,7 @@ export const getVersionHistory = asyncHandler(
     logger.info(`Version history requested - File: ${fileId}, User: ${userId}`);
 
     const response = await versionHistoryService({ fileId, userId });
-    
+
     logger.info(`Version history retrieved - File: ${fileId}`);
     res.json(response);
   }
@@ -90,7 +92,9 @@ export const restoreVersion = asyncHandler(
     const versionNumber = parseInt(req.body.versionNumber, 10);
     const userId = req.user.id;
 
-    logger.info(`Version restore requested - File: ${fileId}, Version: ${versionNumber}, User: ${userId}`);
+    logger.info(
+      `Version restore requested - File: ${fileId}, Version: ${versionNumber}, User: ${userId}`
+    );
 
     if (!versionNumber || isNaN(versionNumber)) {
       logger.warn('Version restore attempted with invalid version number');
@@ -103,7 +107,9 @@ export const restoreVersion = asyncHandler(
       versionNumber,
     });
 
-    logger.info(`Version restored successfully - File: ${fileId}, Restored version: ${versionNumber}`);
+    logger.info(
+      `Version restored successfully - File: ${fileId}, Restored version: ${versionNumber}`
+    );
     res.json(response);
   }
 );

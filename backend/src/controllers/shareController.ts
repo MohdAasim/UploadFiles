@@ -29,7 +29,9 @@ export const shareResource = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { resourceId, resourceType, targetUserEmail, permission } = req.body;
 
-    logger.info(`Share resource initiated - Resource: ${resourceId} (${resourceType}), Target: ${targetUserEmail}, Permission: ${permission}, Sharer: ${req.user.id}`);
+    logger.info(
+      `Share resource initiated - Resource: ${resourceId} (${resourceType}), Target: ${targetUserEmail}, Permission: ${permission}, Sharer: ${req.user.id}`
+    );
 
     // Get socket server instance
     const socketServer = req.app.get('socketServer') as SocketServer;
@@ -41,8 +43,10 @@ export const shareResource = asyncHandler(
       targetUserEmail,
       user: req.user,
     });
-    
-    logger.info(`Resource shared successfully - Resource: ${resourceId} with ${targetUserEmail}`);
+
+    logger.info(
+      `Resource shared successfully - Resource: ${resourceId} with ${targetUserEmail}`
+    );
     res.json(response);
   }
 );
@@ -60,11 +64,13 @@ export const getFilePermissions = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { fileId } = req.params;
     const userId = req.user.id;
-    
-    logger.info(`File permissions requested - File: ${fileId}, User: ${userId}`);
-    
+
+    logger.info(
+      `File permissions requested - File: ${fileId}, User: ${userId}`
+    );
+
     const response = await getFilePermissionService({ userId, fileId });
-    
+
     logger.info(`File permissions retrieved for file: ${fileId}`);
     res.json(response);
   }
@@ -84,7 +90,9 @@ export const getFolderPermissions = asyncHandler(
     const { folderId } = req.params;
     const userId = req.user.id;
 
-    logger.info(`Folder permissions requested - Folder: ${folderId}, User: ${userId}`);
+    logger.info(
+      `Folder permissions requested - Folder: ${folderId}, User: ${userId}`
+    );
 
     const folder = await Folder.findById(folderId).populate(
       'sharedWith.user',
@@ -104,7 +112,9 @@ export const getFolderPermissions = asyncHandler(
     );
 
     if (!isOwner && !hasAdminAccess) {
-      logger.warn(`Unauthorized folder permissions request - Folder: ${folderId}, User: ${userId}`);
+      logger.warn(
+        `Unauthorized folder permissions request - Folder: ${folderId}, User: ${userId}`
+      );
       throw createError('Only owner or admin can view permissions', 403);
     }
 
@@ -141,11 +151,11 @@ export const getFolderPermissions = asyncHandler(
 export const getSharedWithMe = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user.id;
-    
+
     logger.info(`Shared with me requested for user: ${userId}`);
-    
+
     const response = await getSharedWithMeService(userId);
-    
+
     logger.info(`Retrieved shared resources for user: ${userId}`);
     res.json(response);
   }
@@ -163,11 +173,11 @@ export const getSharedWithMe = asyncHandler(
 export const getMySharedResources = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user.id;
-    
+
     logger.info(`Shared by me requested for user: ${userId}`);
-    
+
     const response = await getSharedByMeService(userId);
-    
+
     logger.info(`Retrieved resources shared by user: ${userId}`);
     res.json(response);
   }
@@ -186,17 +196,21 @@ export const removePermission = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { resourceId, resourceType, targetUserEmail } = req.body;
     const userId = req.user.id;
-    
-    logger.info(`Permission removal requested - Resource: ${resourceId} (${resourceType}), Target: ${targetUserEmail}, Remover: ${userId}`);
-    
+
+    logger.info(
+      `Permission removal requested - Resource: ${resourceId} (${resourceType}), Target: ${targetUserEmail}, Remover: ${userId}`
+    );
+
     const response = await removePermissionService({
       resourceId,
       resourceType,
       targetUserEmail,
       userId,
     });
-    
-    logger.info(`Permission removed successfully - Resource: ${resourceId} from ${targetUserEmail}`);
+
+    logger.info(
+      `Permission removed successfully - Resource: ${resourceId} from ${targetUserEmail}`
+    );
     res.json(response);
   }
 );

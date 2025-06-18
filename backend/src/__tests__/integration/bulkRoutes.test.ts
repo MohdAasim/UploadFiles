@@ -20,14 +20,18 @@ describe('Bulk Routes', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    
+
     // Configure mock for authenticate middleware
     (authenticate as jest.Mock).mockImplementation((req, res, next) => {
       // Add a mock user to the request
-      req.user = { id: 'user123', name: 'Test User', email: 'test@example.com' };
+      req.user = {
+        id: 'user123',
+        name: 'Test User',
+        email: 'test@example.com',
+      };
       next();
     });
-    
+
     app.use('/api/v1/bulk', bulkRoutes);
     jest.clearAllMocks();
   });
@@ -50,7 +54,7 @@ describe('Bulk Routes', () => {
       const requestData = {
         action: 'delete',
         files: ['file123', 'file456'],
-        folders: ['folder789']
+        folders: ['folder789'],
       };
 
       // Act
@@ -84,7 +88,7 @@ describe('Bulk Routes', () => {
         action: 'move',
         files: ['file123', 'file456'],
         folders: ['folder789'],
-        targetFolder: 'folder999'
+        targetFolder: 'folder999',
       };
 
       // Act
@@ -113,10 +117,10 @@ describe('Bulk Routes', () => {
                 name: 'test.pdf',
                 downloadUrl: '/api/v1/files/preview/file123',
                 size: 12345,
-                mimetype: 'application/pdf'
-              }
+                mimetype: 'application/pdf',
+              },
             ],
-            folders: ['folder789']
+            folders: ['folder789'],
           },
         });
       });
@@ -124,7 +128,7 @@ describe('Bulk Routes', () => {
       const requestData = {
         action: 'download',
         files: ['file123'],
-        folders: ['folder789']
+        folders: ['folder789'],
       };
 
       // Act
@@ -146,13 +150,13 @@ describe('Bulk Routes', () => {
       (authenticate as jest.Mock).mockImplementation((req, res, next) => {
         return res.status(401).json({
           success: false,
-          message: 'Authentication failed'
+          message: 'Authentication failed',
         });
       });
 
       const requestData = {
         action: 'delete',
-        files: ['file123']
+        files: ['file123'],
       };
 
       // Act

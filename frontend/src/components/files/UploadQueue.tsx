@@ -298,10 +298,7 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                           sx={{ mb: 0.5, height: 4, borderRadius: 2 }}
                         />
                       )}
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                      >
+                      <Typography variant="caption" color="text.secondary">
                         {item.error ? (
                           <Typography
                             component="span"

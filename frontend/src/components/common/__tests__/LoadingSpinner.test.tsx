@@ -5,7 +5,7 @@ import LoadingSpinner from '../LoadingSpinner';
 describe('LoadingSpinner Component', () => {
   it('renders a circular progress indicator', () => {
     render(<LoadingSpinner />);
-    
+
     // Check for the CircularProgress component
     const progressElement = screen.getByRole('progressbar');
     expect(progressElement).toBeInTheDocument();
@@ -13,7 +13,7 @@ describe('LoadingSpinner Component', () => {
 
   it('renders within a centered box container', () => {
     const { container } = render(<LoadingSpinner />);
-    
+
     // Check for the Box with correct styling
     const boxElement = container.firstChild;
     expect(boxElement).toHaveStyle('display: flex');

@@ -33,16 +33,16 @@ describe('Auth Routes', () => {
       // Arrange
       const mockRegister = register as jest.Mock;
       mockRegister.mockImplementation((req, res) => {
-        res.status(201).json({ 
-          success: true, 
-          user: { id: '123', name: 'Test User', email: 'test@example.com' } 
+        res.status(201).json({
+          success: true,
+          user: { id: '123', name: 'Test User', email: 'test@example.com' },
         });
       });
 
       const userData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123'
+        password: 'password123',
       };
 
       // Act
@@ -65,16 +65,16 @@ describe('Auth Routes', () => {
       // Arrange
       const mockLogin = login as jest.Mock;
       mockLogin.mockImplementation((req, res) => {
-        res.status(200).json({ 
-          success: true, 
+        res.status(200).json({
+          success: true,
           token: 'test-token',
-          user: { id: '123', name: 'Test User', email: 'test@example.com' } 
+          user: { id: '123', name: 'Test User', email: 'test@example.com' },
         });
       });
 
       const loginData = {
         email: 'test@example.com',
-        password: 'password123'
+        password: 'password123',
       };
 
       // Act
@@ -105,18 +105,19 @@ describe('Auth Routes', () => {
             return res.status(400).json({
               success: false,
               message: 'Validation error',
-              details: 'Email is required'
+              details: 'Email is required',
             });
           };
         };
       });
 
       // Re-import routes with the new mock
-      const authRoutesWithValidation = require('../../routes/authRoutes').default;
+      const authRoutesWithValidation =
+        require('../../routes/authRoutes').default;
       validationApp.use('/api/auth', authRoutesWithValidation);
 
       const invalidData = {
-        password: 'password123'
+        password: 'password123',
         // Missing email field
       };
 
@@ -129,7 +130,7 @@ describe('Auth Routes', () => {
       expect(response.status).toBe(400);
       expect(response.body.success).toBe(false);
       expect(response.body.message).toBe('Validation error');
-      
+
       // Reset the mock for other tests
       jest.resetModules();
     });

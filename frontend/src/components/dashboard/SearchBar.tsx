@@ -122,11 +122,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   size="small"
                   color="primary"
                 />
-                <Button
-                  size="small"
-                  onClick={onClearSearch}
-                  variant="outlined"
-                >
+                <Button size="small" onClick={onClearSearch} variant="outlined">
                   Clear Search
                 </Button>
               </Box>

@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 
 // Mock the asyncHandler to pass through the function with proper types
 jest.mock('../../middlewares/errorHandler', () => ({
-  asyncHandler: (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
+  asyncHandler:
+    (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         return await fn(req, res, next);
@@ -15,29 +16,29 @@ jest.mock('../../middlewares/errorHandler', () => ({
     const error: any = new Error(message);
     error.statusCode = statusCode;
     return error;
-  }
+  },
 }));
 
 // Mock the models
 jest.mock('../../models/FileMeta', () => ({
   __esModule: true,
   default: {
-    find: jest.fn()
-  }
+    find: jest.fn(),
+  },
 }));
 
 jest.mock('../../models/Folder', () => ({
   __esModule: true,
   default: {
-    find: jest.fn()
-  }
+    find: jest.fn(),
+  },
 }));
 
 jest.mock('../../utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Import after mocks are set up
@@ -67,21 +68,25 @@ describe('Search Controller', () => {
       const mockReq: any = {
         user: undefined,
         query: {
-          q: 'test'
-        }
+          q: 'test',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'User not authenticated',
-        statusCode: 401
-      }));
-      expect(logger.warn).toHaveBeenCalledWith('Search attempted without authentication');
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'User not authenticated',
+          statusCode: 401,
+        })
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Search attempted without authentication'
+      );
     });
 
     it('should return empty results for empty search query', async () => {
@@ -90,15 +95,15 @@ describe('Search Controller', () => {
         user: { id: 'user123' },
         query: {
           q: '',
-          kind: 'all'
-        }
+          kind: 'all',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -114,7 +119,9 @@ describe('Search Controller', () => {
           },
         },
       });
-      expect(logger.info).toHaveBeenCalledWith('Empty search query, returning empty results');
+      expect(logger.info).toHaveBeenCalledWith(
+        'Empty search query, returning empty results'
+      );
     });
 
     it('should search files only when kind is file', async () => {
@@ -123,29 +130,29 @@ describe('Search Controller', () => {
         user: { id: 'user123' },
         query: {
           q: 'test',
-          kind: 'file'
-        }
+          kind: 'file',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const mockFiles = [
         { _id: 'file1', originalName: 'test_file1.pdf' },
-        { _id: 'file2', originalName: 'test_file2.png' }
+        { _id: 'file2', originalName: 'test_file2.png' },
       ];
-      
+
       const mockFilesQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFiles)
+        lean: jest.fn().mockResolvedValue(mockFiles),
       };
-      
+
       (FileMeta.find as jest.Mock).mockReturnValue(mockFilesQuery);
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(FileMeta.find).toHaveBeenCalledWith({
         uploadedBy: 'user123',
@@ -174,29 +181,29 @@ describe('Search Controller', () => {
         user: { id: 'user123' },
         query: {
           q: 'test',
-          kind: 'folder'
-        }
+          kind: 'folder',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const mockFolders = [
         { _id: 'folder1', name: 'test_folder1' },
-        { _id: 'folder2', name: 'test_folder2' }
+        { _id: 'folder2', name: 'test_folder2' },
       ];
-      
+
       const mockFoldersQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFolders)
+        lean: jest.fn().mockResolvedValue(mockFolders),
       };
-      
+
       (Folder.find as jest.Mock).mockReturnValue(mockFoldersQuery);
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(Folder.find).toHaveBeenCalledWith({
         owner: 'user123',
@@ -225,41 +232,39 @@ describe('Search Controller', () => {
         user: { id: 'user123' },
         query: {
           q: 'test',
-          kind: 'all'
-        }
+          kind: 'all',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const mockFiles = [
         { _id: 'file1', originalName: 'test_file1.pdf' },
-        { _id: 'file2', originalName: 'test_file2.png' }
+        { _id: 'file2', originalName: 'test_file2.png' },
       ];
-      
-      const mockFolders = [
-        { _id: 'folder1', name: 'test_folder1' }
-      ];
-      
+
+      const mockFolders = [{ _id: 'folder1', name: 'test_folder1' }];
+
       const mockFilesQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFiles)
+        lean: jest.fn().mockResolvedValue(mockFiles),
       };
-      
+
       const mockFoldersQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFolders)
+        lean: jest.fn().mockResolvedValue(mockFolders),
       };
-      
+
       (FileMeta.find as jest.Mock).mockReturnValue(mockFilesQuery);
       (Folder.find as jest.Mock).mockReturnValue(mockFoldersQuery);
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(FileMeta.find).toHaveBeenCalled();
       expect(Folder.find).toHaveBeenCalled();
@@ -286,33 +291,37 @@ describe('Search Controller', () => {
         query: {
           q: 'test',
           type: 'pdf',
-          kind: 'file'
-        }
+          kind: 'file',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const mockFiles = [
-        { _id: 'file1', originalName: 'test_file1.pdf', mimetype: 'application/pdf' }
+        {
+          _id: 'file1',
+          originalName: 'test_file1.pdf',
+          mimetype: 'application/pdf',
+        },
       ];
-      
+
       const mockFilesQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFiles)
+        lean: jest.fn().mockResolvedValue(mockFiles),
       };
-      
+
       (FileMeta.find as jest.Mock).mockReturnValue(mockFilesQuery);
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(FileMeta.find).toHaveBeenCalledWith({
         uploadedBy: 'user123',
         originalName: { $regex: 'test', $options: 'i' },
-        mimetype: { $regex: 'pdf', $options: 'i' }
+        mimetype: { $regex: 'pdf', $options: 'i' },
       });
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
@@ -333,68 +342,74 @@ describe('Search Controller', () => {
     it('should apply inFolder filter when searching', async () => {
       // Arrange
       const folderId = 'folder123';
-      
+
       const mockReq: any = {
         user: { id: 'user123' },
         query: {
           q: 'test',
           inFolder: folderId,
-          kind: 'all'
-        }
+          kind: 'all',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const mockFiles = [
-        { _id: 'file1', originalName: 'test_file1.pdf', parentFolder: folderId }
+        {
+          _id: 'file1',
+          originalName: 'test_file1.pdf',
+          parentFolder: folderId,
+        },
       ];
-      
+
       const mockFolders = [
-        { _id: 'subfolder1', name: 'test_subfolder', parent: folderId }
+        { _id: 'subfolder1', name: 'test_subfolder', parent: folderId },
       ];
-      
+
       const mockFilesQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFiles)
+        lean: jest.fn().mockResolvedValue(mockFiles),
       };
-      
+
       const mockFoldersQuery = {
         populate: jest.fn().mockReturnThis(),
         sort: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
-        lean: jest.fn().mockResolvedValue(mockFolders)
+        lean: jest.fn().mockResolvedValue(mockFolders),
       };
-      
+
       (FileMeta.find as jest.Mock).mockReturnValue(mockFilesQuery);
       (Folder.find as jest.Mock).mockReturnValue(mockFoldersQuery);
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
       expect(FileMeta.find).toHaveBeenCalledWith({
         uploadedBy: 'user123',
         originalName: { $regex: 'test', $options: 'i' },
-        parentFolder: folderId
+        parentFolder: folderId,
       });
-      
+
       expect(Folder.find).toHaveBeenCalledWith({
         owner: 'user123',
         name: { $regex: 'test', $options: 'i' },
-        parent: folderId
+        parent: folderId,
       });
-      
-      expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
-        success: true,
-        data: expect.objectContaining({
-          summary: expect.objectContaining({
-            searchQuery: 'test',
-            searchKind: 'all'
-          })
+
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          data: expect.objectContaining({
+            summary: expect.objectContaining({
+              searchQuery: 'test',
+              searchKind: 'all',
+            }),
+          }),
         })
-      }));
+      );
     });
 
     it('should handle search errors and throw 500', async () => {
@@ -403,25 +418,27 @@ describe('Search Controller', () => {
         user: { id: 'user123' },
         query: {
           q: 'test',
-          kind: 'all'
-        }
+          kind: 'all',
+        },
       };
-      
+
       const mockRes = mockResponse();
-      
+
       const testError = new Error('Database error');
       (FileMeta.find as jest.Mock).mockImplementation(() => {
         throw testError;
       });
-      
+
       // Act
       await searchFilesAndFolders(mockReq, mockRes, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Search failed',
-        statusCode: 500
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Search failed',
+          statusCode: 500,
+        })
+      );
       expect(logger.error).toHaveBeenCalled();
     });
   });

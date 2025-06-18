@@ -18,9 +18,9 @@ interface AuthRequest extends Request {
 export const getOnlineUsers = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const userId = req.user?.id;
-    
+
     logger.info(`Online users requested by user: ${userId}`);
-    
+
     const socketServer = req.app.get('socketServer');
 
     if (!socketServer) {
@@ -29,7 +29,7 @@ export const getOnlineUsers = asyncHandler(
     }
 
     const onlineUsers = socketServer.getConnectedUsers();
-    
+
     logger.info(`Retrieved ${onlineUsers.length} online users`);
 
     res.json({
@@ -52,9 +52,11 @@ export const getFileEditingStatus = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { fileId } = req.params;
     const userId = req.user?.id;
-    
-    logger.info(`File editing status requested - File: ${fileId}, User: ${userId}`);
-    
+
+    logger.info(
+      `File editing status requested - File: ${fileId}, User: ${userId}`
+    );
+
     const socketServer = req.app.get('socketServer');
 
     if (!socketServer) {
@@ -63,8 +65,10 @@ export const getFileEditingStatus = asyncHandler(
     }
 
     const editingSession = socketServer.fileEditingSessions.get(fileId);
-    
-    logger.info(`File editing status retrieved - File: ${fileId}, Being edited: ${!!editingSession}`);
+
+    logger.info(
+      `File editing status retrieved - File: ${fileId}, Being edited: ${!!editingSession}`
+    );
 
     res.json({
       success: true,
@@ -87,9 +91,11 @@ export const notifyUser = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { targetUserId, type, message, resourceId } = req.body;
     const senderId = req.user?.id;
-    
-    logger.info(`Notification requested - From: ${senderId}, To: ${targetUserId}, Type: ${type}, Resource: ${resourceId}`);
-    
+
+    logger.info(
+      `Notification requested - From: ${senderId}, To: ${targetUserId}, Type: ${type}, Resource: ${resourceId}`
+    );
+
     const socketServer = req.app.get('socketServer');
 
     if (!socketServer) {
@@ -113,7 +119,9 @@ export const notifyUser = asyncHandler(
         timestamp: new Date(),
       });
 
-      logger.info(`Notification sent successfully - From: ${senderId} to: ${targetUserId}`);
+      logger.info(
+        `Notification sent successfully - From: ${senderId} to: ${targetUserId}`
+      );
 
       res.json({
         success: true,
@@ -121,7 +129,7 @@ export const notifyUser = asyncHandler(
       });
     } else {
       logger.warn(`User offline for notification - Target: ${targetUserId}`);
-      
+
       res.json({
         success: false,
         message: 'User is offline',
