@@ -33,7 +33,9 @@ export async function registerUser({
   logger.debug(`Creating new user account for: ${email}`);
   const user = await createUser({ name, email, password });
 
-  logger.info(`User registration successful - ID: ${user._id}, Email: ${email}`);
+  logger.info(
+    `User registration successful - ID: ${user._id}, Email: ${email}`
+  );
 
   return {
     success: true,

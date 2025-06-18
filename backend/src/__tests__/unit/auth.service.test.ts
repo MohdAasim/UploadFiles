@@ -23,22 +23,22 @@ describe('Auth Service', () => {
       const mockUserData = {
         name: 'Test User',
         email: 'test@example.com',
-        password: 'password123'
+        password: 'password123',
       };
-      
+
       const mockCreatedUser = {
         _id: 'user123',
         name: mockUserData.name,
         email: mockUserData.email,
         role: 'user',
       };
-      
+
       (getUserByEmail as jest.Mock).mockResolvedValue(null);
       (createUser as jest.Mock).mockResolvedValue(mockCreatedUser);
-      
+
       // Act
       const result = await registerUser(mockUserData);
-      
+
       // Assert
       expect(getUserByEmail).toHaveBeenCalledWith(mockUserData.email);
       expect(createUser).toHaveBeenCalledWith(mockUserData);
@@ -58,13 +58,17 @@ describe('Auth Service', () => {
       const mockUserData = {
         name: 'Test User',
         email: 'existing@example.com',
-        password: 'password123'
+        password: 'password123',
       };
-      
-      (getUserByEmail as jest.Mock).mockResolvedValue({ email: mockUserData.email });
-      
+
+      (getUserByEmail as jest.Mock).mockResolvedValue({
+        email: mockUserData.email,
+      });
+
       // Act & Assert
-      await expect(registerUser(mockUserData)).rejects.toThrow('User already exists');
+      await expect(registerUser(mockUserData)).rejects.toThrow(
+        'User already exists'
+      );
       expect(getUserByEmail).toHaveBeenCalledWith(mockUserData.email);
       expect(createUser).not.toHaveBeenCalled();
     });
@@ -75,28 +79,30 @@ describe('Auth Service', () => {
       // Arrange
       const mockLoginData = {
         email: 'test@example.com',
-        password: 'password123'
+        password: 'password123',
       };
-      
+
       const mockUser = {
         _id: 'user123',
         name: 'Test User',
         email: mockLoginData.email,
         role: 'user',
-        matchPassword: jest.fn().mockResolvedValue(true)
+        matchPassword: jest.fn().mockResolvedValue(true),
       };
-      
+
       const mockToken = 'mock-jwt-token';
-      
+
       (getUserByEmail as jest.Mock).mockResolvedValue(mockUser);
       (generateToken as jest.Mock).mockReturnValue(mockToken);
-      
+
       // Act
       const result = await loginUser(mockLoginData);
-      
+
       // Assert
       expect(getUserByEmail).toHaveBeenCalledWith(mockLoginData.email);
-      expect(mockUser.matchPassword).toHaveBeenCalledWith(mockLoginData.password);
+      expect(mockUser.matchPassword).toHaveBeenCalledWith(
+        mockLoginData.password
+      );
       expect(generateToken).toHaveBeenCalledWith(mockUser);
       expect(result).toEqual({
         success: true,
@@ -106,7 +112,7 @@ describe('Auth Service', () => {
           name: mockUser.name,
           email: mockUser.email,
           role: mockUser.role,
-        }
+        },
       });
     });
 
@@ -114,13 +120,15 @@ describe('Auth Service', () => {
       // Arrange
       const mockLoginData = {
         email: 'nonexistent@example.com',
-        password: 'password123'
+        password: 'password123',
       };
-      
+
       (getUserByEmail as jest.Mock).mockResolvedValue(null);
-      
+
       // Act & Assert
-      await expect(loginUser(mockLoginData)).rejects.toThrow('Invalid credentials');
+      await expect(loginUser(mockLoginData)).rejects.toThrow(
+        'Invalid credentials'
+      );
       expect(getUserByEmail).toHaveBeenCalledWith(mockLoginData.email);
     });
 
@@ -128,23 +136,27 @@ describe('Auth Service', () => {
       // Arrange
       const mockLoginData = {
         email: 'test@example.com',
-        password: 'wrongpassword'
+        password: 'wrongpassword',
       };
-      
+
       const mockUser = {
         _id: 'user123',
         name: 'Test User',
         email: mockLoginData.email,
         role: 'user',
-        matchPassword: jest.fn().mockResolvedValue(false)
+        matchPassword: jest.fn().mockResolvedValue(false),
       };
-      
+
       (getUserByEmail as jest.Mock).mockResolvedValue(mockUser);
-      
+
       // Act & Assert
-      await expect(loginUser(mockLoginData)).rejects.toThrow('Invalid credentials');
+      await expect(loginUser(mockLoginData)).rejects.toThrow(
+        'Invalid credentials'
+      );
       expect(getUserByEmail).toHaveBeenCalledWith(mockLoginData.email);
-      expect(mockUser.matchPassword).toHaveBeenCalledWith(mockLoginData.password);
+      expect(mockUser.matchPassword).toHaveBeenCalledWith(
+        mockLoginData.password
+      );
       expect(generateToken).not.toHaveBeenCalled();
     });
   });

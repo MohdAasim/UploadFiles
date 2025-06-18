@@ -54,7 +54,6 @@ export const handleViewingEvents = (
 
       // Join the file room
       await socket.join(`file:${fileId}`);
-     
 
       // Broadcast to all users in the file room
       const viewersList = Array.from(viewers);

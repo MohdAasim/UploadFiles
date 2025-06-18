@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Keep existing styles after Tailwind imports */
 :root {

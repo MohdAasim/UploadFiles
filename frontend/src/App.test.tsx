@@ -6,7 +6,7 @@ import React from 'react';
 // Mock LoadingSpinner before importing App
 jest.mock('./components/common/LoadingSpinner', () => ({
   __esModule: true,
-  default: () => <div data-testid="loading-spinner">Loading...</div>
+  default: () => <div data-testid="loading-spinner">Loading...</div>,
 }));
 
 import App from './App';
@@ -14,7 +14,9 @@ import App from './App';
 // Mock Material UI components
 jest.mock('@mui/material', () => ({
   CircularProgress: () => <div data-testid="circular-progress" />,
-  Box: ({ children }: { children: React.ReactNode }) => <div data-testid="mui-box">{children}</div>,
+  Box: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mui-box">{children}</div>
+  ),
   // Add any other components used in your App
 }));
 
@@ -25,38 +27,46 @@ jest.mock('@mui/material/styles', () => ({
   ),
   createTheme: jest.fn().mockReturnValue({}),
   styled: jest.fn().mockImplementation(() => {
-    return jest.fn().mockImplementation(({ children }: { children?: React.ReactNode }) => (
-      <div>{children}</div>
-    ));
-  })
+    return jest
+      .fn()
+      .mockImplementation(({ children }: { children?: React.ReactNode }) => (
+        <div>{children}</div>
+      ));
+  }),
 }));
 
 // Mock dependencies
 jest.mock('react-router-dom', () => ({
-  BrowserRouter: ({ children }: { children: React.ReactNode }) => <div data-testid="router">{children}</div>,
-  Routes: ({ children }: { children: React.ReactNode }) => <div data-testid="routes">{children}</div>,
-  Route: ({ element }: { element: React.ReactNode }) => <div data-testid="route">{element}</div>,
-  Navigate: () => <div data-testid="navigate">Navigate</div>
+  BrowserRouter: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="router">{children}</div>
+  ),
+  Routes: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="routes">{children}</div>
+  ),
+  Route: ({ element }: { element: React.ReactNode }) => (
+    <div data-testid="route">{element}</div>
+  ),
+  Navigate: () => <div data-testid="navigate">Navigate</div>,
 }));
 
 jest.mock('@tanstack/react-query', () => ({
   QueryClient: jest.fn().mockImplementation(() => ({
     setMutationDefaults: jest.fn(),
     getQueryCache: jest.fn().mockReturnValue({
-      config: {}
+      config: {},
     }),
     getMutationCache: jest.fn().mockReturnValue({
-      config: {}
-    })
+      config: {},
+    }),
   })),
   QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="query-provider">{children}</div>
-  )
+  ),
 }));
 
 jest.mock('@mui/material/CssBaseline', () => ({
   __esModule: true,
-  default: () => <div data-testid="css-baseline" />
+  default: () => <div data-testid="css-baseline" />,
 }));
 
 jest.mock('react-hot-toast', () => ({
@@ -64,7 +74,7 @@ jest.mock('react-hot-toast', () => ({
   default: {
     error: jest.fn(),
   },
-  Toaster: () => <div data-testid="toaster" />
+  Toaster: () => <div data-testid="toaster" />,
 }));
 
 // Mock context providers
@@ -74,8 +84,8 @@ jest.mock('./contexts/AuthContext', () => ({
   ),
   useAuth: () => ({
     user: { id: '1', name: 'Test User' },
-    loading: false
-  })
+    loading: false,
+  }),
 }));
 
 jest.mock('./contexts/UploadContext', () => ({
@@ -90,14 +100,14 @@ jest.mock('./contexts/UploadContext', () => ({
     retryUpload: jest.fn(),
     clearCompleted: jest.fn(),
     clearAll: jest.fn(),
-    totalProgress: 0
-  })
+    totalProgress: 0,
+  }),
 }));
 
 jest.mock('./contexts/ViewingContext', () => ({
   ViewingProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="viewing-provider">{children}</div>
-  )
+  ),
 }));
 
 // Mock components
@@ -105,54 +115,54 @@ jest.mock('./components/common/ErrorBoundary', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="error-boundary">{children}</div>
-  )
+  ),
 }));
 
 jest.mock('./components/layout/Layout', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="layout">{children}</div>
-  )
+  ),
 }));
 
 jest.mock('./components/files/UploadQueue', () => ({
   __esModule: true,
-  default: () => <div data-testid="upload-queue" />
+  default: () => <div data-testid="upload-queue" />,
 }));
 
 jest.mock('./pages/LoginPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="login-page" />
+  default: () => <div data-testid="login-page" />,
 }));
 
 jest.mock('./pages/RegisterPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="register-page" />
+  default: () => <div data-testid="register-page" />,
 }));
 
 jest.mock('./pages/DashboardPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="dashboard-page" />
+  default: () => <div data-testid="dashboard-page" />,
 }));
 
 jest.mock('./pages/FilesPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="files-page" />
+  default: () => <div data-testid="files-page" />,
 }));
 
 jest.mock('./pages/FoldersPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="folders-page" />
+  default: () => <div data-testid="folders-page" />,
 }));
 
 jest.mock('./pages/SharedPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="shared-page" />
+  default: () => <div data-testid="shared-page" />,
 }));
 
 jest.mock('./pages/NotFoundPage', () => ({
   __esModule: true,
-  default: () => <div data-testid="not-found-page" />
+  default: () => <div data-testid="not-found-page" />,
 }));
 
 describe('App Component', () => {
@@ -163,12 +173,12 @@ describe('App Component', () => {
 
   it('renders all provider wrappers', () => {
     render(<App />);
-    
+
     // Use getAllByTestId instead of getByTestId for elements that might appear multiple times
     const errorBoundaries = screen.getAllByTestId('error-boundary');
     expect(errorBoundaries.length).toBeGreaterThan(0);
     expect(errorBoundaries[0]).toBeInTheDocument(); // Check the first error boundary
-    
+
     // For unique elements, continue using getByTestId
     expect(screen.getByTestId('query-provider')).toBeInTheDocument();
     expect(screen.getByTestId('theme-provider')).toBeInTheDocument();
@@ -179,7 +189,7 @@ describe('App Component', () => {
 
   it('renders router components', () => {
     render(<App />);
-    
+
     expect(screen.getByTestId('router')).toBeInTheDocument();
     expect(screen.getByTestId('routes')).toBeInTheDocument();
     // Multiple route elements
@@ -207,7 +217,7 @@ describe('App Component', () => {
     it('renders protected routes when user is authenticated', () => {
       // Auth context is mocked to return a user
       render(<App />);
-      
+
       // No need to check for every page, just verify some routes are rendered
       // and the user isn't redirected (no "navigate" component for protected routes)
       const routes = screen.getAllByTestId('route');

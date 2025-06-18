@@ -1,5 +1,11 @@
 jest.mock('@mui/material', () => {
-  const MockCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  const MockCard = ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
     <div data-testid="mui-card" className={className}>
       {children}
     </div>
@@ -108,9 +114,13 @@ describe('StatsCards Component', () => {
     const colorBoxes = boxes.filter((box) => box.style.backgroundColor);
 
     // Test using regex to match rgba values
-    expect(colorBoxes[0].style.backgroundColor).toMatch(/rgba\(76,\s*175,\s*80,\s*0\.125\)/);
+    expect(colorBoxes[0].style.backgroundColor).toMatch(
+      /rgba\(76,\s*175,\s*80,\s*0\.125\)/
+    );
     expect(colorBoxes[0].style.color).toBe('rgb(76, 175, 80)');
-    expect(colorBoxes[1].style.backgroundColor).toMatch(/rgba\(33,\s*150,\s*243,\s*0\.125\)/);
+    expect(colorBoxes[1].style.backgroundColor).toMatch(
+      /rgba\(33,\s*150,\s*243,\s*0\.125\)/
+    );
     expect(colorBoxes[1].style.color).toBe('rgb(33, 150, 243)');
   });
 });

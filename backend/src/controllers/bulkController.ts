@@ -60,7 +60,9 @@ const deleteFolderRecursively = async (
   let deletedFiles = 0;
   let deletedFolders = 0;
 
-  logger.debug(`Starting recursive deletion of folder: ${folderId} for user: ${userId}`);
+  logger.debug(
+    `Starting recursive deletion of folder: ${folderId} for user: ${userId}`
+  );
 
   // Delete all files in this folder
   const files = await FileMeta.find({
@@ -93,7 +95,9 @@ const deleteFolderRecursively = async (
 
   // Delete all subfolders recursively
   const subfolders = await Folder.find({ parent: folderId, owner: userId });
-  logger.info(`Found ${subfolders.length} subfolders to delete in folder: ${folderId}`);
+  logger.info(
+    `Found ${subfolders.length} subfolders to delete in folder: ${folderId}`
+  );
 
   for (const subfolder of subfolders) {
     const subfolderResults = await deleteFolderRecursively(
@@ -108,7 +112,9 @@ const deleteFolderRecursively = async (
     logger.debug(`Deleted subfolder from database: ${subfolder._id}`);
   }
 
-  logger.info(`Completed recursive deletion of folder: ${folderId} - Files: ${deletedFiles}, Folders: ${deletedFolders}`);
+  logger.info(
+    `Completed recursive deletion of folder: ${folderId} - Files: ${deletedFiles}, Folders: ${deletedFolders}`
+  );
   return { deletedFiles, deletedFolders };
 };
 
@@ -126,7 +132,9 @@ export const bulkAction = asyncHandler(
     const { action, files = [], folders = [], targetFolder } = req.body;
     const userId = req.user?.id;
 
-    logger.info(`Bulk action initiated - Action: ${action}, User: ${userId}, Files: ${files.length}, Folders: ${folders.length}`);
+    logger.info(
+      `Bulk action initiated - Action: ${action}, User: ${userId}, Files: ${files.length}, Folders: ${folders.length}`
+    );
 
     if (!userId) {
       logger.warn('Bulk action attempted without authentication');
@@ -205,7 +213,9 @@ export const bulkAction = asyncHandler(
         }
       }
 
-      logger.info(`Bulk delete completed - Files: ${totalDeletedFiles}, Folders: ${totalDeletedFolders}`);
+      logger.info(
+        `Bulk delete completed - Files: ${totalDeletedFiles}, Folders: ${totalDeletedFolders}`
+      );
       res.json({
         success: true,
         message: `Successfully deleted ${totalDeletedFiles} file(s) and ${totalDeletedFolders} folder(s)`,
@@ -219,8 +229,10 @@ export const bulkAction = asyncHandler(
 
     // Bulk Move
     if (action === 'move') {
-      logger.info(`Starting bulk move operation for user: ${userId} to target: ${targetFolder}`);
-      
+      logger.info(
+        `Starting bulk move operation for user: ${userId} to target: ${targetFolder}`
+      );
+
       if (!targetFolder) {
         logger.warn('Bulk move attempted without target folder');
         throw createError('No target folder provided', 400);
@@ -230,7 +242,9 @@ export const bulkAction = asyncHandler(
       if (targetFolder !== 'root') {
         const targetFolderDoc = await Folder.findById(targetFolder);
         if (!targetFolderDoc || targetFolderDoc.owner.toString() !== userId) {
-          logger.warn(`Invalid target folder for move operation: ${targetFolder}`);
+          logger.warn(
+            `Invalid target folder for move operation: ${targetFolder}`
+          );
           throw createError('Invalid target folder', 400);
         }
         logger.debug(`Target folder validated: ${targetFolder}`);
@@ -252,9 +266,13 @@ export const bulkAction = asyncHandler(
                   : new mongoose.Types.ObjectId(targetFolder);
               await file.save();
               movedFiles++;
-              logger.debug(`Successfully moved file: ${fileId} to ${targetFolder}`);
+              logger.debug(
+                `Successfully moved file: ${fileId} to ${targetFolder}`
+              );
             } else {
-              logger.warn(`File not found or access denied for move: ${fileId}`);
+              logger.warn(
+                `File not found or access denied for move: ${fileId}`
+              );
             }
           } catch (error) {
             logger.error(`Failed to move file ${fileId}:`, error);
@@ -274,7 +292,9 @@ export const bulkAction = asyncHandler(
                 targetFolder !== 'root' &&
                 (await isDescendantFolder(folderId, targetFolder))
               ) {
-                logger.warn(`Cannot move folder ${folderId} into its descendant ${targetFolder}`);
+                logger.warn(
+                  `Cannot move folder ${folderId} into its descendant ${targetFolder}`
+                );
                 continue;
               }
 
@@ -285,9 +305,13 @@ export const bulkAction = asyncHandler(
                   : new mongoose.Types.ObjectId(targetFolder);
               await folder.save();
               movedFolders++;
-              logger.debug(`Successfully moved folder: ${folderId} to ${targetFolder}`);
+              logger.debug(
+                `Successfully moved folder: ${folderId} to ${targetFolder}`
+              );
             } else {
-              logger.warn(`Folder not found or access denied for move: ${folderId}`);
+              logger.warn(
+                `Folder not found or access denied for move: ${folderId}`
+              );
             }
           } catch (error) {
             logger.error(`Failed to move folder ${folderId}:`, error);
@@ -295,7 +319,9 @@ export const bulkAction = asyncHandler(
         }
       }
 
-      logger.info(`Bulk move completed - Files: ${movedFiles}, Folders: ${movedFolders}`);
+      logger.info(
+        `Bulk move completed - Files: ${movedFiles}, Folders: ${movedFolders}`
+      );
       res.json({
         success: true,
         message: `Successfully moved ${movedFiles} file(s) and ${movedFolders} folder(s)`,
@@ -331,17 +357,24 @@ export const bulkAction = asyncHandler(
               });
               logger.debug(`Added file to download list: ${file.originalName}`);
             } else {
-              logger.warn(`File not found or access denied for download: ${fileId}`);
+              logger.warn(
+                `File not found or access denied for download: ${fileId}`
+              );
             }
           } catch (error) {
-            logger.error(`Failed to prepare download for file ${fileId}:`, error);
+            logger.error(
+              `Failed to prepare download for file ${fileId}:`,
+              error
+            );
           }
         }
       }
 
       // Folders (collect all files in those folders)
       if (Array.isArray(folders) && folders.length > 0) {
-        logger.info(`Preparing files from ${folders.length} folders for download`);
+        logger.info(
+          `Preparing files from ${folders.length} folders for download`
+        );
         for (const folderId of folders) {
           try {
             // Recursively collect all files in folder
@@ -370,18 +403,25 @@ export const bulkAction = asyncHandler(
                     size: file.size,
                     mimetype: file.mimetype,
                   });
-                  logger.debug(`Added file from folder to download list: ${file.originalName}`);
+                  logger.debug(
+                    `Added file from folder to download list: ${file.originalName}`
+                  );
                 });
                 result.folders.push(currFolderId);
               }
             }
           } catch (error) {
-            logger.error(`Failed to process folder ${folderId} for download:`, error);
+            logger.error(
+              `Failed to process folder ${folderId} for download:`,
+              error
+            );
           }
         }
       }
 
-      logger.info(`Bulk download preparation completed - Total files: ${result.files.length}, Folders processed: ${result.folders.length}`);
+      logger.info(
+        `Bulk download preparation completed - Total files: ${result.files.length}, Folders processed: ${result.folders.length}`
+      );
       res.json({
         success: true,
         data: result,
@@ -406,8 +446,10 @@ const isDescendantFolder = async (
   sourceFolderId: string,
   targetFolderId: string
 ): Promise<boolean> => {
-  logger.debug(`Checking if ${targetFolderId} is descendant of ${sourceFolderId}`);
-  
+  logger.debug(
+    `Checking if ${targetFolderId} is descendant of ${sourceFolderId}`
+  );
+
   if (targetFolderId === 'root' || !targetFolderId) {
     logger.debug('Target is root folder, not a descendant');
     return false;
@@ -421,12 +463,16 @@ const isDescendantFolder = async (
   let currentFolder = await Folder.findById(targetFolderId);
   while (currentFolder && currentFolder.parent) {
     if (currentFolder.parent.toString() === sourceFolderId) {
-      logger.debug(`Found descendant relationship: ${targetFolderId} is descendant of ${sourceFolderId}`);
+      logger.debug(
+        `Found descendant relationship: ${targetFolderId} is descendant of ${sourceFolderId}`
+      );
       return true;
     }
     currentFolder = await Folder.findById(currentFolder.parent);
   }
 
-  logger.debug(`No descendant relationship found between ${sourceFolderId} and ${targetFolderId}`);
+  logger.debug(
+    `No descendant relationship found between ${sourceFolderId} and ${targetFolderId}`
+  );
   return false;
 };

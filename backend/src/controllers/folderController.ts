@@ -28,11 +28,13 @@ export const createFolder = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     const { name, parent } = req.body;
     const owner = req.user.id;
-    
-    logger.info(`Folder creation requested - Name: ${name}, Parent: ${parent || 'root'}, Owner: ${owner}`);
-    
+
+    logger.info(
+      `Folder creation requested - Name: ${name}, Parent: ${parent || 'root'}, Owner: ${owner}`
+    );
+
     const response = await addFolder(name, parent, owner);
-    
+
     logger.info(`Folder created successfully -, Name: ${name}`);
     res.status(201).json(response);
   }
@@ -52,7 +54,9 @@ export const listFolderTree = asyncHandler(
     const owner = req.user.id;
     const { parent } = req.query;
 
-    logger.info(`Folder tree requested - Owner: ${owner}, Parent: ${parent || 'root'}`);
+    logger.info(
+      `Folder tree requested - Owner: ${owner}, Parent: ${parent || 'root'}`
+    );
 
     if (!owner) {
       logger.warn('Folder tree requested without authentication');
@@ -76,7 +80,9 @@ export const listFolderTree = asyncHandler(
       .populate('parentFolder', 'name')
       .sort({ createdAt: -1 });
 
-    logger.info(`Folder tree retrieved - Folders: ${folders.length}, Files: ${files.length}, Parent: ${parent || 'root'}`);
+    logger.info(
+      `Folder tree retrieved - Folders: ${folders.length}, Files: ${files.length}, Parent: ${parent || 'root'}`
+    );
 
     res.json({
       success: true,
@@ -142,7 +148,9 @@ export const deleteFolder = asyncHandler(
     const folderId = req.params.id;
     const userId = req.user?.id;
 
-    logger.info(`Folder deletion requested - Folder: ${folderId}, User: ${userId}`);
+    logger.info(
+      `Folder deletion requested - Folder: ${folderId}, User: ${userId}`
+    );
 
     if (!userId) {
       logger.warn('Folder deletion attempted without authentication');
@@ -158,13 +166,17 @@ export const deleteFolder = asyncHandler(
 
     // Check if user owns the folder
     if (folder.owner.toString() !== userId) {
-      logger.warn(`Unauthorized folder deletion attempt - Folder: ${folderId}, User: ${userId}`);
+      logger.warn(
+        `Unauthorized folder deletion attempt - Folder: ${folderId}, User: ${userId}`
+      );
       throw createError('Not authorized to delete this folder', 403);
     }
 
     try {
-      logger.info(`Starting recursive deletion of folder: ${folder.name} (${folderId})`);
-      
+      logger.info(
+        `Starting recursive deletion of folder: ${folder.name} (${folderId})`
+      );
+
       // Recursively delete all contents
       await deleteFolderRecursive(folderId, userId);
 
@@ -196,7 +208,9 @@ export const updateFolder = asyncHandler(
     const { name } = req.body;
     const userId = req.user?.id;
 
-    logger.info(`Folder update requested - Folder: ${folderId}, New name: ${name}, User: ${userId}`);
+    logger.info(
+      `Folder update requested - Folder: ${folderId}, New name: ${name}, User: ${userId}`
+    );
 
     if (!userId) {
       logger.warn('Folder update attempted without authentication');
@@ -217,7 +231,9 @@ export const updateFolder = asyncHandler(
 
     // Check if user owns the folder
     if (folder.owner.toString() !== userId) {
-      logger.warn(`Unauthorized folder update attempt - Folder: ${folderId}, User: ${userId}`);
+      logger.warn(
+        `Unauthorized folder update attempt - Folder: ${folderId}, User: ${userId}`
+      );
       throw createError('Not authorized to update this folder', 403);
     }
 
@@ -230,7 +246,9 @@ export const updateFolder = asyncHandler(
     });
 
     if (existingFolder) {
-      logger.warn(`Duplicate folder name in same parent - Name: ${name}, Parent: ${folder.parent}`);
+      logger.warn(
+        `Duplicate folder name in same parent - Name: ${name}, Parent: ${folder.parent}`
+      );
       throw createError(
         'A folder with this name already exists in the same location',
         400
@@ -242,7 +260,9 @@ export const updateFolder = asyncHandler(
       folder.name = name.trim();
       await folder.save();
 
-      logger.info(`Folder updated successfully - ID: ${folderId}, Old name: ${oldName}, New name: ${name}`);
+      logger.info(
+        `Folder updated successfully - ID: ${folderId}, Old name: ${oldName}, New name: ${name}`
+      );
 
       const updatedFolder = await Folder.findById(folderId)
         .populate('owner', 'name email')
@@ -280,7 +300,9 @@ async function deleteFolderRecursive(
       owner: userId,
     });
 
-  logger.info(`Found ${subfolders.length} subfolders to delete in folder: ${folderId}`);
+  logger.info(
+    `Found ${subfolders.length} subfolders to delete in folder: ${folderId}`
+  );
 
   // Recursively delete all subfolders
   for (const subfolder of subfolders) {

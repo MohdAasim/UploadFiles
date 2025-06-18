@@ -29,14 +29,18 @@ export async function uploadFileService({
   user,
   socketServer,
 }: uploadFileServicePropsType) {
-  logger.info(`File upload service initiated - File: ${file.originalname}, User: ${user.id}, Parent: ${parentFolder || 'root'}`);
-  
+  logger.info(
+    `File upload service initiated - File: ${file.originalname}, User: ${user.id}, Parent: ${parentFolder || 'root'}`
+  );
+
   // Validate parent folder if provided
   if (parentFolder) {
     logger.debug(`Validating parent folder: ${parentFolder}`);
     const folder = await findFolderbyId(parentFolder);
     if (!folder || folder.owner.toString() !== user.id) {
-      logger.warn(`Invalid parent folder for upload - Folder: ${parentFolder}, User: ${user.id}`);
+      logger.warn(
+        `Invalid parent folder for upload - Folder: ${parentFolder}, User: ${user.id}`
+      );
       throw createError('Parent folder not found or not yours', 404);
     }
     logger.debug(`Parent folder validated successfully: ${folder.name}`);
@@ -53,11 +57,15 @@ export async function uploadFileService({
     parentFolder: (parentFolder as any) || null,
   });
 
-  logger.info(`File metadata created successfully - ID: ${fileMeta._id}, Size: ${file.size} bytes`);
+  logger.info(
+    `File metadata created successfully - ID: ${fileMeta._id}, Size: ${file.size} bytes`
+  );
 
   // Emit real-time event
   if (socketServer) {
-    logger.debug(`Emitting real-time upload notification for file: ${file.originalname}`);
+    logger.debug(
+      `Emitting real-time upload notification for file: ${file.originalname}`
+    );
     // Emit to all connected users (or specific room)
     socketServer.io.emit('new-file-uploaded', {
       file: fileMeta,
@@ -67,10 +75,14 @@ export async function uploadFileService({
       },
       parentFolder: parentFolder,
     });
-    logger.debug(`Real-time notification sent for file upload: ${file.originalname}`);
+    logger.debug(
+      `Real-time notification sent for file upload: ${file.originalname}`
+    );
   }
 
-  logger.info(`File upload service completed successfully - File: ${file.originalname}, ID: ${fileMeta._id}`);
+  logger.info(
+    `File upload service completed successfully - File: ${file.originalname}, ID: ${fileMeta._id}`
+  );
 
   return {
     success: true,

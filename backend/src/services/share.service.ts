@@ -205,7 +205,9 @@ export async function getFilePermissionService({
   userId: string;
   fileId: string;
 }) {
-  logger.info(`File permissions service requested - File: ${fileId}, User: ${userId}`);
+  logger.info(
+    `File permissions service requested - File: ${fileId}, User: ${userId}`
+  );
 
   const file = await getFileMetaByFileId(fileId);
 
@@ -214,7 +216,9 @@ export async function getFilePermissionService({
     throw createError('File not found', 404);
   }
 
-  logger.debug(`File found for permissions check - ID: ${fileId}, Name: ${file.originalName}`);
+  logger.debug(
+    `File found for permissions check - ID: ${fileId}, Name: ${file.originalName}`
+  );
 
   // Check if user is owner or has admin permission
   const isOwner = file.uploadedBy.toString() === userId;
@@ -224,11 +228,15 @@ export async function getFilePermissionService({
   );
 
   if (!isOwner && !hasAdminAccess) {
-    logger.warn(`File permissions denied - insufficient access: File: ${fileId}, User: ${userId}`);
+    logger.warn(
+      `File permissions denied - insufficient access: File: ${fileId}, User: ${userId}`
+    );
     throw createError('Only owner or admin can view permissions', 403);
   }
 
-  logger.debug(`Permissions access validated for file: ${fileId}, User: ${userId}`);
+  logger.debug(
+    `Permissions access validated for file: ${fileId}, User: ${userId}`
+  );
 
   const permissions = file.sharedWith.map((entry: any) => ({
     user: {
@@ -239,7 +247,9 @@ export async function getFilePermissionService({
     permission: entry.permission,
   }));
 
-  logger.info(`File permissions retrieved successfully - File: ${fileId}, Permissions: ${permissions.length}`);
+  logger.info(
+    `File permissions retrieved successfully - File: ${fileId}, Permissions: ${permissions.length}`
+  );
 
   return {
     success: true,
@@ -304,7 +314,9 @@ export async function getSharedWithMeService(userId: string) {
     };
   });
 
-  logger.info(`Shared with me retrieved - Files: ${files.length}, Folders: ${folders.length}, User: ${userId}`);
+  logger.info(
+    `Shared with me retrieved - Files: ${files.length}, Folders: ${folders.length}, User: ${userId}`
+  );
 
   return {
     success: true,
@@ -361,7 +373,9 @@ export async function getSharedByMeService(userId: string) {
     })),
   }));
 
-  logger.info(`Shared by me retrieved - Files: ${files.length}, Folders: ${folders.length}, User: ${userId}`);
+  logger.info(
+    `Shared by me retrieved - Files: ${files.length}, Folders: ${folders.length}, User: ${userId}`
+  );
 
   return {
     success: true,
@@ -397,30 +411,42 @@ export async function removePermissionService({
   logger.debug(`Looking up target user: ${targetUserEmail}`);
   const targetUser = await getUserByEmail(targetUserEmail);
   if (!targetUser) {
-    logger.warn(`Permission removal failed - target user not found: ${targetUserEmail}`);
+    logger.warn(
+      `Permission removal failed - target user not found: ${targetUserEmail}`
+    );
     throw createError('Target user not found', 404);
   }
 
-  logger.debug(`Target user found for permission removal - ID: ${targetUser._id}, Name: ${targetUser.name}`);
+  logger.debug(
+    `Target user found for permission removal - ID: ${targetUser._id}, Name: ${targetUser.name}`
+  );
 
   let resource: any;
   if (resourceType === 'file') {
     logger.debug(`Processing file permission removal for file: ${resourceId}`);
     resource = await getFileMetaById(resourceId);
   } else if (resourceType === 'folder') {
-    logger.debug(`Processing folder permission removal for folder: ${resourceId}`);
+    logger.debug(
+      `Processing folder permission removal for folder: ${resourceId}`
+    );
     resource = await findFolderbyId(resourceId);
   } else {
-    logger.warn(`Invalid resource type for permission removal: ${resourceType}`);
+    logger.warn(
+      `Invalid resource type for permission removal: ${resourceType}`
+    );
     throw createError('Invalid resource type', 400);
   }
 
   if (!resource) {
-    logger.warn(`Permission removal failed - resource not found: ${resourceId} (${resourceType})`);
+    logger.warn(
+      `Permission removal failed - resource not found: ${resourceId} (${resourceType})`
+    );
     throw createError('Resource not found', 404);
   }
 
-  logger.debug(`Resource found for permission removal - ID: ${resourceId}, Type: ${resourceType}`);
+  logger.debug(
+    `Resource found for permission removal - ID: ${resourceId}, Type: ${resourceType}`
+  );
 
   // Check if user is owner or has admin permission
   const isOwner =
@@ -429,28 +455,38 @@ export async function removePermissionService({
       : resource.owner.toString() === userId;
 
   if (!isOwner) {
-    logger.debug(`User is not owner, checking admin permissions for removal - Resource: ${resourceId}, User: ${userId}`);
+    logger.debug(
+      `User is not owner, checking admin permissions for removal - Resource: ${resourceId}, User: ${userId}`
+    );
     const hasAdminAccess = resource.sharedWith.some(
       (entry: any) =>
         entry.user.toString() === userId && entry.permission === 'admin'
     );
     if (!hasAdminAccess) {
-      logger.warn(`Permission removal denied - insufficient permissions: Resource: ${resourceId}, User: ${userId}`);
+      logger.warn(
+        `Permission removal denied - insufficient permissions: Resource: ${resourceId}, User: ${userId}`
+      );
       throw createError('Only owner or admin can remove permissions', 403);
     }
-    logger.debug(`Admin permissions validated for removal - Resource: ${resourceId}, User: ${userId}`);
+    logger.debug(
+      `Admin permissions validated for removal - Resource: ${resourceId}, User: ${userId}`
+    );
   }
 
   // Remove the user from sharedWith array
   const targetUserId = (targetUser._id as mongoose.Types.ObjectId).toString();
-  logger.debug(`Removing permission for user: ${targetUserId} from resource: ${resourceId}`);
-  
+  logger.debug(
+    `Removing permission for user: ${targetUserId} from resource: ${resourceId}`
+  );
+
   resource.sharedWith = resource.sharedWith.filter(
     (entry: any) => entry.user.toString() !== targetUserId
   );
 
   await resource.save();
-  logger.info(`Permission removed successfully - Resource: ${resourceId} (${resourceType}) from ${targetUserEmail}`);
+  logger.info(
+    `Permission removed successfully - Resource: ${resourceId} (${resourceType}) from ${targetUserEmail}`
+  );
 
   return {
     success: true,

@@ -27,7 +27,7 @@ interface AuthRequest extends Request {
 export const uploadFile = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
     logger.info(`File upload initiated by user: ${req.user?.id}`);
-    
+
     if (!req.file) {
       logger.warn('File upload attempted without file');
       throw createError('No file uploaded', 400);
@@ -39,8 +39,10 @@ export const uploadFile = asyncHandler(
     }
 
     const { parentFolder } = req.body;
-    logger.info(`Uploading file: ${req.file.originalname} to folder: ${parentFolder || 'root'}`);
-    
+    logger.info(
+      `Uploading file: ${req.file.originalname} to folder: ${parentFolder || 'root'}`
+    );
+
     const socketServer = req.app.get('socketServer');
 
     const response = await uploadFileService({
@@ -49,7 +51,7 @@ export const uploadFile = asyncHandler(
       user: req.user,
       parentFolder,
     });
-    
+
     logger.info(`File uploaded successfully: ${req.file.originalname} `);
     res.status(201).json(response);
   }
@@ -72,7 +74,9 @@ export const listFiles = asyncHandler(
     }
 
     const parentFolder = (req.query.parentFolder as string) || null;
-    logger.info(`Listing files for user: ${req.user.id} in folder: ${parentFolder || 'root'}`);
+    logger.info(
+      `Listing files for user: ${req.user.id} in folder: ${parentFolder || 'root'}`
+    );
 
     const files = await getFileMetaByownerAndFolder(req.user.id, parentFolder);
     logger.info(`Found ${files.length} files for user: ${req.user.id}`);
@@ -117,7 +121,9 @@ export const previewFile = asyncHandler(
 
     // Check permissions: Only owner can preview
     if (file.uploadedBy.toString() !== userId && !sharedId) {
-      logger.warn(`Unauthorized file preview attempt - File: ${fileId}, User: ${userId}`);
+      logger.warn(
+        `Unauthorized file preview attempt - File: ${fileId}, User: ${userId}`
+      );
       throw createError('Not authorized to preview this file', 403);
     }
 
@@ -130,7 +136,9 @@ export const previewFile = asyncHandler(
       throw createError('File not found on server', 404);
     }
 
-    logger.info(`Serving file for preview: ${file.originalName} to user: ${userId}`);
+    logger.info(
+      `Serving file for preview: ${file.originalName} to user: ${userId}`
+    );
 
     // Set correct headers for preview
     res.setHeader('Content-Type', file.mimetype);
@@ -144,7 +152,7 @@ export const previewFile = asyncHandler(
     const readStream = fs.createReadStream(filePath);
 
     // Handle stream errors
-    readStream.on('error', (error) => {
+    readStream.on('error', error => {
       logger.error(`Error reading file stream for ${fileId}:`, error);
       throw createError('Error reading file', 500);
     });
@@ -187,13 +195,15 @@ export const deleteFile = asyncHandler(
 
     // Check if user owns the file
     if (file.uploadedBy.toString() !== userId) {
-      logger.warn(`Unauthorized file deletion attempt - File: ${fileId}, User: ${userId}`);
+      logger.warn(
+        `Unauthorized file deletion attempt - File: ${fileId}, User: ${userId}`
+      );
       throw createError('Not authorized to delete this file', 403);
     }
 
     try {
       logger.info(`Deleting file: ${file.originalName} with ID: ${fileId}`);
-      
+
       // Delete physical file from filesystem
       if (fs.existsSync(file.path)) {
         fs.unlinkSync(file.path);
@@ -210,7 +220,9 @@ export const deleteFile = asyncHandler(
             fs.unlinkSync(version.path);
             logger.debug(`Deleted file version: ${version.path}`);
           } else {
-            logger.warn(`File version not found on filesystem: ${version.path}`);
+            logger.warn(
+              `File version not found on filesystem: ${version.path}`
+            );
           }
         });
       }

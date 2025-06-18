@@ -5,7 +5,8 @@ import path from 'path';
 
 // Mock the asyncHandler to pass through the function with proper types
 jest.mock('../../middlewares/errorHandler', () => ({
-  asyncHandler: (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => 
+  asyncHandler:
+    (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
     async (req: Request, res: Response, next: NextFunction): Promise<void> => {
       try {
         return await fn(req, res, next);
@@ -17,48 +18,56 @@ jest.mock('../../middlewares/errorHandler', () => ({
     const error: any = new Error(message);
     error.statusCode = statusCode;
     return error;
-  }
+  },
 }));
 
 // Mock dependencies
 jest.mock('../../models/FileMeta', () => ({
   __esModule: true,
   default: {
-    findByIdAndDelete: jest.fn()
-  }
+    findByIdAndDelete: jest.fn(),
+  },
 }));
 
 jest.mock('../../services/file.service', () => ({
-  uploadFileService: jest.fn()
+  uploadFileService: jest.fn(),
 }));
 
 jest.mock('../../repository/filemeta.repo', () => ({
   getFileMetaById: jest.fn(),
-  getFileMetaByownerAndFolder: jest.fn()
+  getFileMetaByownerAndFolder: jest.fn(),
 }));
 
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
   unlinkSync: jest.fn(),
-  createReadStream: jest.fn()
+  createReadStream: jest.fn(),
 }));
 
 jest.mock('path', () => ({
-  resolve: jest.fn()
+  resolve: jest.fn(),
 }));
 
 jest.mock('../../utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Import after mocks are set up
-import { uploadFile, listFiles, previewFile, deleteFile } from '../../controllers/fileController';
+import {
+  uploadFile,
+  listFiles,
+  previewFile,
+  deleteFile,
+} from '../../controllers/fileController';
 import FileMeta from '../../models/FileMeta';
 import { uploadFileService } from '../../services/file.service';
-import { getFileMetaById, getFileMetaByownerAndFolder } from '../../repository/filemeta.repo';
+import {
+  getFileMetaById,
+  getFileMetaByownerAndFolder,
+} from '../../repository/filemeta.repo';
 
 // Create mock response and next function
 const mockResponse = () => {
@@ -81,7 +90,7 @@ const mockReadStream = {
     }
     return mockReadStream;
   }),
-  endCallback: null
+  endCallback: null,
 };
 
 describe('File Controller', () => {
@@ -96,18 +105,20 @@ describe('File Controller', () => {
       const req: any = {
         user: { id: 'user123' },
         file: undefined,
-        body: {}
+        body: {},
       };
       const res = mockResponse();
-      
+
       // Act
       await uploadFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'No file uploaded',
-        statusCode: 400
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'No file uploaded',
+          statusCode: 400,
+        })
+      );
       expect(uploadFileService).not.toHaveBeenCalled();
     });
 
@@ -116,18 +127,20 @@ describe('File Controller', () => {
       const req: any = {
         user: undefined,
         file: { originalname: 'test.pdf' },
-        body: {}
+        body: {},
       };
       const res = mockResponse();
-      
+
       // Act
       await uploadFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'User not found',
-        statusCode: 401
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'User not found',
+          statusCode: 401,
+        })
+      );
       expect(uploadFileService).not.toHaveBeenCalled();
     });
 
@@ -139,28 +152,28 @@ describe('File Controller', () => {
       const mockUploadResponse = {
         success: true,
         message: 'File uploaded successfully',
-        data: { file: { id: 'file123', name: 'test.pdf' } }
+        data: { file: { id: 'file123', name: 'test.pdf' } },
       };
-      
+
       const req: any = {
         user: mockUser,
         file: mockFile,
         body: { parentFolder: 'folder123' },
-        app: { get: jest.fn().mockReturnValue(mockSocketServer) }
+        app: { get: jest.fn().mockReturnValue(mockSocketServer) },
       };
       const res = mockResponse();
-      
+
       (uploadFileService as jest.Mock).mockResolvedValue(mockUploadResponse);
-      
+
       // Act
       await uploadFile(req, res, mockNext);
-      
+
       // Assert
       expect(uploadFileService).toHaveBeenCalledWith({
         file: mockFile,
         socketServer: mockSocketServer,
         user: mockUser,
-        parentFolder: 'folder123'
+        parentFolder: 'folder123',
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockUploadResponse);
@@ -173,18 +186,20 @@ describe('File Controller', () => {
       // Arrange
       const req: any = {
         user: undefined,
-        query: {}
+        query: {},
       };
       const res = mockResponse();
-      
+
       // Act
       await listFiles(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'User not found',
-        statusCode: 401
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'User not found',
+          statusCode: 401,
+        })
+      );
       expect(getFileMetaByownerAndFolder).not.toHaveBeenCalled();
     });
 
@@ -193,28 +208,28 @@ describe('File Controller', () => {
       const mockUser = { id: 'user123' };
       const mockFiles = [
         { id: 'file1', name: 'file1.pdf' },
-        { id: 'file2', name: 'file2.jpg' }
+        { id: 'file2', name: 'file2.jpg' },
       ];
-      
+
       const req: any = {
         user: mockUser,
-        query: {}
+        query: {},
       };
       const res = mockResponse();
-      
+
       (getFileMetaByownerAndFolder as jest.Mock).mockResolvedValue(mockFiles);
-      
+
       // Act
       await listFiles(req, res, mockNext);
-      
+
       // Assert
       expect(getFileMetaByownerAndFolder).toHaveBeenCalledWith('user123', null);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: {
           files: mockFiles,
-          count: 2
-        }
+          count: 2,
+        },
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -223,29 +238,30 @@ describe('File Controller', () => {
       // Arrange
       const mockUser = { id: 'user123' };
       const parentFolder = 'folder123';
-      const mockFiles = [
-        { id: 'file3', name: 'file3.docx' }
-      ];
-      
+      const mockFiles = [{ id: 'file3', name: 'file3.docx' }];
+
       const req: any = {
         user: mockUser,
-        query: { parentFolder }
+        query: { parentFolder },
       };
       const res = mockResponse();
-      
+
       (getFileMetaByownerAndFolder as jest.Mock).mockResolvedValue(mockFiles);
-      
+
       // Act
       await listFiles(req, res, mockNext);
-      
+
       // Assert
-      expect(getFileMetaByownerAndFolder).toHaveBeenCalledWith('user123', parentFolder);
+      expect(getFileMetaByownerAndFolder).toHaveBeenCalledWith(
+        'user123',
+        parentFolder
+      );
       expect(res.json).toHaveBeenCalledWith({
         success: true,
         data: {
           files: mockFiles,
-          count: 1
-        }
+          count: 1,
+        },
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -256,20 +272,22 @@ describe('File Controller', () => {
       // Arrange
       const req: any = {
         user: { id: 'user123' },
-        params: { id: 'file123' }
+        params: { id: 'file123' },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(null);
-      
+
       // Act
       await previewFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'File not found',
-        statusCode: 404
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'File not found',
+          statusCode: 404,
+        })
+      );
     });
 
     it('should throw 403 error if user is not authorized to preview file', async () => {
@@ -279,25 +297,27 @@ describe('File Controller', () => {
       const mockFile = {
         _id: fileId,
         uploadedBy: 'otherUser456',
-        sharedWith: []
+        sharedWith: [],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
-      
+
       // Act
       await previewFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Not authorized to preview this file',
-        statusCode: 403
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Not authorized to preview this file',
+          statusCode: 403,
+        })
+      );
     });
 
     it('should throw 404 error if file does not exist on filesystem', async () => {
@@ -308,27 +328,29 @@ describe('File Controller', () => {
         _id: fileId,
         uploadedBy: userId,
         path: '/path/to/file.pdf',
-        sharedWith: []
+        sharedWith: [],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
       (path.resolve as jest.Mock).mockReturnValue('/resolved/path/to/file.pdf');
       (fs.existsSync as jest.Mock).mockReturnValue(false);
-      
+
       // Act
       await previewFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'File not found on server',
-        statusCode: 404
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'File not found on server',
+          statusCode: 404,
+        })
+      );
     });
 
     it('should stream file successfully for owner', async () => {
@@ -342,27 +364,35 @@ describe('File Controller', () => {
         originalName: 'test.pdf',
         mimetype: 'application/pdf',
         size: 12345,
-        sharedWith: []
+        sharedWith: [],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
       (path.resolve as jest.Mock).mockReturnValue('/resolved/path/to/file.pdf');
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      
+
       // Act
       await previewFile(req, res, mockNext);
-      
+
       // Assert
-      expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf');
-      expect(res.setHeader).toHaveBeenCalledWith('Content-Disposition', 'inline; filename="test.pdf"');
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/pdf'
+      );
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        'inline; filename="test.pdf"'
+      );
       expect(res.setHeader).toHaveBeenCalledWith('Content-Length', '12345');
-      expect(fs.createReadStream).toHaveBeenCalledWith('/resolved/path/to/file.pdf');
+      expect(fs.createReadStream).toHaveBeenCalledWith(
+        '/resolved/path/to/file.pdf'
+      );
       expect(mockReadStream.pipe).toHaveBeenCalledWith(res);
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -378,26 +408,34 @@ describe('File Controller', () => {
         originalName: 'test.pdf',
         mimetype: 'application/pdf',
         size: 12345,
-        sharedWith: [{ user: userId }]
+        sharedWith: [{ user: userId }],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
       (path.resolve as jest.Mock).mockReturnValue('/resolved/path/to/file.pdf');
       (fs.existsSync as jest.Mock).mockReturnValue(true);
-      
+
       // Act
       await previewFile(req, res, mockNext);
-      
+
       // Assert
-      expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/pdf');
-      expect(res.setHeader).toHaveBeenCalledWith('Content-Disposition', 'inline; filename="test.pdf"');
-      expect(fs.createReadStream).toHaveBeenCalledWith('/resolved/path/to/file.pdf');
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'application/pdf'
+      );
+      expect(res.setHeader).toHaveBeenCalledWith(
+        'Content-Disposition',
+        'inline; filename="test.pdf"'
+      );
+      expect(fs.createReadStream).toHaveBeenCalledWith(
+        '/resolved/path/to/file.pdf'
+      );
       expect(mockReadStream.pipe).toHaveBeenCalledWith(res);
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -408,38 +446,42 @@ describe('File Controller', () => {
       // Arrange
       const req: any = {
         user: undefined,
-        params: { id: 'file123' }
+        params: { id: 'file123' },
       };
       const res = mockResponse();
-      
+
       // Act
       await deleteFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'User not authenticated',
-        statusCode: 401
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'User not authenticated',
+          statusCode: 401,
+        })
+      );
     });
 
     it('should throw 404 error if file is not found', async () => {
       // Arrange
       const req: any = {
         user: { id: 'user123' },
-        params: { id: 'file123' }
+        params: { id: 'file123' },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(null);
-      
+
       // Act
       await deleteFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'File not found',
-        statusCode: 404
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'File not found',
+          statusCode: 404,
+        })
+      );
     });
 
     it('should throw 403 error if user is not authorized to delete file', async () => {
@@ -448,25 +490,27 @@ describe('File Controller', () => {
       const fileId = 'file123';
       const mockFile = {
         _id: fileId,
-        uploadedBy: { toString: () => 'otherUser456' }
+        uploadedBy: { toString: () => 'otherUser456' },
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
-      
+
       // Act
       await deleteFile(req, res, mockNext);
-      
+
       // Assert
-      expect(mockNext).toHaveBeenCalledWith(expect.objectContaining({
-        message: 'Not authorized to delete this file',
-        statusCode: 403
-      }));
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'Not authorized to delete this file',
+          statusCode: 403,
+        })
+      );
     });
 
     it('should successfully delete file and its versions', async () => {
@@ -480,23 +524,23 @@ describe('File Controller', () => {
         uploadedBy: { toString: () => userId },
         versions: [
           { path: '/path/to/file_v1.pdf' },
-          { path: '/path/to/file_v2.pdf' }
-        ]
+          { path: '/path/to/file_v2.pdf' },
+        ],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
       (fs.existsSync as jest.Mock).mockReturnValue(true);
       (FileMeta.findByIdAndDelete as jest.Mock).mockResolvedValue({});
-      
+
       // Act
       await deleteFile(req, res, mockNext);
-      
+
       // Assert
       expect(fs.unlinkSync).toHaveBeenCalledTimes(3); // Main file + 2 versions
       expect(fs.unlinkSync).toHaveBeenNthCalledWith(1, '/path/to/file.pdf');
@@ -505,7 +549,7 @@ describe('File Controller', () => {
       expect(FileMeta.findByIdAndDelete).toHaveBeenCalledWith(fileId);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'File deleted successfully'
+        message: 'File deleted successfully',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -519,28 +563,28 @@ describe('File Controller', () => {
         originalName: 'test.pdf',
         path: '/path/to/file.pdf',
         uploadedBy: { toString: () => userId },
-        versions: []
+        versions: [],
       };
-      
+
       const req: any = {
         user: { id: userId },
-        params: { id: fileId }
+        params: { id: fileId },
       };
       const res = mockResponse();
-      
+
       (getFileMetaById as jest.Mock).mockResolvedValue(mockFile);
       (fs.existsSync as jest.Mock).mockReturnValue(false);
       (FileMeta.findByIdAndDelete as jest.Mock).mockResolvedValue({});
-      
+
       // Act
       await deleteFile(req, res, mockNext);
-      
+
       // Assert
       expect(fs.unlinkSync).not.toHaveBeenCalled();
       expect(FileMeta.findByIdAndDelete).toHaveBeenCalledWith(fileId);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
-        message: 'File deleted successfully'
+        message: 'File deleted successfully',
       });
       expect(mockNext).not.toHaveBeenCalled();
     });

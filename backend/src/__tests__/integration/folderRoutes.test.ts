@@ -18,16 +18,16 @@ jest.mock('../../utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Import after mocks are set up
-import { 
-  createFolder, 
-  listFolderTree, 
-  getAllFolders, 
-  deleteFolder, 
-  updateFolder 
+import {
+  createFolder,
+  listFolderTree,
+  getAllFolders,
+  deleteFolder,
+  updateFolder,
 } from '../../controllers/folderController';
 import { authenticate } from '../../middlewares/auth';
 import folderRoutes from '../../routes/folderRoutes';
@@ -38,19 +38,21 @@ describe('Folder Routes', () => {
   beforeEach(() => {
     app = express();
     app.use(express.json());
-    
+
     // Configure mock for authenticate middleware
-    (authenticate as jest.Mock).mockImplementation((req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-      // Add a mock user to the request
-      req.user = { 
-        id: 'user123', 
-        name: 'Test User', 
-        email: 'test@example.com',
-        role: 'user'
-      };
-      next();
-    });
-    
+    (authenticate as jest.Mock).mockImplementation(
+      (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+        // Add a mock user to the request
+        req.user = {
+          id: 'user123',
+          name: 'Test User',
+          email: 'test@example.com',
+          role: 'user',
+        };
+        next();
+      }
+    );
+
     app.use('/api/v1/folders', folderRoutes);
     jest.clearAllMocks();
   });
@@ -60,20 +62,22 @@ describe('Folder Routes', () => {
       // Arrange
       const folderData = {
         name: 'New Folder',
-        parent: 'parent123'
+        parent: 'parent123',
       };
-      
-      (createFolder as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.status(201).json({
-          success: true,
-          data: {
-            _id: 'folder123',
-            name: 'New Folder',
-            parent: 'parent123',
-            owner: 'user123'
-          }
-        });
-      });
+
+      (createFolder as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.status(201).json({
+            success: true,
+            data: {
+              _id: 'folder123',
+              name: 'New Folder',
+              parent: 'parent123',
+              owner: 'user123',
+            },
+          });
+        }
+      );
 
       // Act
       const response = await request(app)
@@ -89,12 +93,14 @@ describe('Folder Routes', () => {
 
     it('should handle authentication failure', async () => {
       // Arrange
-      (authenticate as jest.Mock).mockImplementation((req: Request, res: Response, next: NextFunction) => {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication failed'
-        });
-      });
+      (authenticate as jest.Mock).mockImplementation(
+        (req: Request, res: Response, next: NextFunction) => {
+          return res.status(401).json({
+            success: false,
+            message: 'Authentication failed',
+          });
+        }
+      );
 
       // Act
       const response = await request(app)
@@ -111,20 +117,20 @@ describe('Folder Routes', () => {
   describe('GET /api/v1/folders/tree', () => {
     it('should call listFolderTree controller', async () => {
       // Arrange
-      (listFolderTree as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.json({
-          success: true,
-          data: {
-            folders: [
-              { _id: 'folder1', name: 'Folder 1', owner: 'user123' }
-            ],
-            files: [],
-            folderCount: 1,
-            fileCount: 0,
-            currentFolder: null
-          }
-        });
-      });
+      (listFolderTree as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.json({
+            success: true,
+            data: {
+              folders: [{ _id: 'folder1', name: 'Folder 1', owner: 'user123' }],
+              files: [],
+              folderCount: 1,
+              fileCount: 0,
+              currentFolder: null,
+            },
+          });
+        }
+      );
 
       // Act
       const response = await request(app).get('/api/v1/folders/tree');
@@ -138,18 +144,20 @@ describe('Folder Routes', () => {
 
     it('should pass parent query parameter to controller', async () => {
       // Arrange
-      (listFolderTree as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.json({
-          success: true,
-          data: {
-            folders: [],
-            files: [],
-            folderCount: 0,
-            fileCount: 0,
-            currentFolder: req.query.parent
-          }
-        });
-      });
+      (listFolderTree as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.json({
+            success: true,
+            data: {
+              folders: [],
+              files: [],
+              folderCount: 0,
+              fileCount: 0,
+              currentFolder: req.query.parent,
+            },
+          });
+        }
+      );
 
       // Act
       await request(app).get('/api/v1/folders/tree?parent=folder123');
@@ -157,7 +165,7 @@ describe('Folder Routes', () => {
       // Assert
       expect(listFolderTree).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: { parent: 'folder123' }
+          query: { parent: 'folder123' },
         }),
         expect.any(Object),
         expect.any(Function)
@@ -168,18 +176,20 @@ describe('Folder Routes', () => {
   describe('GET /api/v1/folders/all', () => {
     it('should call getAllFolders controller', async () => {
       // Arrange
-      (getAllFolders as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.json({
-          success: true,
-          data: {
-            folders: [
-              { _id: 'folder1', name: 'Folder 1', owner: 'user123' },
-              { _id: 'folder2', name: 'Folder 2', owner: 'user123' }
-            ],
-            count: 2
-          }
-        });
-      });
+      (getAllFolders as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.json({
+            success: true,
+            data: {
+              folders: [
+                { _id: 'folder1', name: 'Folder 1', owner: 'user123' },
+                { _id: 'folder2', name: 'Folder 2', owner: 'user123' },
+              ],
+              count: 2,
+            },
+          });
+        }
+      );
 
       // Act
       const response = await request(app).get('/api/v1/folders/all');
@@ -197,13 +207,15 @@ describe('Folder Routes', () => {
     it('should call deleteFolder controller with folder ID', async () => {
       // Arrange
       const folderId = 'folder123';
-      
-      (deleteFolder as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.json({
-          success: true,
-          message: 'Folder and all contents deleted successfully'
-        });
-      });
+
+      (deleteFolder as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.json({
+            success: true,
+            message: 'Folder and all contents deleted successfully',
+          });
+        }
+      );
 
       // Act
       const response = await request(app).delete(`/api/v1/folders/${folderId}`);
@@ -214,7 +226,7 @@ describe('Folder Routes', () => {
       expect(authenticate).toHaveBeenCalled();
       expect(deleteFolder).toHaveBeenCalledWith(
         expect.objectContaining({
-          params: { id: folderId }
+          params: { id: folderId },
         }),
         expect.any(Object),
         expect.any(Function)
@@ -227,20 +239,22 @@ describe('Folder Routes', () => {
       // Arrange
       const folderId = 'folder123';
       const updateData = {
-        name: 'Updated Folder Name'
+        name: 'Updated Folder Name',
       };
-      
-      (updateFolder as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.json({
-          success: true,
-          data: {
-            _id: folderId,
-            name: updateData.name,
-            owner: 'user123'
-          },
-          message: 'Folder updated successfully'
-        });
-      });
+
+      (updateFolder as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.json({
+            success: true,
+            data: {
+              _id: folderId,
+              name: updateData.name,
+              owner: 'user123',
+            },
+            message: 'Folder updated successfully',
+          });
+        }
+      );
 
       // Act
       const response = await request(app)
@@ -255,7 +269,7 @@ describe('Folder Routes', () => {
       expect(updateFolder).toHaveBeenCalledWith(
         expect.objectContaining({
           params: { id: folderId },
-          body: updateData
+          body: updateData,
         }),
         expect.any(Object),
         expect.any(Function)
@@ -265,13 +279,15 @@ describe('Folder Routes', () => {
     it('should handle folder not found error', async () => {
       // Arrange
       const folderId = 'notfound123';
-      
-      (updateFolder as jest.Mock).mockImplementation((req: Request, res: Response) => {
-        res.status(404).json({
-          success: false,
-          message: 'Folder not found'
-        });
-      });
+
+      (updateFolder as jest.Mock).mockImplementation(
+        (req: Request, res: Response) => {
+          res.status(404).json({
+            success: false,
+            message: 'Folder not found',
+          });
+        }
+      );
 
       // Act
       const response = await request(app)

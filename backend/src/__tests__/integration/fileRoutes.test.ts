@@ -11,15 +11,15 @@ beforeEach(() => {
 jest.mock('../../controllers/fileController');
 jest.mock('../../middlewares/auth');
 jest.mock('../../middlewares/upload', () => ({
-  single: jest.fn().mockImplementation((fieldName) => {
+  single: jest.fn().mockImplementation(fieldName => {
     return (req: Request, res: Response, next: NextFunction) => next();
-  })
+  }),
 }));
 jest.mock('../../utils/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 }));
 
 // Define interface to extend Express Request
@@ -43,7 +43,7 @@ describe('File Routes', () => {
   beforeEach(() => {
     // Clear previous mocks and imports
     jest.clearAllMocks();
-    
+
     // Import after resetting mocks - need to require them dynamically
     const controllers = require('../../controllers/fileController');
     const authMiddleware = require('../../middlewares/auth');
@@ -61,20 +61,26 @@ describe('File Routes', () => {
     // Set up Express app
     app = express();
     app.use(express.json());
-    
+
     // Configure mock for authenticate middleware
-    authenticate.mockImplementation((req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-      // Add a mock user to the request
-      req.user = { id: 'user123', name: 'Test User', email: 'test@example.com' };
-      next();
-    });
-    
+    authenticate.mockImplementation(
+      (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+        // Add a mock user to the request
+        req.user = {
+          id: 'user123',
+          name: 'Test User',
+          email: 'test@example.com',
+        };
+        next();
+      }
+    );
+
     // Use the routes
     app.use('/api/v1/files', fileRoutes);
-    
+
     // Verify upload.single was called (this happens when routes are registered)
     expect(upload.single).toHaveBeenCalledWith('file');
-    
+
     // Reset mocks after route registration so tests start fresh
     jest.clearAllMocks();
   });
@@ -86,7 +92,7 @@ describe('File Routes', () => {
         res.status(201).json({
           success: true,
           message: 'File uploaded successfully',
-          data: { file: { id: 'file123', name: 'test.pdf' } }
+          data: { file: { id: 'file123', name: 'test.pdf' } },
         });
       });
 
@@ -106,12 +112,14 @@ describe('File Routes', () => {
 
     it('should handle authentication failure', async () => {
       // Arrange
-      authenticate.mockImplementation((req: Request, res: Response, next: NextFunction) => {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication failed'
-        });
-      });
+      authenticate.mockImplementation(
+        (req: Request, res: Response, next: NextFunction) => {
+          return res.status(401).json({
+            success: false,
+            message: 'Authentication failed',
+          });
+        }
+      );
 
       // Act
       const response = await request(app)
@@ -130,16 +138,16 @@ describe('File Routes', () => {
       // Arrange
       const mockFiles = [
         { id: 'file1', name: 'file1.pdf' },
-        { id: 'file2', name: 'file2.jpg' }
+        { id: 'file2', name: 'file2.jpg' },
       ];
-      
+
       listFiles.mockImplementation((req: Request, res: Response) => {
         res.json({
           success: true,
           data: {
             files: mockFiles,
-            count: mockFiles.length
-          }
+            count: mockFiles.length,
+          },
         });
       });
 
@@ -161,8 +169,8 @@ describe('File Routes', () => {
           success: true,
           data: {
             files: [],
-            count: 0
-          }
+            count: 0,
+          },
         });
       });
 
@@ -174,7 +182,7 @@ describe('File Routes', () => {
       // Check that req.query.parentFolder was passed correctly
       expect(listFiles).toHaveBeenCalledWith(
         expect.objectContaining({
-          query: { parentFolder: 'folder123' }
+          query: { parentFolder: 'folder123' },
         }),
         expect.any(Object),
         expect.any(Function)
@@ -186,7 +194,7 @@ describe('File Routes', () => {
     it('should call previewFile controller with file ID', async () => {
       // Arrange
       const fileId = 'file123';
-      
+
       previewFile.mockImplementation((req: Request, res: Response) => {
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'inline; filename="test.pdf"');
@@ -194,14 +202,16 @@ describe('File Routes', () => {
       });
 
       // Act
-      const response = await request(app).get(`/api/v1/files/preview/${fileId}`);
+      const response = await request(app).get(
+        `/api/v1/files/preview/${fileId}`
+      );
 
       // Assert
       expect(response.status).toBe(200);
       expect(previewFile).toHaveBeenCalled();
       expect(previewFile).toHaveBeenCalledWith(
         expect.objectContaining({
-          params: { id: fileId }
+          params: { id: fileId },
         }),
         expect.any(Object),
         expect.any(Function)
@@ -211,16 +221,18 @@ describe('File Routes', () => {
     it('should handle file not found error', async () => {
       // Arrange
       const fileId = 'nonexistent';
-      
+
       previewFile.mockImplementation((req: Request, res: Response) => {
         res.status(404).json({
           success: false,
-          message: 'File not found'
+          message: 'File not found',
         });
       });
 
       // Act
-      const response = await request(app).get(`/api/v1/files/preview/${fileId}`);
+      const response = await request(app).get(
+        `/api/v1/files/preview/${fileId}`
+      );
 
       // Assert
       expect(response.status).toBe(404);
@@ -233,11 +245,11 @@ describe('File Routes', () => {
     it('should call deleteFile controller with file ID', async () => {
       // Arrange
       const fileId = 'file123';
-      
+
       deleteFile.mockImplementation((req: Request, res: Response) => {
         res.json({
           success: true,
-          message: 'File deleted successfully'
+          message: 'File deleted successfully',
         });
       });
 
@@ -250,7 +262,7 @@ describe('File Routes', () => {
       expect(deleteFile).toHaveBeenCalled();
       expect(deleteFile).toHaveBeenCalledWith(
         expect.objectContaining({
-          params: { id: fileId }
+          params: { id: fileId },
         }),
         expect.any(Object),
         expect.any(Function)
@@ -260,11 +272,11 @@ describe('File Routes', () => {
     it('should handle unauthorized deletion', async () => {
       // Arrange
       const fileId = 'file123';
-      
+
       deleteFile.mockImplementation((req: Request, res: Response) => {
         res.status(403).json({
           success: false,
-          message: 'Not authorized to delete this file'
+          message: 'Not authorized to delete this file',
         });
       });
 

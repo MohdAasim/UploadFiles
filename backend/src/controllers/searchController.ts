@@ -36,7 +36,9 @@ export const searchFilesAndFolders = asyncHandler(
       kind = 'all', // "file" | "folder" | "all"
     } = req.query;
 
-    logger.info(`Search parameters - Query: "${q}", Type: ${type}, Folder: ${inFolder}, Kind: ${kind}`);
+    logger.info(
+      `Search parameters - Query: "${q}", Type: ${type}, Folder: ${inFolder}, Kind: ${kind}`
+    );
 
     if (!q || typeof q !== 'string' || q.trim().length === 0) {
       logger.info('Empty search query, returning empty results');
@@ -65,7 +67,7 @@ export const searchFilesAndFolders = asyncHandler(
       // Search files - simplified query
       if (kind === 'all' || kind === 'file') {
         logger.info(`Searching files with query: "${searchQuery}"`);
-        
+
         const fileQuery: any = {
           uploadedBy: userId,
           originalName: { $regex: searchQuery, $options: 'i' },
@@ -96,7 +98,7 @@ export const searchFilesAndFolders = asyncHandler(
       // Search folders - simplified query
       if (kind === 'all' || kind === 'folder') {
         logger.info(`Searching folders with query: "${searchQuery}"`);
-        
+
         const folderQuery: any = {
           owner: userId,
           name: { $regex: searchQuery, $options: 'i' },
@@ -107,7 +109,7 @@ export const searchFilesAndFolders = asyncHandler(
           folderQuery.parent = inFolder;
           logger.debug(`Added parent folder filter: ${inFolder}`);
         }
-        
+
         folders = await Folder.find(folderQuery)
           .populate('owner', 'name email')
           .populate('parent', 'name')
@@ -119,7 +121,9 @@ export const searchFilesAndFolders = asyncHandler(
       }
 
       const totalResults = files.length + folders.length;
-      logger.info(`Search completed - Total results: ${totalResults} (Files: ${files.length}, Folders: ${folders.length})`);
+      logger.info(
+        `Search completed - Total results: ${totalResults} (Files: ${files.length}, Folders: ${folders.length})`
+      );
 
       // Return response in expected format
       res.json({
