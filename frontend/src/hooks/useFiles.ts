@@ -248,7 +248,7 @@ export const useBatchUpload = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
-      toast.success('Batch upload completed!');
+      queryClient.invalidateQueries({ queryKey: ['folderTree'] });
     },
     onError: (error: any) => {
       toast.error(`Batch upload failed: ${error?.message || 'Unknown error'}`);
@@ -263,6 +263,7 @@ export const useDeleteFile = () => {
     mutationFn: (fileId: string) => filesAPI.deleteFile(fileId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ['folderTree'] });
       toast.success('File deleted successfully!');
     },
     onError: (error: any) => {
