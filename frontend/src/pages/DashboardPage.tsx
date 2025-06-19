@@ -21,7 +21,7 @@ import DashboardHeader from '../components/dashboard/DashboardHeader';
 import StatsCards from '../components/dashboard/StatsCards';
 import FileManagementSection from '../components/dashboard/FileManagementSection';
 import DashboardSpeedDial from '../components/dashboard/DashboardSpeedDial';
-import type { FileType } from '../types';
+import type { FileType, SearchFilters } from '../types';
 import toast from 'react-hot-toast';
 
 const DashboardPage: React.FC = () => {
@@ -46,13 +46,17 @@ const DashboardPage: React.FC = () => {
   } = useFolderTree(currentFolder);
   const { data: allFolders } = useFolders();
 
-  // Search hook
+  // Search hook with enhanced functionality
   const {
+    query,
+    filters: searchFilters,
     updateQuery,
     searchResults,
     isLoading: searchLoading,
     error: searchError,
     updateCurrentFolder,
+    updateFilters,
+    clearFilters,
   } = useSearch();
 
   // Effects
@@ -182,6 +186,14 @@ const DashboardPage: React.FC = () => {
     []
   );
 
+  // Add these handlers for filter operations
+  const handleFilterChange = React.useCallback(
+    (filters: SearchFilters) => {
+      updateFilters(filters);
+    },
+    [updateFilters]
+  );
+
   return (
     <div>
       <DashboardHeader
@@ -200,11 +212,14 @@ const DashboardPage: React.FC = () => {
         searchLoading={searchLoading}
         searchError={searchError}
         searchResults={searchResults}
+        searchFilters={searchFilters}
         showSearchResults={showSearchResults}
         currentFolder={currentFolder}
         onTabChange={handleTabChange}
         onSearchChange={handleSearchChange}
         onClearSearch={handleClearSearch}
+        onFilterChange={handleFilterChange}
+        onClearFilters={clearFilters}
         onUploadDialogOpen={() => setUploadDialogOpen(true)}
         onBulkUploadOpen={() => setBulkUploadOpen(true)}
         onCreateFolderDialogOpen={() => setCreateFolderDialogOpen(true)}

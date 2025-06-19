@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TextField,
   InputAdornment,
@@ -9,9 +9,41 @@ import {
   Chip,
   Button,
   Box,
+  Collapse,
+  Paper,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Slider,
+  FormControlLabel,
+  Switch,
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Badge,
+  Tooltip,
+  useTheme,
 } from '@mui/material';
-import { Search, Clear } from '@mui/icons-material';
-import type { searchResultsType } from '../../types';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import {
+  Search,
+  Clear,
+  FilterList,
+  CalendarMonth,
+  FilePresent,
+  Label,
+  SortByAlpha,
+  Storage,
+  ContentPaste,
+  Settings,
+} from '@mui/icons-material';
+import type { searchResultsType, SearchFilters } from '../../types';
 
 interface SearchBarProps {
   searchQuery: string;
@@ -19,8 +51,11 @@ interface SearchBarProps {
   searchLoading: boolean;
   searchError: Error | null;
   searchResults: searchResultsType;
+  filters: SearchFilters;
   onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onClearSearch: () => void;
+  onFilterChange: (filters: SearchFilters) => void;
+  onClearFilters: () => void;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -29,44 +64,178 @@ const SearchBar: React.FC<SearchBarProps> = ({
   searchLoading,
   searchError,
   searchResults,
+  filters,
   onSearchChange,
   onClearSearch,
+  onFilterChange,
+  onClearFilters,
 }) => {
+  const theme = useTheme();
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+
   const showSearchResults = debouncedQuery.length >= 2;
+  const hasActiveFilters = Object.values(filters).some(
+    (value) => value !== undefined && value !== '' && value !== false
+  );
+
+  const activeFilterCount = Object.values(filters).filter(
+    (value) => value !== undefined && value !== '' && value !== false
+  ).length;
+
+  const handleFilterToggle = () => {
+    setShowFilters((prev) => !prev);
+  };
+
+  const handleFilterChange = (name: string, value: any) => {
+    onFilterChange({ ...filters, [name]: value });
+  };
+
+  const handleOpenFilterDialog = () => {
+    setFilterDialogOpen(true);
+  };
+
+  const handleCloseFilterDialog = () => {
+    setFilterDialogOpen(false);
+  };
+
+  const renderActiveFilters = () => {
+    if (!hasActiveFilters) return null;
+
+    return (
+      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+        {filters.fileType && (
+          <Chip
+            size="small"
+            icon={<FilePresent fontSize="small" />}
+            label={`Type: ${filters.fileType}`}
+            onDelete={() => handleFilterChange('fileType', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.dateFrom && (
+          <Chip
+            size="small"
+            icon={<CalendarMonth fontSize="small" />}
+            label={`From: ${new Date(filters.dateFrom).toLocaleDateString()}`}
+            onDelete={() => handleFilterChange('dateFrom', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.dateTo && (
+          <Chip
+            size="small"
+            icon={<CalendarMonth fontSize="small" />}
+            label={`To: ${new Date(filters.dateTo).toLocaleDateString()}`}
+            onDelete={() => handleFilterChange('dateTo', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.minSize && (
+          <Chip
+            size="small"
+            icon={<Storage fontSize="small" />}
+            label={`Min: ${filters.minSize}MB`}
+            onDelete={() => handleFilterChange('minSize', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.maxSize && (
+          <Chip
+            size="small"
+            icon={<Storage fontSize="small" />}
+            label={`Max: ${filters.maxSize}MB`}
+            onDelete={() => handleFilterChange('maxSize', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.tags && (
+          <Chip
+            size="small"
+            icon={<Label fontSize="small" />}
+            label={`Tags: ${filters.tags}`}
+            onDelete={() => handleFilterChange('tags', '')}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        {filters.searchContent && (
+          <Chip
+            size="small"
+            icon={<ContentPaste fontSize="small" />}
+            label="Content search enabled"
+            onDelete={() => handleFilterChange('searchContent', false)}
+            color="primary"
+            variant="outlined"
+          />
+        )}
+        <Button
+          size="small"
+          variant="text"
+          onClick={onClearFilters}
+          sx={{ ml: 'auto' }}
+        >
+          Clear all filters
+        </Button>
+      </Box>
+    );
+  };
 
   return (
     <div className="mb-6">
-      <TextField
-        fullWidth
-        placeholder="Search files and folders by name..."
-        value={searchQuery}
-        onChange={onSearchChange}
-        variant="outlined"
-        size="small"
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Search color="action" />
-            </InputAdornment>
-          ),
-          endAdornment: searchQuery && (
-            <InputAdornment position="end">
-              <IconButton
-                size="small"
-                onClick={onClearSearch}
-                title="Clear search"
-              >
-                <Clear />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-          },
-        }}
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <TextField
+          fullWidth
+          placeholder="Search files and folders by name..."
+          value={searchQuery}
+          onChange={onSearchChange}
+          variant="outlined"
+          size="small"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search color="action" />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={onClearSearch}
+                  title="Clear search"
+                >
+                  <Clear />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+            },
+          }}
+        />
+        <Tooltip title="Advanced search filters">
+          <Badge badgeContent={activeFilterCount} color="primary">
+            <Button
+              variant={hasActiveFilters ? 'contained' : 'outlined'}
+              size="small"
+              startIcon={<FilterList />}
+              onClick={handleOpenFilterDialog}
+              sx={{ borderRadius: 2, minWidth: '120px' }}
+            >
+              Filters
+            </Button>
+          </Badge>
+        </Tooltip>
+      </Box>
+
+      {renderActiveFilters()}
 
       {/* Search Status Indicators */}
       {searchQuery.length > 0 && searchQuery.length < 2 && (
@@ -96,6 +265,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           className="mt-2 block"
         >
           🔍 Searching for "{debouncedQuery}"...
+          {hasActiveFilters && ' (with filters)'}
         </Typography>
       )}
 
@@ -113,6 +283,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <Box className="flex items-center gap-4 mb-4">
                 <Typography variant="h6">
                   Search Results for "{debouncedQuery}"
+                  {hasActiveFilters && ' (Filtered)'}
                 </Typography>
                 <Chip
                   label={`${
@@ -130,6 +301,205 @@ const SearchBar: React.FC<SearchBarProps> = ({
           )}
         </div>
       )}
+
+      {/* Filter Dialog */}
+      <Dialog
+        open={filterDialogOpen}
+        onClose={handleCloseFilterDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FilterList />
+            Advanced Search Filters
+          </Box>
+          {hasActiveFilters && (
+            <Button size="small" color="error" onClick={onClearFilters}>
+              Clear All Filters
+            </Button>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 0 }}>
+            {/* File Type Filter */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>File Type</InputLabel>
+                <Select
+                  value={filters.fileType || ''}
+                  label="File Type"
+                  onChange={(e) =>
+                    handleFilterChange('fileType', e.target.value)
+                  }
+                >
+                  <MenuItem value="">Any</MenuItem>
+                  <MenuItem value="image">Images</MenuItem>
+                  <MenuItem value="document">Documents</MenuItem>
+                  <MenuItem value="pdf">PDF</MenuItem>
+                  <MenuItem value="video">Videos</MenuItem>
+                  <MenuItem value="audio">Audio</MenuItem>
+                  <MenuItem value="spreadsheet">Spreadsheets</MenuItem>
+                  <MenuItem value="presentation">Presentations</MenuItem>
+                  <MenuItem value="archive">Archives</MenuItem>
+                  <MenuItem value="code">Code Files</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* Date Range */}
+            <Grid item xs={12} md={6}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <DatePicker
+                      label="From Date"
+                      value={
+                        filters.dateFrom ? new Date(filters.dateFrom) : null
+                      }
+                      onChange={(date) =>
+                        handleFilterChange('dateFrom', date?.toISOString())
+                      }
+                      slotProps={{
+                        textField: { size: 'small', fullWidth: true },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <DatePicker
+                      label="To Date"
+                      value={filters.dateTo ? new Date(filters.dateTo) : null}
+                      onChange={(date) =>
+                        handleFilterChange('dateTo', date?.toISOString())
+                      }
+                      slotProps={{
+                        textField: { size: 'small', fullWidth: true },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </LocalizationProvider>
+            </Grid>
+
+            {/* Size Range */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" gutterBottom>
+                File Size Range (MB)
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    label="Min Size (MB)"
+                    type="number"
+                    value={filters.minSize || ''}
+                    onChange={(e) =>
+                      handleFilterChange('minSize', e.target.value)
+                    }
+                    size="small"
+                    fullWidth
+                    InputProps={{ inputProps: { min: 0 } }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    label="Max Size (MB)"
+                    type="number"
+                    value={filters.maxSize || ''}
+                    onChange={(e) =>
+                      handleFilterChange('maxSize', e.target.value)
+                    }
+                    size="small"
+                    fullWidth
+                    InputProps={{ inputProps: { min: 0 } }}
+                  />
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Tags */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Tags (comma separated)"
+                value={filters.tags || ''}
+                onChange={(e) => handleFilterChange('tags', e.target.value)}
+                size="small"
+                fullWidth
+                placeholder="project, important, work"
+              />
+            </Grid>
+
+            {/* Owner */}
+            <Grid item xs={12} md={6}>
+              <TextField
+                label="Owner"
+                value={filters.owner || ''}
+                onChange={(e) => handleFilterChange('owner', e.target.value)}
+                size="small"
+                fullWidth
+                placeholder="Search by owner name/email"
+              />
+            </Grid>
+
+            {/* Content Search Switch */}
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={filters.searchContent || false}
+                    onChange={(e) =>
+                      handleFilterChange('searchContent', e.target.checked)
+                    }
+                    color="primary"
+                  />
+                }
+                label={
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                    }}
+                  >
+                    <ContentPaste fontSize="small" />
+                    <Typography>
+                      Search within file contents (may be slower)
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Grid>
+
+            {/* Sort By */}
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Sort By</InputLabel>
+                <Select
+                  value={filters.sortBy || 'name'}
+                  label="Sort By"
+                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                >
+                  <MenuItem value="name">Name</MenuItem>
+                  <MenuItem value="date_newest">Date (Newest First)</MenuItem>
+                  <MenuItem value="date_oldest">Date (Oldest First)</MenuItem>
+                  <MenuItem value="size_largest">Size (Largest First)</MenuItem>
+                  <MenuItem value="size_smallest">Size (Smallest First)</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseFilterDialog} color="primary">
+            Apply Filters
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

@@ -81,13 +81,15 @@ export interface ApiResponse<T = unknown> {
 }
 
 export interface SearchFilters {
-  q?: string;
-  type?: string;
-  inFolder?: string;
-  uploadedBy?: string;
-  kind?: 'file' | 'folder' | 'all';
+  fileType?: string;
   dateFrom?: string;
   dateTo?: string;
+  minSize?: string | number;
+  maxSize?: string | number;
+  tags?: string;
+  owner?: string;
+  searchContent?: boolean;
+  sortBy?: string;
 }
 
 export interface NotificationData {
@@ -99,7 +101,19 @@ export interface NotificationData {
 }
 
 export interface searchResultsType {
-  data: { files: FileType[]; folders: FolderType[] };
+  data?: {
+    files: FileType[];
+    folders: FolderType[];
+    summary?: {
+      totalFiles: number;
+      totalFolders: number;
+      searchQuery: string;
+      searchType: string;
+      searchKind: string;
+      filteredCount?: number;
+      matchesInContent?: number;
+    };
+  };
 }
 
 // Additional types for better API responses
