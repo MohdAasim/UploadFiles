@@ -53,6 +53,7 @@ import PreviewDialog from '../dialogs/PreviewDialog';
 import VersionHistoryDialog from '../dialogs/VersionHistoryDialog';
 import BulkDeleteDialog from '../dialogs/BulkDeleteDialog';
 import BulkDownloadDialog from '../dialogs/BulkDownloadDialog';
+import { ErrorLoading_Const, Loading_Const } from '../../utils/constant';
 
 interface FileManagerProps {
   currentFolder?: string;
@@ -173,7 +174,7 @@ const FileManager: React.FC<FileManagerProps> = ({
   if (isLoading) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography>Loading files and folders...</Typography>
+        <Typography>{Loading_Const}</Typography>
       </Box>
     );
   }
@@ -183,7 +184,7 @@ const FileManager: React.FC<FileManagerProps> = ({
     console.error('Folder tree error:', error);
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography color="error">Error loading files and folders</Typography>
+        <Typography color="error">{ErrorLoading_Const}</Typography>
         <Typography variant="body2" color="text.secondary">
           {error.message}
         </Typography>
@@ -625,7 +626,10 @@ const FileManager: React.FC<FileManagerProps> = ({
         )}
         {selectedItem?.type === 'file' && (
           <MenuItem
-            onClick={() => handleVersionHistory(selectedItem as FileWithType)}
+            onClick={() => {
+              handleVersionHistory(selectedItem as FileWithType);
+              handleMenuClose();
+            }}
           >
             <ListItemIcon>
               <History fontSize="small" />
@@ -646,7 +650,12 @@ const FileManager: React.FC<FileManagerProps> = ({
             <ListItemText>Open Folder</ListItemText>
           </MenuItem>
         )}
-        <MenuItem onClick={() => handleShare(selectedItem!)}>
+        <MenuItem
+          onClick={() => {
+            handleShare(selectedItem!);
+            handleMenuClose();
+          }}
+        >
           <ListItemIcon>
             <Share fontSize="small" />
           </ListItemIcon>
@@ -665,7 +674,13 @@ const FileManager: React.FC<FileManagerProps> = ({
             <ListItemText>Download</ListItemText>
           </MenuItem>
         )}
-        <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+        <MenuItem
+          onClick={() => {
+            handleDelete();
+            handleMenuClose();
+          }}
+          sx={{ color: 'error.main' }}
+        >
           <ListItemIcon>
             <Delete fontSize="small" color="error" />
           </ListItemIcon>

@@ -136,7 +136,7 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
         </AvatarGroup>
 
         <Box sx={{ ml: 1 }}>
-          {viewers.slice(0, 2).map((viewer, index) => (
+          {viewers.slice(0, 2).map((viewer) => (
             <Typography key={viewer.id} variant="caption" display="block">
               {viewer.name}
             </Typography>
