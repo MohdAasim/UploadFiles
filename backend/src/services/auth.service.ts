@@ -32,6 +32,7 @@ export async function registerUser({
 
   logger.debug(`Creating new user account for: ${email}`);
   const user = await createUser({ name, email, password });
+  const token = generateToken(user);
 
   logger.info(
     `User registration successful - ID: ${user._id}, Email: ${email}`
@@ -39,6 +40,7 @@ export async function registerUser({
 
   return {
     success: true,
+    token,
     user: {
       id: user._id,
       name: user.name,

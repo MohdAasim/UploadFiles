@@ -76,6 +76,18 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+// Add this helper function above your FileUpload component
+const getFilePreview = (file: File, setPreviewUrl: (url: string | null) => void) => {
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = (e) => setPreviewUrl(e.target?.result as string);
+    reader.onerror = () => setPreviewUrl(null);
+    reader.readAsDataURL(file);
+  } else {
+    setPreviewUrl(null);
+  }
+};
+
 const FileUpload: React.FC<FileUploadProps> = ({
   parentFolder,
   onUploadComplete,
@@ -91,6 +103,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [autoUpload, setAutoUpload] = useState(true);
   const [urlInput, setUrlInput] = useState('');
   const [isDragActive, setIsDragActive] = useState(false);
+
+  const [filePreviews, setFilePreviews] = useState<Record<string, string | null>>({});
 
   const intervalRefs = useRef<Map<string, number>>(new Map());
   const uploadFile = useUploadFile();
@@ -321,6 +335,32 @@ const FileUpload: React.FC<FileUploadProps> = ({
       console.error('URL upload failed:', error);
     }
   };
+
+  // Generate previews when files are added
+  React.useEffect(() => {
+    uploadingFiles.forEach((uploadingFile) => {
+      if (filePreviews[uploadingFile.id] === undefined) {
+        if (uploadingFile.file.type.startsWith('image/')) {
+          getFilePreview(uploadingFile.file, (url) =>
+            setFilePreviews((prev) => ({ ...prev, [uploadingFile.id]: url }))
+          );
+        } else {
+          setFilePreviews((prev) => ({ ...prev, [uploadingFile.id]: null }));
+        }
+      }
+    });
+    // Clean up previews for removed files
+    Object.keys(filePreviews).forEach((id) => {
+      if (!uploadingFiles.find((f) => f.id === id)) {
+        setFilePreviews((prev) => {
+          const copy = { ...prev };
+          delete copy[id];
+          return copy;
+        });
+      }
+    });
+    // eslint-disable-next-line
+  }, [uploadingFiles]);
 
   const getStatusIcon = (status: UploadingFile['status']) => {
     switch (status) {
@@ -565,6 +605,30 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       mb: 1,
                     }}
                   >
+                    {/* Preview Thumbnail */}
+                    <Box sx={{ mr: 2, width: 48, height: 48, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {uploadingFile.file.type.startsWith('image/') && filePreviews[uploadingFile.id] ? (
+                        <img
+                          src={filePreviews[uploadingFile.id] as string}
+                          alt="preview"
+                          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '';
+                            setFilePreviews((prev) => ({ ...prev, [uploadingFile.id]: null }));
+                          }}
+                        />
+                      ) : uploadingFile.file.type.startsWith('video/') ? (
+                        <VideoIcon />
+                      ) : uploadingFile.file.type.startsWith('audio/') ? (
+                        <AudioIcon />
+                      ) : uploadingFile.file.type === 'application/pdf' ? (
+                        <PdfIcon />
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          Preview not available
+                        </Typography>
+                      )}
+                    </Box>
                     <Box sx={{ mr: 2 }}>
                       {getStatusIcon(uploadingFile.status)}
                     </Box>
@@ -659,5 +723,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
     </Box>
   );
 };
+
+const VideoIcon = () => <span role="img" aria-label="video" style={{ fontSize: 32 }}>🎥</span>;
+const AudioIcon = () => <span role="img" aria-label="audio" style={{ fontSize: 32 }}>🎵</span>;
+const PdfIcon = () => <span role="img" aria-label="pdf" style={{ fontSize: 32 }}>📄</span>;
 
 export default FileUpload;

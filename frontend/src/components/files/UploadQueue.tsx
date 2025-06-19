@@ -53,8 +53,6 @@ interface UploadQueueProps {
 
 const UploadQueue: React.FC<UploadQueueProps> = ({
   items,
-  onPause,
-  onResume,
   onCancel,
   onRetry,
   onClearCompleted,
@@ -326,24 +324,7 @@ const UploadQueue: React.FC<UploadQueueProps> = ({
                 />
                 <ListItemSecondaryAction>
                   <Box sx={{ display: 'flex' }}>
-                    {item.status === 'uploading' && (
-                      <IconButton
-                        size="small"
-                        onClick={() => onPause(item.id)}
-                        title="Pause"
-                      >
-                        <Pause />
-                      </IconButton>
-                    )}
-                    {item.status === 'paused' && (
-                      <IconButton
-                        size="small"
-                        onClick={() => onResume(item.id)}
-                        title="Resume"
-                      >
-                        <PlayArrow />
-                      </IconButton>
-                    )}
+
                     {item.status === 'error' && (
                       <IconButton
                         size="small"

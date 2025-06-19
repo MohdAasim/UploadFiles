@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,7 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import toast, { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider} from './contexts/AuthContext';
 import { UploadProvider } from './contexts/UploadContext';
 import { ViewingProvider } from './contexts/ViewingContext';
 import Layout from './components/layout/Layout';
@@ -18,12 +17,11 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import FilesPage from './pages/FilesPage';
 import FoldersPage from './pages/FoldersPage';
-import UploadQueue from './components/files/UploadQueue';
-import { useUploadContext } from './contexts/UploadContext';
 import SharedPage from './pages/SharedPage';
 import NotFoundPage from './pages/NotFoundPage';
-import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import PublicRoute from './components/route_guards/PublicRoutes';
+import ProtectedRoute from './components/route_guards/ProtectedRoutes';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,64 +76,12 @@ const theme = createTheme({
   },
 });
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
 
-  if (loading) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
-  return user ? <>{children}</> : <Navigate to="/login" />;
-};
 
-const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
-};
 
 // Component to render the upload queue
-const UploadQueueContainer = () => {
-  const {
-    uploads,
-    pauseUpload,
-    resumeUpload,
-    removeUpload,
-    retryUpload,
-    clearCompleted,
-    clearAll,
-    totalProgress,
-  } = useUploadContext();
-
-  return (
-    <UploadQueue
-      items={uploads}
-      onPause={pauseUpload}
-      onResume={resumeUpload}
-      onCancel={removeUpload}
-      onRetry={retryUpload}
-      onClearCompleted={clearCompleted}
-      onClearAll={clearAll}
-      totalProgress={totalProgress}
-    />
-  );
-};
 
 function App() {
   return (
@@ -239,10 +185,6 @@ function App() {
                     </Routes>
                   </ErrorBoundary>
 
-                  {/* Upload Queue - Only show for authenticated users */}
-                  <ProtectedRoute>
-                    <UploadQueueContainer />
-                  </ProtectedRoute>
                 </Router>
 
                 {/* Toast Notifications */}

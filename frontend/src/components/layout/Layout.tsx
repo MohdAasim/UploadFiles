@@ -2,6 +2,7 @@ import React, { useState, type ReactNode } from 'react';
 import { Box, Toolbar } from '@mui/material';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import UploadQueueContainer from './UploadQueue';
 
 interface LayoutProps {
   children: ReactNode;
@@ -39,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Toolbar />
         <Box sx={{ p: 3 }}>{children}</Box>
       </Box>
+      <UploadQueueContainer/>
     </Box>
   );
 };

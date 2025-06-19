@@ -58,9 +58,9 @@ const RegisterPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);  
 
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, login } = useAuth(); // <-- add login here
   const navigate = useNavigate();
 
   const {
@@ -83,6 +83,8 @@ const RegisterPage: React.FC = () => {
 
     try {
       await registerUser(data.name, data.email, data.password);
+      // Automatically log in after registration
+      await login(data.email, data.password);
       toast.success('Registration successful! Welcome aboard!');
       navigate('/dashboard');
     } catch (err) {

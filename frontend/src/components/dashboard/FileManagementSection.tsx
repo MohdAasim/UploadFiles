@@ -9,6 +9,7 @@ import FileUpload from '../files/FileUpload';
 import Breadcrumb from '../Breadcrumb';
 import { Button, Typography } from '@mui/material';
 import { CloudQueue } from '@mui/icons-material';
+import type { SearchFilters } from '../../types';
 
 interface FileManagementSectionProps {
   tabValue: number;
@@ -17,11 +18,14 @@ interface FileManagementSectionProps {
   searchLoading: boolean;
   searchError: Error | null;
   searchResults: any;
+  searchFilters: SearchFilters;
   showSearchResults: boolean;
   currentFolder: string | undefined;
   onTabChange: (event: React.SyntheticEvent, newValue: number) => void;
   onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onClearSearch: () => void;
+  onFilterChange: (filters: SearchFilters) => void;
+  onClearFilters: () => void;
   onUploadDialogOpen: () => void;
   onBulkUploadOpen: () => void;
   onCreateFolderDialogOpen: () => void;
@@ -36,11 +40,14 @@ const FileManagementSection: React.FC<FileManagementSectionProps> = ({
   searchLoading,
   searchError,
   searchResults,
+  searchFilters,
   showSearchResults,
   currentFolder,
   onTabChange,
   onSearchChange,
   onClearSearch,
+  onFilterChange,
+  onClearFilters,
   onUploadDialogOpen,
   onBulkUploadOpen,
   onCreateFolderDialogOpen,
@@ -65,8 +72,11 @@ const FileManagementSection: React.FC<FileManagementSectionProps> = ({
             searchLoading={searchLoading}
             searchError={searchError}
             searchResults={searchResults}
+            filters={searchFilters}
             onSearchChange={onSearchChange}
             onClearSearch={onClearSearch}
+            onFilterChange={onFilterChange}
+            onClearFilters={onClearFilters}
           />
 
           {!showSearchResults && (

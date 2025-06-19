@@ -131,16 +131,25 @@ export const foldersAPI = {
     api.put<ApiResponse<FolderType>>(`/folders/${folderId}`, data),
 };
 
-// Search API - simplified version
+// Search API - enhanced version
 export const searchAPI = {
-  // Basic search using existing backend route
+  // Advanced search with content indexing and metadata filters
   search: (params: {
     q?: string;
     type?: string;
     inFolder?: string;
     kind?: 'file' | 'folder' | 'all';
+    fileType?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    minSize?: string | number;
+    maxSize?: string | number;
+    tags?: string;
+    owner?: string;
+    searchContent?: boolean;
+    sortBy?: string;
   }) => {
-    console.log('API: Making search request with params:', params);
+    console.log('API: Making advanced search request with params:', params);
     return api.get<
       ApiResponse<{
         files: FileType[];
@@ -151,6 +160,8 @@ export const searchAPI = {
           searchQuery: string;
           searchType: string;
           searchKind: string;
+          filteredCount?: number;
+          matchesInContent?: number;
         };
       }>
     >('/search', { params });
@@ -258,9 +269,8 @@ export const bulkAPI = {
 
 // Real-time API
 export const realtimeAPI = {
-  getOnlineUsers: () =>
-    api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
-
+  // Fallback REST API for online users
+  getOnlineUsers: () => api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
   getFileEditingStatus: (fileId: string) =>
     api.get<ApiResponse>(`/realtime/file-status/${fileId}`),
 
