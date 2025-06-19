@@ -85,7 +85,7 @@ const FileViewersIndicator: React.FC<FileViewersIndicatorProps> = ({
             {showCount && (
               <Chip
                 icon={<Visibility />}
-                label={viewersCount}
+                label={1}
                 size="small"
                 color="primary"
                 variant="outlined"
