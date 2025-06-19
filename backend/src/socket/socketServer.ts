@@ -94,10 +94,20 @@ export class SocketServer {
       // Notification events
       this.handleNotificationEvents(socket);
 
+      // Notify all clients about updated online users
+      this.io.emit('onlineUsersUpdated', Array.from(this.connectedUsers.values()).map(
+        user => user.userData
+      ));
+
       // Handle disconnection
       socket.on('disconnect', () => {
-        console.log(`User ${socket.userData.name} disconnected: ${socket.id}`);
+        console.log(`User ${socket.userData?.name} disconnected: ${socket.id}`);
         this.connectedUsers.delete(socket.userId!);
+
+        // Notify all clients about updated online users
+        this.io.emit('onlineUsersUpdated', Array.from(this.connectedUsers.values()).map(
+          user => user.userData
+        ));
 
         // Remove from all file editing sessions
         for (const [fileId, session] of this.fileEditingSessions.entries()) {
@@ -299,12 +309,13 @@ export class SocketServer {
       }
     );
 
-    // Get online users
+    // Get online users - Fix to emit the correct event name
     socket.on('get-online-users', () => {
       const onlineUsers = Array.from(this.connectedUsers.values()).map(
         user => user.userData
       );
-      socket.emit('online-users', onlineUsers);
+      console.log('Sending online users list:', onlineUsers.length);
+      socket.emit('onlineUsersUpdated', onlineUsers); // Changed from 'online-users' to match frontend
     });
 
     // Check if specific user is online

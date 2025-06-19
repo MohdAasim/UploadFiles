@@ -228,8 +228,15 @@ class SocketService {
     });
 
     // Online users
-    this.socket.on('online-users', (users: OnlineUser[]) => {
+    this.socket.on('onlineUsersUpdated', (users: OnlineUser[]) => {
+      console.log('Received online users update:', users.length);
       this.triggerEvent('onlineUsersUpdated', users);
+    });
+
+    // Add a connection success handler to request online users immediately
+    this.socket.on('connected', () => {
+      console.log('Socket connected successfully, requesting online users');
+      this.getOnlineUsers();
     });
   }
 
@@ -346,7 +353,12 @@ class SocketService {
 
   // Utility methods
   getOnlineUsers(): void {
-    this.emit('get-online-users');
+    if (this.socket?.connected) {
+      console.log('Emitting get-online-users event');
+      this.socket.emit('get-online-users');
+    } else {
+      console.warn('Cannot get online users - socket not connected');
+    }
   }
 
   checkUserOnline(userId: string): void {

@@ -269,9 +269,8 @@ export const bulkAPI = {
 
 // Real-time API
 export const realtimeAPI = {
-  getOnlineUsers: () =>
-    api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
-
+  // Fallback REST API for online users
+  getOnlineUsers: () => api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
   getFileEditingStatus: (fileId: string) =>
     api.get<ApiResponse>(`/realtime/file-status/${fileId}`),
 

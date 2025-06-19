@@ -327,9 +327,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
           )}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={3} sx={{ mt: 0 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1.5 }}>
             {/* File Type Filter */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>File Type</InputLabel>
                 <Select
@@ -351,13 +351,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   <MenuItem value="code">Code Files</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Box>
 
             {/* Date Range */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                <Box sx={{ display: 'flex', mx: -1 }}>
+                  <Box sx={{ width: '50%', px: 1 }}>
                     <DatePicker
                       label="From Date"
                       value={
@@ -370,8 +370,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         textField: { size: 'small', fullWidth: true },
                       }}
                     />
-                  </Grid>
-                  <Grid item xs={6}>
+                  </Box>
+                  <Box sx={{ width: '50%', px: 1 }}>
                     <DatePicker
                       label="To Date"
                       value={filters.dateTo ? new Date(filters.dateTo) : null}
@@ -382,18 +382,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         textField: { size: 'small', fullWidth: true },
                       }}
                     />
-                  </Grid>
-                </Grid>
+                  </Box>
+                </Box>
               </LocalizationProvider>
-            </Grid>
+            </Box>
 
             {/* Size Range */}
-            <Grid item xs={12}>
+            <Box sx={{ width: '100%', p: 1.5 }}>
               <Typography variant="subtitle2" gutterBottom>
                 File Size Range (MB)
               </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
+              <Box sx={{ display: 'flex', mx: -1 }}>
+                <Box sx={{ width: '50%', px: 1 }}>
                   <TextField
                     label="Min Size (MB)"
                     type="number"
@@ -405,8 +405,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     fullWidth
                     InputProps={{ inputProps: { min: 0 } }}
                   />
-                </Grid>
-                <Grid item xs={6}>
+                </Box>
+                <Box sx={{ width: '50%', px: 1 }}>
                   <TextField
                     label="Max Size (MB)"
                     type="number"
@@ -418,12 +418,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     fullWidth
                     InputProps={{ inputProps: { min: 0 } }}
                   />
-                </Grid>
-              </Grid>
-            </Grid>
+                </Box>
+              </Box>
+            </Box>
 
             {/* Tags */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <TextField
                 label="Tags (comma separated)"
                 value={filters.tags || ''}
@@ -432,10 +432,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 fullWidth
                 placeholder="project, important, work"
               />
-            </Grid>
+            </Box>
 
             {/* Owner */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <TextField
                 label="Owner"
                 value={filters.owner || ''}
@@ -444,10 +444,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 fullWidth
                 placeholder="Search by owner name/email"
               />
-            </Grid>
+            </Box>
 
             {/* Content Search Switch */}
-            <Grid item xs={12}>
+            <Box sx={{ width: '100%', p: 1.5 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -473,10 +473,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   </Box>
                 }
               />
-            </Grid>
+            </Box>
 
             {/* Sort By */}
-            <Grid item xs={12} md={6}>
+            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Sort By</InputLabel>
                 <Select
@@ -491,8 +491,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   <MenuItem value="size_smallest">Size (Smallest First)</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseFilterDialog} color="primary">
