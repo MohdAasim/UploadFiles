@@ -1,3 +1,4 @@
+// /home/arslaanas/Desktop/UploadFiles/frontend/src/hooks/useFileManagerLogic.ts
 import { useState, useMemo } from 'react';
 import { api } from '../services/api';
 import {
@@ -7,8 +8,12 @@ import {
 } from '../utils/sweetAlert';
 import type { FileType, FolderType, SelectableItem } from '../types';
 
-export interface FileWithType extends FileType { type: 'file'; }
-export interface FolderWithType extends FolderType { type: 'folder'; }
+export interface FileWithType extends FileType {
+  type: 'file';
+}
+export interface FolderWithType extends FolderType {
+  type: 'folder';
+}
 export type ItemWithType = FileWithType | FolderWithType;
 /*eslint-disable @typescript-eslint/no-explicit-any*/
 export function useFileManagerLogic(
@@ -27,17 +32,31 @@ export function useFileManagerLogic(
 
   // Dialogs
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
-  const [selectedFileForPreview, setSelectedFileForPreview] = useState<{ id: string; name: string; type: string; } | null>(null);
+  const [selectedFileForPreview, setSelectedFileForPreview] = useState<{
+    id: string;
+    name: string;
+    type: string;
+  } | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [shareResource, setShareResource] = useState<{ id: string; type: 'file' | 'folder'; name: string; } | null>(null);
+  const [shareResource, setShareResource] = useState<{
+    id: string;
+    type: 'file' | 'folder';
+    name: string;
+  } | null>(null);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
-  const [selectedFileForVersion, setSelectedFileForVersion] = useState<{ id: string; name: string; } | null>(null);
+  const [selectedFileForVersion, setSelectedFileForVersion] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [bulkDownloadDialogOpen, setBulkDownloadDialogOpen] = useState(false);
+  const [bulkMoveDialogOpen, setBulkMoveDialogOpen] = useState(false);
 
   // Selection logic
-  const isAllSelected = selectedItems.length === allItems.length && allItems.length > 0;
-  const isIndeterminate = selectedItems.length > 0 && selectedItems.length < allItems.length;
+  const isAllSelected =
+    selectedItems.length === allItems.length && allItems.length > 0;
+  const isIndeterminate =
+    selectedItems.length > 0 && selectedItems.length < allItems.length;
 
   const handleItemSelect = (itemId: string) => {
     setSelectedItems((prev) =>
@@ -76,8 +95,10 @@ export function useFileManagerLogic(
   // Bulk actions
   const handleBulkDelete = () => setBulkDeleteDialogOpen(true);
   const handleBulkDownload = () => setBulkDownloadDialogOpen(true);
+  const handleBulkMove = () => setBulkMoveDialogOpen(true);
   const handleBulkDeleteComplete = () => setSelectedItems([]);
   const handleBulkDownloadComplete = () => setSelectedItems([]);
+  const handleBulkMoveComplete = () => setSelectedItems([]);
 
   // Menu actions
   const handleMenuOpen = (
@@ -179,7 +200,8 @@ export function useFileManagerLogic(
     if (mimetype.startsWith('audio/')) return '🎵';
     if (mimetype.includes('pdf')) return '📄';
     if (mimetype.includes('word') || mimetype.includes('document')) return '📝';
-    if (mimetype.includes('excel') || mimetype.includes('spreadsheet')) return '📊';
+    if (mimetype.includes('excel') || mimetype.includes('spreadsheet'))
+      return '📊';
     if (mimetype.includes('zip') || mimetype.includes('archive')) return '📦';
     return '📄';
   };
@@ -234,8 +256,10 @@ export function useFileManagerLogic(
     // Bulk
     handleBulkDelete,
     handleBulkDownload,
+    handleBulkMove,
     handleBulkDeleteComplete,
     handleBulkDownloadComplete,
+    handleBulkMoveComplete,
 
     // Menu
     anchorEl,
@@ -261,6 +285,8 @@ export function useFileManagerLogic(
     setBulkDeleteDialogOpen,
     bulkDownloadDialogOpen,
     setBulkDownloadDialogOpen,
+    bulkMoveDialogOpen,
+    setBulkMoveDialogOpen,
 
     // File/folder
     handleDownload,

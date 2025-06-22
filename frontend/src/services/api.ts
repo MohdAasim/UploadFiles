@@ -1,3 +1,4 @@
+// /home/arslaanas/Desktop/UploadFiles/backend/src/controllers/searchController.ts
 import axios from 'axios';
 import type {
   AuthResponse,
@@ -270,7 +271,8 @@ export const bulkAPI = {
 // Real-time API
 export const realtimeAPI = {
   // Fallback REST API for online users
-  getOnlineUsers: () => api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
+  getOnlineUsers: () =>
+    api.get<ApiResponse<OnlineUser[]>>('/realtime/online-users'),
   getFileEditingStatus: (fileId: string) =>
     api.get<ApiResponse>(`/realtime/file-status/${fileId}`),
 
