@@ -115,8 +115,6 @@ const MoveDialog: React.FC<MoveDialogProps> = ({
             </ListItem>
             {availableFolders.length > 0 && <Divider />}
             {availableFolders.map((folder) => (
-              <>
-                {console.log(folder,"-------------")}
                 <ListItem key={folder._id} disablePadding>
                   <ListItemButton
                     selected={selectedFolder === folder._id}
@@ -128,7 +126,6 @@ const MoveDialog: React.FC<MoveDialogProps> = ({
                     <ListItemText primary={folder.name} />
                   </ListItemButton>
                 </ListItem>
-              </>
             ))}
           </List>
         </Box>
