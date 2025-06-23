@@ -233,21 +233,20 @@ export const bulkAction = asyncHandler(
         `Starting bulk move operation for user: ${userId} to target: ${targetFolder}`
       );
 
-      if (!targetFolder) {
-        logger.warn('Bulk move attempted without target folder');
-        throw createError('No target folder provided', 400);
-      }
+      // Modified: treat null targetFolder as root folder
+      const effectiveTarget = targetFolder || 'root';
+      logger.debug(`Using effective target folder: ${effectiveTarget}`);
 
       // Validate target folder if it's not root
-      if (targetFolder !== 'root') {
-        const targetFolderDoc = await Folder.findById(targetFolder);
+      if (effectiveTarget !== 'root') {
+        const targetFolderDoc = await Folder.findById(effectiveTarget);
         if (!targetFolderDoc || targetFolderDoc.owner.toString() !== userId) {
           logger.warn(
-            `Invalid target folder for move operation: ${targetFolder}`
+            `Invalid target folder for move operation: ${effectiveTarget}`
           );
           throw createError('Invalid target folder', 400);
         }
-        logger.debug(`Target folder validated: ${targetFolder}`);
+        logger.debug(`Target folder validated: ${effectiveTarget}`);
       }
 
       let movedFiles = 0;
@@ -255,19 +254,19 @@ export const bulkAction = asyncHandler(
 
       // Move files
       if (Array.isArray(files) && files.length > 0) {
-        logger.info(`Moving ${files.length} files to ${targetFolder}`);
+        logger.info(`Moving ${files.length} files to ${effectiveTarget}`);
         for (const fileId of files) {
           try {
             const file = await FileMeta.findById(fileId);
             if (file && file.uploadedBy.toString() === userId) {
               file.parentFolder =
-                targetFolder === 'root'
+                effectiveTarget === 'root'
                   ? null
-                  : new mongoose.Types.ObjectId(targetFolder);
+                  : new mongoose.Types.ObjectId(effectiveTarget);
               await file.save();
               movedFiles++;
               logger.debug(
-                `Successfully moved file: ${fileId} to ${targetFolder}`
+                `Successfully moved file: ${fileId} to ${effectiveTarget}`
               );
             } else {
               logger.warn(
@@ -282,31 +281,31 @@ export const bulkAction = asyncHandler(
 
       // Move folders
       if (Array.isArray(folders) && folders.length > 0) {
-        logger.info(`Moving ${folders.length} folders to ${targetFolder}`);
+        logger.info(`Moving ${folders.length} folders to ${effectiveTarget}`);
         for (const folderId of folders) {
           try {
             const folder = await Folder.findById(folderId);
             if (folder && folder.owner.toString() === userId) {
               // Prevent moving folder into itself or its descendants
               if (
-                targetFolder !== 'root' &&
-                (await isDescendantFolder(folderId, targetFolder))
+                effectiveTarget !== 'root' &&
+                (await isDescendantFolder(folderId, effectiveTarget))
               ) {
                 logger.warn(
-                  `Cannot move folder ${folderId} into its descendant ${targetFolder}`
+                  `Cannot move folder ${folderId} into its descendant ${effectiveTarget}`
                 );
                 continue;
               }
 
               // Convert string to ObjectId or set to null for root
               folder.parent =
-                targetFolder === 'root'
+                effectiveTarget === 'root'
                   ? null
-                  : new mongoose.Types.ObjectId(targetFolder);
+                  : new mongoose.Types.ObjectId(effectiveTarget);
               await folder.save();
               movedFolders++;
               logger.debug(
-                `Successfully moved folder: ${folderId} to ${targetFolder}`
+                `Successfully moved folder: ${folderId} to ${effectiveTarget}`
               );
             } else {
               logger.warn(

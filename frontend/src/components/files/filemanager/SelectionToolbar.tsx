@@ -1,6 +1,13 @@
+// /home/arslaanas/Desktop/UploadFiles/frontend/src/components/files/filemanager/SelectionToolbar.tsx
 import React from 'react';
 import { Toolbar, Checkbox, Button, Chip } from '@mui/material';
-import { SelectAll, Download, Delete, Clear } from '@mui/icons-material';
+import {
+  SelectAll,
+  Download,
+  Delete,
+  Clear,
+  DriveFileMove,
+} from '@mui/icons-material';
 
 interface SelectionToolbarProps {
   isAllSelected: boolean;
@@ -9,6 +16,7 @@ interface SelectionToolbarProps {
   onSelectAll: () => void;
   onBulkDownload: () => void;
   onBulkDelete: () => void;
+  onBulkMove: () => void;
   onClearSelection: () => void;
 }
 
@@ -19,6 +27,7 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
   onSelectAll,
   onBulkDownload,
   onBulkDelete,
+  onBulkMove,
   onClearSelection,
 }) => (
   <Toolbar sx={{ minHeight: '48px !important', px: '0 !important', mb: 1 }}>
@@ -54,6 +63,16 @@ const SelectionToolbar: React.FC<SelectionToolbarProps> = ({
           sx={{ mr: 1 }}
         >
           Download
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          color="primary"
+          startIcon={<DriveFileMove />}
+          onClick={onBulkMove}
+          sx={{ mr: 1 }}
+        >
+          Move
         </Button>
         <Button
           size="small"

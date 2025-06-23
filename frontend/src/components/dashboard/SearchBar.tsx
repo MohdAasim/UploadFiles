@@ -1,4 +1,5 @@
 /* eslint-disable */
+// /home/arslaanas/Desktop/UploadFiles/frontend/src/components/dashboard/SearchBar.tsx
 import React, { useState } from 'react';
 import {
   TextField,
@@ -70,6 +71,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onFilterChange,
   onClearFilters,
 }) => {
+  console.log({ searchResults });
+
   const theme = useTheme();
   const [showFilters, setShowFilters] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
@@ -287,8 +290,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 </Typography>
                 <Chip
                   label={`${
-                    ((searchResults as any).files?.length || 0) +
-                    ((searchResults as any).folders?.length || 0)
+                    (searchResults?.data?.files?.length || 0) +
+                    (searchResults?.data?.folders?.length || 0)
                   } items found`}
                   size="small"
                   color="primary"
@@ -345,10 +348,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   <MenuItem value="pdf">PDF</MenuItem>
                   <MenuItem value="video">Videos</MenuItem>
                   <MenuItem value="audio">Audio</MenuItem>
-                  <MenuItem value="spreadsheet">Spreadsheets</MenuItem>
-                  <MenuItem value="presentation">Presentations</MenuItem>
-                  <MenuItem value="archive">Archives</MenuItem>
-                  <MenuItem value="code">Code Files</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -422,30 +421,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
               </Box>
             </Box>
 
-            {/* Tags */}
-            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
-              <TextField
-                label="Tags (comma separated)"
-                value={filters.tags || ''}
-                onChange={(e) => handleFilterChange('tags', e.target.value)}
-                size="small"
-                fullWidth
-                placeholder="project, important, work"
-              />
-            </Box>
-
-            {/* Owner */}
-            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
-              <TextField
-                label="Owner"
-                value={filters.owner || ''}
-                onChange={(e) => handleFilterChange('owner', e.target.value)}
-                size="small"
-                fullWidth
-                placeholder="Search by owner name/email"
-              />
-            </Box>
-
             {/* Content Search Switch */}
             <Box sx={{ width: '100%', p: 1.5 }}>
               <FormControlLabel
@@ -473,24 +448,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   </Box>
                 }
               />
-            </Box>
-
-            {/* Sort By */}
-            <Box sx={{ width: { xs: '100%', md: '50%' }, p: 1.5 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Sort By</InputLabel>
-                <Select
-                  value={filters.sortBy || 'name'}
-                  label="Sort By"
-                  onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                >
-                  <MenuItem value="name">Name</MenuItem>
-                  <MenuItem value="date_newest">Date (Newest First)</MenuItem>
-                  <MenuItem value="date_oldest">Date (Oldest First)</MenuItem>
-                  <MenuItem value="size_largest">Size (Largest First)</MenuItem>
-                  <MenuItem value="size_smallest">Size (Smallest First)</MenuItem>
-                </Select>
-              </FormControl>
             </Box>
           </Box>
         </DialogContent>

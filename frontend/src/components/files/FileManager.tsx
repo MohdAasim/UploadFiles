@@ -1,3 +1,4 @@
+// /home/arslaanas/Desktop/UploadFiles/frontend/src/components/files/FileManager.tsx
 /*eslint-disable */
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
@@ -15,13 +16,17 @@ import PreviewDialog from '../dialogs/PreviewDialog';
 import VersionHistoryDialog from '../dialogs/VersionHistoryDialog';
 import BulkDeleteDialog from '../dialogs/BulkDeleteDialog';
 import BulkDownloadDialog from '../dialogs/BulkDownloadDialog';
+import MoveDialog from '../dialogs/MoveDialog';
 import { ErrorLoading_Const, Loading_Const } from '../../utils/constant';
 import SelectionToolbar from './filemanager/SelectionToolbar';
 import FileTable from './filemanager/FileTable';
 import FileContextMenu from './filemanager/FileContextMenu';
 import { useFileManagerLogic } from '../../hooks/useFileManagerLogic';
-import type { ItemWithType, FileWithType, FolderWithType } from '../../hooks/useFileManagerLogic';
-
+import type {
+  ItemWithType,
+  FileWithType,
+  FolderWithType,
+} from '../../hooks/useFileManagerLogic';
 
 interface FileManagerProps {
   currentFolder?: string;
@@ -67,7 +72,12 @@ const FileManager: React.FC<FileManagerProps> = ({
     [files, folders]
   );
 
-  const logic = useFileManagerLogic(allItems, onFolderClick, deleteFile, deleteFolder);
+  const logic = useFileManagerLogic(
+    allItems,
+    onFolderClick,
+    deleteFile,
+    deleteFolder
+  );
 
   const handleFileClick = (id: string) => {
     startViewing(id);
@@ -117,19 +127,23 @@ const FileManager: React.FC<FileManagerProps> = ({
         onSelectAll={logic.handleSelectAll}
         onBulkDownload={logic.handleBulkDownload}
         onBulkDelete={logic.handleBulkDelete}
+        onBulkMove={logic.handleBulkMove}
         onClearSelection={logic.handleClearSelection}
       />
       <FileTable
-        allItems={allItems.map(item => ({
+        allItems={allItems.map((item) => ({
           ...item,
-          createdAt: formatDistanceToNow(new Date(item.createdAt), { addSuffix: true }),
+          createdAt: formatDistanceToNow(new Date(item.createdAt), {
+            addSuffix: true,
+          }),
         }))}
         selectedItems={logic.selectedItems}
         selectionMode={logic.selectionMode}
         onItemSelect={logic.handleItemSelect}
         onRowClick={handleFileClick}
-        onRowDoubleClick={item => {
-          if (item.type === 'folder') logic.handleFolderDoubleClick(item as FolderWithType);
+        onRowDoubleClick={(item) => {
+          if (item.type === 'folder')
+            logic.handleFolderDoubleClick(item as FolderWithType);
         }}
         onMenuOpen={logic.handleMenuOpen}
         getFileIcon={logic.getFileIcon}
@@ -143,11 +157,17 @@ const FileManager: React.FC<FileManagerProps> = ({
         open={Boolean(logic.anchorEl)}
         selectedItem={logic.selectedItem}
         onClose={logic.handleMenuClose}
-        onPreview={() => logic.handlePreview(logic.selectedItem as FileWithType)}
-        onVersionHistory={() => logic.handleVersionHistory(logic.selectedItem as FileWithType)}
+        onPreview={() =>
+          logic.handlePreview(logic.selectedItem as FileWithType)
+        }
+        onVersionHistory={() =>
+          logic.handleVersionHistory(logic.selectedItem as FileWithType)
+        }
         onOpenFolder={() => onFolderClick(logic.selectedItem?._id)}
         onShare={() => logic.handleShare(logic.selectedItem!)}
-        onDownload={() => logic.handleDownload(logic.selectedItem as FileWithType)}
+        onDownload={() =>
+          logic.handleDownload(logic.selectedItem as FileWithType)
+        }
         onDelete={logic.handleDelete}
       />
       <PreviewDialog
@@ -188,6 +208,13 @@ const FileManager: React.FC<FileManagerProps> = ({
         onClose={() => logic.setBulkDownloadDialogOpen(false)}
         selectedItems={logic.selectedSelectableItems}
         onDownloadComplete={logic.handleBulkDownloadComplete}
+      />
+      <MoveDialog
+        open={logic.bulkMoveDialogOpen}
+        onClose={() => logic.setBulkMoveDialogOpen(false)}
+        selectedItems={logic.selectedSelectableItems}
+        folders={folders}
+        onMoveComplete={logic.handleBulkMoveComplete}
       />
     </Box>
   );
